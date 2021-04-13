@@ -1,0 +1,234 @@
+####
+# Name: Isabella Yee
+# andrewID: iby
+####
+
+from cmu_112_graphics import *
+
+####
+# General drawing functions
+####
+
+def redrawAll(app, canvas):
+    # replace with modes later!!
+    if app.mainScreen:
+        drawMainScreen(app, canvas)
+    elif app.inGacha:
+        drawGachaScreen(app, canvas)
+    elif app.inBarracks:
+        drawTeam(app, canvas)
+    elif app.inBetween:
+        drawTransitionScreen(app, canvas)
+
+def drawBackground(app, canvas, color):
+    ''' set the background to a solid color '''
+    canvas.create_rectangle(0, 0, app.width, app.height, color=color, width=0)
+
+def drawSeashells(app, canvas, topX, topY):
+    ''' draw the player's Seashell count '''
+    # draw box and seashell icon
+    canvas.create_rectangle(topX, topY, topX + 40, topY + 20) # change later
+    # insert icon here
+
+    canvas.create_text(topX, topY, text=app.seashells, anchor="nw",
+                            font=app.buttonFont)
+
+####
+# Menu drawing functions
+####
+
+def drawButton(app, canvas, topX, topY, botX, botY, text=""):
+    ''' draw a rectangle representing a button '''
+    canvas.create_rectangle(topX, topY, botX, botY, fill=app.buttonColor)
+
+    centerX = botX - topX
+    centerY = botY - topY
+    canvas.create_text(centerX, centerY, text=text, color=app.textColor,
+                        font=app.buttonFont)
+
+def drawMainScreen(app, canvas):
+    ''' draw the main screen '''
+    drawBackground(app, canvas, "white") # change later
+
+    # draw title
+    pass
+
+    # draw buttons
+    pass
+
+    # draw credits
+    creditText = '''(C) Isabella Yee 2021 | made with Python | 15-112
+Special thanks to Casper Wong'''
+    canvas.create_text(0, app.height, text=creditText, anchor="sw",
+                            color=app.textColor, font=app.buttonFont)
+
+def drawTransitionScreen(app, canvas):
+    ''' draw the transition screen '''
+    # draw progress bar
+    progress = app.droplets // app.moatSize
+    fillLength = (app.width - (2 * app.margin)) * progress
+    canvas.create_rectangle(app.margin, app.margin, app.width - app.margin,
+                app.margin + 10, fill="black")
+    canvas.create_rectangle(app.margin, app.margin, app.margin + fillLength,
+                app.margin + 10, fill="blue", width=0)
+    canvas.create_text(app.width // 2, 5, text=f"{app.droplets}/{app.moatSize}",
+                color="white")
+
+    drawSeashells(app, canvas, app.margin, app.margin + 15)
+
+    # draw buttons
+    pass
+
+####
+# Dialogue drawing functions
+####
+
+def drawDialogueBox(app, canvas, name, text, position="bottom"):
+    ''' draw a character's dialogue box '''
+    if position == "bottom":
+        topX = 0
+        topY = app.height - 10 # change later
+        botX = app.width
+        botY = app.height
+    else: # position == "top"
+        topX = topY = 0
+        botX = app.width
+        botY = 10 # change later
+    
+    canvas.create_rectangle(topX, topY, botX, botY, outline=app.borderColor,
+        width=5)
+    
+    # draw text
+    canvas.create_text(topX + app.margin, topY + app.margin, anchor="nw",
+        text=name, color=app.textColor, font=app.dialogueFont)
+    
+    space = 10 # change later
+    for line in text.splitlines():
+        drawDialogue(app, canvas, line, topX + app.margin, topY + space)
+        space *= 2
+
+def drawDialogue(app, canvas, line, topX, topY):
+    ''' draw a line of dialogue '''
+    canvas.create_text(topX, topY, text=line, anchor="nw", color=app.textColor,
+                            font=app.dialogueFont)
+
+####
+# Gacha drawing functions
+####
+
+def drawGachaScreen(app, canvas):
+    ''' draw the gacha screen '''
+    # draw Anna dialogue
+    if not app.tutorial:
+        dialogue = '''I wonder who we'll meet today!
+Each pull costs 1 Seashell.'''
+    else:
+        dialogue = "I haven't written this yet." # change later
+    drawDialogueBox(app, canvas, "Anna", dialogue, "top")
+
+    drawSeashells(app, canvas, app.margin, 10) # change later
+
+    # draw back arrow
+    pass
+
+    # draw gacha machine
+    pass
+
+    # draw buttons
+    oneFifthWidth = app.width // 5
+    oneFifthHeight = app.height // 5
+    drawButton(app, canvas, oneFifthWidth, oneFifthHeight * 4,
+                oneFifthWidth * 2, oneFifthHeight * 9 // 2, "1-pull")
+    drawButton(app, canvas, oneFifthWidth * 3, oneFifthHeight * 4,
+                oneFifthWidth * 4, oneFifthHeight * 9 // 2, "3-pull")
+
+####
+# Team drawing functions
+####
+
+def drawTeam(app, canvas):
+    ''' draw the current team in the barracks screen '''
+    drawBackground(app, canvas, "blue")
+
+    # draw back button
+    pass
+
+    oneFifthHeight = app.height // 5
+    slotNum = 1
+    for unit in app.team:
+        drawStatus(app, canvas, unit, oneFifthHeight * slotNum)
+        slotNum += 1
+
+def drawStatus(app, canvas, unit, topY):
+    ''' draw a unit's status bar '''
+    canvas.create_rectangle(0, topY, app.width, topY + (app.height//5),
+                                fill=app.buttonColor)
+
+    # draw unit name and icon
+    canvas.create_text(app.margin, topY + app.margin, anchor="nw",
+        text=unit.name, color=app.textColor, font=app.dialogueFont)
+    # insert icon here
+
+    # draw stats and inventory
+    offset = (2 * app.margin) + app.cellSize
+    drawHPBar(app, canvas, unit, offset, topY)
+    # insert other stats + inventory here (including weapon icon)
+    stats = f'''Attack {unit.attack}
+Def {unit.defense}      Res {unit.res}'''
+
+def drawHPBar(app, canvas, unit, topX, topY):
+    ''' draw a unit's HP bar '''
+    canvas.create_text(topX, topY, text=f"{unit.hp} / {unit.maxHP}",
+                        anchor="nw", color=app.textColor, font=app.dialogueFont)
+
+    # draw bar below text
+    filled = unit.hp // unit.maxHP
+    fillLength = (app.width - topX - app.margin) * filled
+    canvas.create_rectangle(topX, topY + 10, app.width - app.margin, topY + 20,
+                                fill="black") # change Ys later
+    canvas.create_rectangle(topX, topY + 10, topX + fillLength, topY + 20,
+                                fill="green", width=0)
+
+####
+# Battle drawing functions
+####
+
+def drawBattleScreen(app, canvas, mapType):
+    ''' draw the battle screen '''
+    # insert check for menu/status/etc here
+
+    drawMap(app, canvas, mapType)
+    for unit in app.team:
+        pass # draw player team
+    # draw enemies
+
+def drawMap(app, canvas, mapType):
+    ''' draw a battle map '''
+    # terrain colors - change later
+    sand = "yellow"
+    dune = "orange"
+    water = "blue"
+    castle = "brown"
+
+    # draw terrain according to map
+    rows, cols = len(mapType), len(mapType[0])
+    for row in range(rows):
+        for col in range(cols):
+            cell = mapType[row][col]
+            if cell == "O":
+                drawCell(app, canvas, row, col, dune)
+            elif cell == "X":
+                drawCell(app, canvas, row, col, water)
+            elif cell == "*":
+                drawCell(app, canvas, row, col, castle)
+            else:
+                drawCell(app, canvas, row, col, sand)
+
+def drawCell(app, canvas, row, col, color):
+    ''' draw a cell of a battle map '''
+    topX = app.margin + (app.cellSize * col)
+    topY = app.mapOffset + (app.cellSize * row)
+    botX = topX + app.cellSize
+    botY = topY + app.cellSize
+
+    canvas.create_rectangle(topX, topY, botX, botY, color=color)
