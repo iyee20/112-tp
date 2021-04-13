@@ -6,14 +6,16 @@
 import random
 
 ####
-# Classes (characters)
+# Characters
 ####
 
 class Unit(object):
     ''' class for all units '''
-    def __init__(self, name, weapon, maxHP, attack, defense, res, accuracy):
+    def __init__(self, name, weapon, maxHP, attack, defense, res, accuracy,
+                    image):
         self.name = name
         self.weapon = weapon
+        self.image = image
         
         # set weapon characteristics
         if self.weapon == "bubble wand":
@@ -64,8 +66,10 @@ class Unit(object):
 
 class PlayableChar(Unit):
     ''' class for playable characters (inherits from Unit class) '''
-    def __init__(self, name, weapon, maxHP, attack, defense, res, accuracy):
-        Unit.__init__(self, name, weapon, maxHP, attack, defense, res, accuracy)
+    def __init__(self, name, weapon, maxHP, attack, defense, res, accuracy,
+                    image):
+        Unit.__init__(self, name, weapon, maxHP, attack, defense, res, accuracy,
+                        image)
 
         # set stats unique to playable characters
         self.level = 1
@@ -90,8 +94,10 @@ class PlayableChar(Unit):
 
 class Enemy(Unit):
     ''' class for enemies (inherits from Unit class) '''
-    def __init__(self, name, weapon, maxHP, attack, defense, res, accuracy):
-        Unit.__init__(self, name, weapon, maxHP, attack, defense, res, accuracy)
+    def __init__(self, name, weapon, maxHP, attack, defense, res, accuracy,
+                    image):
+        Unit.__init__(self, name, weapon, maxHP, attack, defense, res, accuracy,
+                        image)
 
         # set stats unique to enemies
         self.droplets = random.randint(0, 5) # number of Droplets carried
@@ -107,7 +113,7 @@ class Enemy(Unit):
                 if unit.defense < lowestDefense:
                     target = unit
                     lowestDefense = unit.defense
-        # magicaly units attack the player unit with lowest res
+        # magical units attack the player unit with lowest res
         else:
             lowestRes = 1000
             target = None
@@ -116,6 +122,27 @@ class Enemy(Unit):
                     target = unit
                     lowestRest = unit.res
         return target
+
+def loadPlayableUnits(app):
+    ''' define all playable units '''
+    blankImage = "that's not right"
+    # balance stats, replace images later
+    app.aqua = PlayableChar(app.playerName, "pool noodle", 15, 5, 5, 5, 95,
+                            blankImage)
+    app.giang = PlayableChar("Giang", "water gun", 15, 5, 5, 5, 95,
+                            blankImage)
+    app.iara = PlayableChar("Iara", "pool noodle", 15, 5, 5, 5, 95,
+                            blankImage)
+    app.kai = PlayableChar("Kai", "water gun", 15, 5, 5, 5, 95,
+                            blankImage)
+    app.marina = PlayableChar("Marina", "bubble wand", 15, 5, 5, 5, 95,
+                            blankImage)
+    app.morgan = PlayableChar("Morgan", "bubble wand", 15, 5, 5, 5, 95,
+                            blankImage)
+    app.naia = PlayableChar("Naia", "water gun", 15, 5, 5, 5, 95,
+                            blankImage)
+    app.walter = PlayableChar("Walter", "pool noodle", 15, 5, 5, 5, 95,
+                            blankImage)
 
 ####
 # Maps

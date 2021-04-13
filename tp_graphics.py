@@ -6,19 +6,22 @@
 from cmu_112_graphics import *
 
 ####
-# General drawing functions
+# Import images
 ####
 
-def redrawAll(app, canvas):
-    # replace with modes later!!
-    if app.mainScreen:
-        drawMainScreen(app, canvas)
-    elif app.inGacha:
-        drawGachaScreen(app, canvas)
-    elif app.inBarracks:
-        drawTeam(app, canvas)
-    elif app.inBetween:
-        drawTransitionScreen(app, canvas)
+def loadImages(app):
+    ''' import images from local files '''
+    # backgrounds
+
+    # map-related images
+    
+    # character icons
+
+    # character fullbodies
+
+####
+# General drawing functions
+####
 
 def drawBackground(app, canvas, color):
     ''' set the background to a solid color '''
@@ -33,10 +36,6 @@ def drawSeashells(app, canvas, topX, topY):
     canvas.create_text(topX, topY, text=app.seashells, anchor="nw",
                             font=app.buttonFont)
 
-####
-# Menu drawing functions
-####
-
 def drawButton(app, canvas, topX, topY, botX, botY, text=""):
     ''' draw a rectangle representing a button '''
     canvas.create_rectangle(topX, topY, botX, botY, fill=app.buttonColor)
@@ -46,7 +45,11 @@ def drawButton(app, canvas, topX, topY, botX, botY, text=""):
     canvas.create_text(centerX, centerY, text=text, color=app.textColor,
                         font=app.buttonFont)
 
-def drawMainScreen(app, canvas):
+####
+# Main/transition screen drawing functions
+####
+
+def mainScreenMode_redrawAll(app, canvas):
     ''' draw the main screen '''
     drawBackground(app, canvas, "white") # change later
 
@@ -62,7 +65,7 @@ Special thanks to Casper Wong'''
     canvas.create_text(0, app.height, text=creditText, anchor="sw",
                             color=app.textColor, font=app.buttonFont)
 
-def drawTransitionScreen(app, canvas):
+def transitionMode_redrawAll(app, canvas):
     ''' draw the transition screen '''
     # draw progress bar
     progress = app.droplets // app.moatSize
@@ -77,7 +80,15 @@ def drawTransitionScreen(app, canvas):
     drawSeashells(app, canvas, app.margin, app.margin + 15)
 
     # draw buttons
-    pass
+    oneFifthHeight = app.height // 5
+    drawButton(app, canvas, app.margin, oneFifthHeight, app.width - app.margin,
+                    (oneFifthHeight * 2) - app.margin, "Gacha")
+    drawButton(app, canvas, app.margin, oneFifthHeight * 2,
+                    app.width - app.margin, (oneFifthHeight * 3) - app.margin,
+                    "Battle")
+    drawButton(app, canvas, app.margin, oneFifthHeight * 3,
+                    app.width - app.margin, (oneFifthHeight * 4) - app.margin,
+                    "Team")
 
 ####
 # Dialogue drawing functions
@@ -116,7 +127,7 @@ def drawDialogue(app, canvas, line, topX, topY):
 # Gacha drawing functions
 ####
 
-def drawGachaScreen(app, canvas):
+def gachaMode_redrawAll(app, canvas):
     ''' draw the gacha screen '''
     # draw Anna dialogue
     if not app.tutorial:
@@ -146,7 +157,7 @@ Each pull costs 1 Seashell.'''
 # Team drawing functions
 ####
 
-def drawTeam(app, canvas):
+def barracksMode_redrawAll(app, canvas):
     ''' draw the current team in the barracks screen '''
     drawBackground(app, canvas, "blue")
 
@@ -193,6 +204,7 @@ def drawHPBar(app, canvas, unit, topX, topY):
 # Battle drawing functions
 ####
 
+# use app.map instead of mapType every time
 def drawBattleScreen(app, canvas, mapType):
     ''' draw the battle screen '''
     # insert check for menu/status/etc here
