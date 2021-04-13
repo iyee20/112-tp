@@ -33,6 +33,14 @@ class Unit(object):
         self.defense, self.res = defense, res
         self.accuracy = accuracy
         self.defeated = False
+    
+    def __repr__(self):
+        ''' return a value when self is printed '''
+        return self.name
+
+    def __hash__(self):
+        ''' return a hash value for self '''
+        return hash(self.name)
 
     def attack(self, target):
         ''' attack a target unit '''

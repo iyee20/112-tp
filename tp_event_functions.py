@@ -4,6 +4,7 @@
 ####
 
 from cmu_112_graphics import *
+from tp_graphics import *
 
 ####
 # Main app
@@ -36,19 +37,68 @@ def appStarted(app):
     # define game mode
     app.freeplay = False
     app.mode = "mainScreenMode"
+    app.cheats = False
+
+def menuButtonClicked(app, event):
+    ''' return the number (1, 2, or 3 top-down) of a menu button clicked '''
+    event.x, event.y = xClick, yClick
+    oneFifthHeight = app.height // 5
+
+    # all 3-button menus are formatted the same
+    if app.margin <= xClick <= app.width - app.margin:
+        if oneFifthHeight <= yClick <= (oneFifthHeight*2) - app.margin:
+            return 1
+        elif oneFifthHeight * 2 <= yClick <= (oneFifthHeight*3) - app.margin:
+            return 2
+        elif oneFifthHeight * 3 <= yClick <= (oneFifthHeight*4) - app.margin:
+            return 3
+    return None
+
+def backButtonClicked(app, event, topX, topY):
+    ''' return True if a back arrow button is clicked '''
+    if topX <= event.x <= topX + 10: # change later
+        if topY <= event.y <= topY + 10:
+            return True
+    return False
 
 ####
 # Main screen
 ####
 
 def mainScreenMode_mousePressed(app, event):
-    pass
+    ''' handle mouse presses in main screen mode '''
+    # only one game mode (story or freeplay) is available at a time 
+    if not app.freeplay: # story button
+        if menuButtonClicked(app, event) == 1:
+            app.mode = "tutorialMode"
+    else: # freeplay button
+        if menuButtonClicked(app, event) == 2:
+            app.mode = "battleMode"
+    # settings button
+    if menuButtonClicked(app, event) == 3:
+        app.mode = "settingsMode"
+
+####
+# Settings
+####
+
+def settingsMode_mousePressed(app, event):
+    ''' handle mouse presses in settings mode '''
+    if menuButtonClicked(app, event) == 1: # change moat size
+        pass # fix later
+    elif menuButtonClicked(app, event) == 2: # toggle extras/cheats
+        app.cheats = not app.cheats
+    elif menuButtonClicked(app, event) == 3: # nothing...
+        print("Why did you click this button?")
+    elif backButtonClicked(app, event, app.margin, app.margin): # back to main
+        app.mode = "mainScreenMode"
 
 ####
 # Tutorial
 ####
 
 def tutorialMode_mousePressed(app, event):
+    ''' handle mouse presses in tutorial mode '''
     name = app.getUserInput("name??") # change later - limit characters
     if name.isspace():
         app.playerName = "Aqua"
@@ -59,9 +109,23 @@ def tutorialMode_mousePressed(app, event):
 # Transition screen
 ####
 
+def transitionMode_mousePressed(app, event):
+    ''' handle mouse presses in transition mode '''
+    if menuButtonClicked(app, event) == 1: # gacha button
+        app.mode = "gachaMode"
+    elif menuButtonClicked(app, event) == 2: # battle button
+        app.mode = "battleMode"
+    elif menuButtonClicked(app, event) == 3: # team button
+        app.mode = "barracksMode"
+
 ####
 # Barracks screen
 ####
+
+def barracksMode_mousePressed(app, event):
+    ''' handle mouse presses in barracks mode '''
+    if backButtonClicked(app, event, app.margin, app.margin):
+        app.mode = "transitionMode"
 
 ####
 # Battle screen
@@ -138,3 +202,8 @@ def moveIsLegal(unit, drow, dcol):
 ####
 # Gacha screen
 ####
+
+def gachaMode_mousePressed(app, event):
+    ''' handle mouse presses in gacha mode '''
+    if backButtonClicked(app, event, app.margin, 10): # change later
+        app.mode = "transitionMode"

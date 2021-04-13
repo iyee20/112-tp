@@ -4,6 +4,7 @@
 ####
 
 from cmu_112_graphics import *
+from tp_event_functions import *
 
 ####
 # Import images
@@ -36,18 +37,38 @@ def drawSeashells(app, canvas, topX, topY):
     canvas.create_text(topX, topY, text=app.seashells, anchor="nw",
                             font=app.buttonFont)
 
-def drawButton(app, canvas, topX, topY, botX, botY, text=""):
+def drawButton(app, canvas, topX, topY, botX, botY, color=app.buttonColor,
+                text=""):
     ''' draw a rectangle representing a button '''
-    canvas.create_rectangle(topX, topY, botX, botY, fill=app.buttonColor)
+    canvas.create_rectangle(topX, topY, botX, botY, fill=color)
 
     centerX = botX - topX
     centerY = botY - topY
     canvas.create_text(centerX, centerY, text=text, color=app.textColor,
                         font=app.buttonFont)
 
+def drawBackButton(app, canvas, topX, topY):
+    ''' draw a back arrow button '''
+    botX = topX + 10 # change later if needed
+    botY = topY + 10
+    drawButton(app, canvas, topX, topY, botX, botY, text="<--")
+
 ####
-# Main/transition screen drawing functions
+# Menu screen drawing functions
 ####
+
+def drawThreeButtonMenu(app, canvas, text1, text2, text3,
+        color1=app.buttonColor, color2=app.buttonColor, color3=app.buttonColor):
+    ''' draw a menu with three buttons '''
+    oneFifthHeight = app.height // 5
+    drawButton(app, canvas, app.margin, oneFifthHeight, app.width - app.margin,
+            (oneFifthHeight*2) - app.margin, color=color1, text=text1)
+    drawButton(app, canvas, app.margin, oneFifthHeight * 2,
+                    app.width - app.margin, (oneFifthHeight*3) - app.margin,
+                    color=color2, text=text2)
+    drawButton(app, canvas, app.margin, oneFifthHeight * 3,
+                    app.width - app.margin, (oneFifthHeight*4) - app.margin,
+                    color=color3, text=text3)
 
 def mainScreenMode_redrawAll(app, canvas):
     ''' draw the main screen '''
@@ -57,7 +78,15 @@ def mainScreenMode_redrawAll(app, canvas):
     pass
 
     # draw buttons
-    pass
+    if app.freeplay:
+        storyColor = "gray"
+        freeplayColor = app.buttonColor
+    else:
+        storyColor = app.buttonColor
+        freeplayColor = "gray"
+    oneFifthHeight = app.height // 5
+    drawThreeButtonMenu(app, canvas, "Story", "Freeplay", "Settings",
+                            color1=storyColor, color2=freeplayColor)
 
     # draw credits
     creditText = '''(C) Isabella Yee 2021 | made with Python | 15-112
@@ -79,16 +108,14 @@ def transitionMode_redrawAll(app, canvas):
 
     drawSeashells(app, canvas, app.margin, app.margin + 15)
 
-    # draw buttons
-    oneFifthHeight = app.height // 5
-    drawButton(app, canvas, app.margin, oneFifthHeight, app.width - app.margin,
-                    (oneFifthHeight * 2) - app.margin, "Gacha")
-    drawButton(app, canvas, app.margin, oneFifthHeight * 2,
-                    app.width - app.margin, (oneFifthHeight * 3) - app.margin,
-                    "Battle")
-    drawButton(app, canvas, app.margin, oneFifthHeight * 3,
-                    app.width - app.margin, (oneFifthHeight * 4) - app.margin,
-                    "Team")
+    drawThreeButtonMenu(app, canvas, "Gacha", "Battle", "Team")
+
+def settingsMode_redrawAll(app, canvas):
+    ''' draw the settings screen '''
+    drawBackButton(app, canvas, app.margin, app.margin)
+
+    drawThreeButtonMenu(app, canvas, "Change Moat Size", "Toggle Extras",
+                            "Do Nothing")
 
 ####
 # Dialogue drawing functions
@@ -139,8 +166,7 @@ Each pull costs 1 Seashell.'''
 
     drawSeashells(app, canvas, app.margin, 10) # change later
 
-    # draw back arrow
-    pass
+    drawBackButton(app, canvas, app.margin, 10) # change later
 
     # draw gacha machine
     pass
@@ -149,9 +175,9 @@ Each pull costs 1 Seashell.'''
     oneFifthWidth = app.width // 5
     oneFifthHeight = app.height // 5
     drawButton(app, canvas, oneFifthWidth, oneFifthHeight * 4,
-                oneFifthWidth * 2, oneFifthHeight * 9 // 2, "1-pull")
+                oneFifthWidth * 2, oneFifthHeight * 9 // 2, text="1-pull")
     drawButton(app, canvas, oneFifthWidth * 3, oneFifthHeight * 4,
-                oneFifthWidth * 4, oneFifthHeight * 9 // 2, "3-pull")
+                oneFifthWidth * 4, oneFifthHeight * 9 // 2, text="3-pull")
 
 ####
 # Team drawing functions
@@ -161,8 +187,7 @@ def barracksMode_redrawAll(app, canvas):
     ''' draw the current team in the barracks screen '''
     drawBackground(app, canvas, "blue")
 
-    # draw back button
-    pass
+    drawBackButton(app, canvas, app.margin, app.margin)
 
     oneFifthHeight = app.height // 5
     slotNum = 1
