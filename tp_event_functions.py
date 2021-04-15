@@ -86,13 +86,25 @@ def mainScreenMode_mousePressed(app, event):
 def settingsMode_mousePressed(app, event):
     ''' handle mouse presses in settings mode '''
     if menuButtonClicked(app, event) == 1: # change moat size
-        pass # fix later
+        changeMoatSize(app)
+        app.showMessage(f"Moat size is now {app.moatSize} Droplets.")
     elif menuButtonClicked(app, event) == 2: # toggle extras/cheats
         app.cheats = not app.cheats
     elif menuButtonClicked(app, event) == 3: # nothing...
         print("Why did you click this button?")
     elif backButtonClicked(app, event, app.margin, app.margin): # back to main
         app.mode = "mainScreenMode"
+
+def changeMoatSize(app):
+    ''' change the moat size to change story mode length '''
+    sizes = [25, 50]
+    for size in sizes:
+        # increase moat size by 1 step if moat size is not max
+        if app.moatSize < size:
+            app.moatSize = size
+            return
+    # decrease moat size to minimum if moat size is max
+    app.moatSize = 10
 
 ####
 # Tutorial

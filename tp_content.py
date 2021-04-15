@@ -162,13 +162,30 @@ Pseudocode
 destination = nearest cell such that target is in range
 store nodes n: node n-1 in dictionary --> reconstruct path later in helper
 
-heuristic h = (estimate) Manhattan/row,col distance to destination from node
+heuristic h(n) = (estimate) Manhattan/row,col distance to destination from node
 // this doesn't account for terrain in the way
-// use as a function param, so calculate beforehand
+// function used as a function param
 
 Need:
-- list of visited nodes (represents a stack, so only pop off the end)
-// = [startNode] at first
+- set (?) of visited nodes (more efficient is a priority queue, but...)
+// == {startNode} at first
 - empty dict() for path storage
+- dict() for g(n) = cost to get to node n (== 0 for start)
+- dict() for f(n) = g(n) + h(n) (== h(start) for start)
 
+While loop (while node storage isn't empty):
+    current node = the one with the lowest f(n)
+    if current node is the destination: return the reconstructed path
+    remove the current node from the node storage (represents traveling past it)
+    for each (legal) neighbor of the current node:
+        calculated g (from start to neighbor via current) = g(current) +
+                distance from neighbor to current
+        if calculated g < g(neighbor): path is the best so far
+            store path to neighbor as current
+            g[neighbor] = calculated g
+            f[neighbor] = g[neighbor] + h(neighbor)
+            if neighbor not in visited nodes: add neighbor to visited nodes
+
+failure condition = node storage is empty without reaching destination
+// this shouldn't happen...
 """

@@ -17,8 +17,31 @@ def loadImages(app):
     # map-related images
     
     # character icons
+    loadIcons(app)
 
     # character fullbodies
+
+    # misc
+
+def loadIcons(app):
+    ''' load character icon images '''
+    # NPCs
+    app.annaImg = app.loadImage("images/anna.png")
+
+    # playable characters
+    app.aquaImg = app.loadImage("images/aqua.png")
+    app.giangImg = app.loadImage("images/giang.png")
+    app.iaraImg = app.loadImage("images/iara.png")
+    app.kaiImg = app.loadImage("images/kai.png")
+    app.marinaImg = app.loadImage("images/marina.png")
+    app.morganImg = app.loadImage("images/morgan.png")
+    app.naiaImg = app.loadImage("images/naia.png")
+    app.walterImg = app.loadImage("images/walter.png")
+
+    # enemies
+    app.dehydrationImg = app.loadImage("images/dehydration.png")
+    app.heatstrokeImg = app.loadImage("images/heatstroke.png")
+    app.saltImg = app.loadImage("images/salt.png")
 
 ####
 # General drawing functions
