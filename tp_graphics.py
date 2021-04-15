@@ -229,17 +229,16 @@ def drawHPBar(app, canvas, unit, topX, topY):
 # Battle drawing functions
 ####
 
-# use app.map instead of mapType every time
-def drawBattleScreen(app, canvas, mapType):
+def drawBattleScreen(app, canvas):
     ''' draw the battle screen '''
     # insert check for menu/status/etc here
 
-    drawMap(app, canvas, mapType)
+    drawMap(app, canvas, app.map)
     for unit in app.team:
         pass # draw player team
     # draw enemies
 
-def drawMap(app, canvas, mapType):
+def drawMap(app, canvas):
     ''' draw a battle map '''
     # terrain colors - change later
     sand = "yellow"
@@ -248,10 +247,10 @@ def drawMap(app, canvas, mapType):
     castle = "brown"
 
     # draw terrain according to map
-    rows, cols = len(mapType), len(mapType[0])
+    rows, cols = len(app.map), len(app.map[0])
     for row in range(rows):
         for col in range(cols):
-            cell = mapType[row][col]
+            cell = app.map[row][col]
             if cell == "O":
                 drawCell(app, canvas, row, col, dune)
             elif cell == "X":

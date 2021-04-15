@@ -3,6 +3,7 @@
 # andrewID: iby
 ####
 
+import random
 from cmu_112_graphics import *
 from tp_graphics import *
 
@@ -131,21 +132,80 @@ def barracksMode_mousePressed(app, event):
 # Battle screen
 ####
 
-def spawnTeam(team, mapType, unitType="playable"):
+def chooseMap(app):
+    ''' set the current map for one battle '''
+    # _ = sand, O = dune, X = water, * = sand castle
+    # A = player unit spawn point, E = enemy unit spawn point
+
+    sandCastleMap = [
+        ["_", "_", "_", "_", "_", "O", "O"],
+        ["_", "_", "_", "_", "_", "E", "O"],
+        ["_", "A", "_", "_", "_", "_", "E"],
+        ["_", "_", "A", "_", "_", "E", "_"],
+        ["_", "A", "_", "_", "_", "_", "E"],
+        ["_", "_", "X", "X", "X", "E", "_"],
+        ["_", "_", "X", "*", "X", "_", "_"],
+    ]
+
+    dunesMap = [
+        ["O", "_", "_", "_", "_", "E", "_"],
+        ["_", "A", "_", "_", "_", "_", "O"],
+        ["_", "A", "O", "O", "_", "E", "O"],
+        ["_", "A", "_", "O", "_", "_", "E"],
+        ["_", "_", "_", "_", "_", "_", "_"],
+        ["O", "_", "_", "O", "_", "E", "_"],
+        ["O", "O", "_", "O", "E", "_", "_"],
+    ]
+
+    beachMap = [
+        ["X", "X", "X", "X", "X", "X", "X"],
+        ["_", "_", "_", "_", "_", "_", "E"],
+        ["A", "_", "_", "_", "O", "_", "E"],
+        ["_", "A", "_", "_", "_", "E", "_"],
+        ["A", "_", "O", "_", "_", "_", "E"],
+        ["_", "_", "O", "_", "_", "_", "E"],
+        ["_", "_", "_", "_", "_", "O", "O"],
+    ]
+
+    tidalMap = [
+        ["X", "_", "E", "E", "_", "X", "X"],
+        ["_", "_", "_", "_", "E", "_", "O"],
+        ["_", "O", "O", "_", "_", "_", "_"],
+        ["_", "_", "X", "X", "_", "E", "_"],
+        ["_", "_", "X", "O", "E", "_", "_"],
+        ["_", "A", "_", "O", "_", "_", "X"],
+        ["_", "A", "A", "_", "_", "O", "X"],
+    ]
+
+    islandMap = [
+        ["X", "X", "X", "X", "X", "X", "X"],
+        ["X", "_", "_", "_", "E", "_", "X"],
+        ["X", "A", "_", "_", "_", "E", "X"],
+        ["X", "A", "_", "O", "E", "_", "X"],
+        ["X", "A", "_", "_", "_", "E", "X"],
+        ["X", "_", "_", "_", "E", "_", "X"],
+        ["X", "X", "X", "X", "X", "X", "X"],
+    ]
+
+    maps = [sandCastleMap, dunesMap, beachMap, tidalMap, islandMap]
+    app.map = random.choice(maps)
+
+def spawnTeam(app, team, unitType="playable"):
     ''' set positions for a team of units based on available spawn points '''
     # create a set of possible spawn points
     spawnPoints = set()
-    rows, cols = len(mapType), len(mapType[0])
+    rows, cols = len(app.map), len(app.map[0])
+    # spawn units on corresponding spawn points
     if unitType == "playable":
         spawnSymbol = "A"
     else: # unitType == "enemy"
         spawnSymbol = "E"
     for row in range(rows):
         for col in range(cols):
-            if mapType[row][col] == spawnSymbol:
+            if app.map[row][col] == spawnSymbol:
                 spawnPoints.add((row, col))
     
-    # place each unit at a row,col position
+    # place each unit at a randomly chosen row,col position from those available
     for unit in team:
         unit.row, unit.col = spawnPoints.pop()
 
@@ -186,15 +246,16 @@ def inRange(unit, target):
     dcol = abs(unit.col - target.col)
     return drow + dcol == unit.range
 
-def moveIsLegal(unit, drow, dcol):
+def moveIsLegal(app, unit, drow, dcol):
     ''' check if a unit can legally move in direction drow,dcol '''
     newRow = unit.row + drow
     newCol = unit.col + dcol
     
-    if newRow < 0 or newRow > 6: # fix magic numbers later
+    if newRow < 0 or newRow >= len(app.map):
         return False
-    elif newCol < 0 or newCol > 6:
+    elif newCol < 0 or newCol >= len(app.map):
         return False
+    # insert check for occupied cell here
     # insert check for terrain here
     else:
         return True

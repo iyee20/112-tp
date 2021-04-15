@@ -153,64 +153,22 @@ def loadPlayableUnits(app):
                             blankImage)
 
 ####
-# Maps
-####
-
-# _ = sand, O = dune, X = water, * = sand castle
-# A = player unit spawn point, E = enemy unit spawn point
-
-sandCastleMap = [
-    ["_", "_", "_", "_", "_", "O", "O"],
-    ["_", "_", "_", "_", "_", "E", "O"],
-    ["_", "A", "_", "_", "_", "_", "E"],
-    ["_", "_", "A", "_", "_", "E", "_"],
-    ["_", "A", "_", "_", "_", "_", "E"],
-    ["_", "_", "X", "X", "X", "E", "_"],
-    ["_", "_", "X", "*", "X", "_", "_"],
-]
-
-dunesMap = [
-    ["O", "_", "_", "_", "_", "E", "_"],
-    ["_", "A", "_", "_", "_", "_", "O"],
-    ["_", "A", "O", "O", "_", "E", "O"],
-    ["_", "A", "_", "O", "_", "_", "E"],
-    ["_", "_", "_", "_", "_", "_", "_"],
-    ["O", "_", "_", "O", "_", "E", "_"],
-    ["O", "O", "_", "O", "E", "_", "_"],
-]
-
-beachMap = [
-    ["X", "X", "X", "X", "X", "X", "X"],
-    ["_", "_", "_", "_", "_", "_", "E"],
-    ["A", "_", "_", "_", "O", "_", "E"],
-    ["_", "A", "_", "_", "_", "E", "_"],
-    ["A", "_", "O", "_", "_", "_", "E"],
-    ["_", "_", "O", "_", "_", "_", "E"],
-    ["_", "_", "_", "_", "_", "O", "O"],
-]
-
-tidalMap = [
-    ["X", "_", "E", "E", "_", "X", "X"],
-    ["_", "_", "_", "_", "E", "_", "O"],
-    ["_", "O", "O", "_", "_", "_", "_"],
-    ["_", "_", "X", "X", "_", "E", "_"],
-    ["_", "_", "X", "O", "E", "_", "_"],
-    ["_", "A", "_", "O", "_", "_", "X"],
-    ["_", "A", "A", "_", "_", "O", "X"],
-]
-
-islandMap = [
-    ["X", "X", "X", "X", "X", "X", "X"],
-    ["X", "_", "_", "_", "E", "_", "X"],
-    ["X", "A", "_", "_", "_", "E", "X"],
-    ["X", "A", "_", "O", "E", "_", "X"],
-    ["X", "A", "_", "_", "_", "E", "X"],
-    ["X", "_", "_", "_", "E", "_", "X"],
-    ["X", "X", "X", "X", "X", "X", "X"],
-]
-
-maps = [sandCastleMap, dunesMap, beachMap, tidalMap, islandMap]
-
-####
 # Searching algorithm for enemies
 ####
+
+"""
+Pseudocode
+
+destination = nearest cell such that target is in range
+store nodes n: node n-1 in dictionary --> reconstruct path later in helper
+
+heuristic h = (estimate) Manhattan/row,col distance to destination from node
+// this doesn't account for terrain in the way
+// use as a function param, so calculate beforehand
+
+Need:
+- list of visited nodes (represents a stack, so only pop off the end)
+// = [startNode] at first
+- empty dict() for path storage
+
+"""
