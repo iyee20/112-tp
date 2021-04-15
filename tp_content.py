@@ -135,22 +135,24 @@ def loadPlayableUnits(app):
     ''' define all playable units '''
     blankImage = "that's not right"
     # balance stats, replace images later
-    app.aqua = PlayableChar(app.playerName, "pool noodle", 15, 5, 5, 5, 95,
+    app.aqua = PlayableChar("Aqua", "pool noodle", 15, 5, 5, 5, 95,
                             blankImage)
-    app.giang = PlayableChar("Giang", "water gun", 15, 5, 5, 5, 95,
+    giang = PlayableChar("Giang", "water gun", 15, 5, 5, 5, 95,
                             blankImage)
-    app.iara = PlayableChar("Iara", "pool noodle", 15, 5, 5, 5, 95,
+    iara = PlayableChar("Iara", "pool noodle", 15, 5, 5, 5, 95,
                             blankImage)
-    app.kai = PlayableChar("Kai", "water gun", 15, 5, 5, 5, 95,
+    kai = PlayableChar("Kai", "water gun", 15, 5, 5, 5, 95,
                             blankImage)
-    app.marina = PlayableChar("Marina", "bubble wand", 15, 5, 5, 5, 95,
+    marina = PlayableChar("Marina", "bubble wand", 15, 5, 5, 5, 95,
                             blankImage)
-    app.morgan = PlayableChar("Morgan", "bubble wand", 15, 5, 5, 5, 95,
+    morgan = PlayableChar("Morgan", "bubble wand", 15, 5, 5, 5, 95,
                             blankImage)
-    app.naia = PlayableChar("Naia", "water gun", 15, 5, 5, 5, 95,
+    naia = PlayableChar("Naia", "water gun", 15, 5, 5, 5, 95,
                             blankImage)
-    app.walter = PlayableChar("Walter", "pool noodle", 15, 5, 5, 5, 95,
+    walter = PlayableChar("Walter", "pool noodle", 15, 5, 5, 5, 95,
                             blankImage)
+    
+    app.toPull = {giang, iara, kai, marina, morgan, naia, walter}
 
 ####
 # Searching algorithm for enemies

@@ -12,7 +12,7 @@ from tp_graphics import *
 ####
 
 def appStarted(app):
-    # import images and create characters
+    # import images and create playable characters
     loadImages(app)
     loadPlayableUnits(app)
 
@@ -22,8 +22,8 @@ def appStarted(app):
     app.mapOffset = 0 # change later
 
     # set up collections
-    app.barracks = set()
-    app.team = []
+    app.barracks = [app.aqua]
+    app.team = [app.aqua]
     app.items = set() # may remove
     app.droplets = app.seashells = 0
     app.moatSize = 25
@@ -45,7 +45,7 @@ def menuButtonClicked(app, event):
     event.x, event.y = xClick, yClick
     oneFifthHeight = app.height // 5
 
-    # all 3-button menus are formatted the same
+    # all 3-button menus are formatted the same, so compare y values
     if app.margin <= xClick <= app.width - app.margin:
         if oneFifthHeight <= yClick <= (oneFifthHeight*2) - app.margin:
             return 1
@@ -90,7 +90,11 @@ def settingsMode_mousePressed(app, event):
         app.showMessage(f"Moat size is now {app.moatSize} Droplets.")
     elif menuButtonClicked(app, event) == 2: # toggle extras/cheats
         app.cheats = not app.cheats
-    elif menuButtonClicked(app, event) == 3: # nothing...
+        if app.cheats:
+            app.showMessage("Developer extras ON.")
+        else:
+            app.showMessage("Developer extras OFF.")
+    elif menuButtonClicked(app, event) == 3: # nothing... (for now)
         print("Why did you click this button?")
     elif backButtonClicked(app, event, app.margin, app.margin): # back to main
         app.mode = "mainScreenMode"
@@ -113,10 +117,8 @@ def changeMoatSize(app):
 def tutorialMode_mousePressed(app, event):
     ''' handle mouse presses in tutorial mode '''
     name = app.getUserInput("name??") # change later - limit characters
-    if name.isspace():
-        app.playerName = "Aqua"
-    else:
-        app.playerName = name
+    if not name.isspace():
+        app.aqua.name = name
 
 ####
 # Transition screen
@@ -280,3 +282,34 @@ def gachaMode_mousePressed(app, event):
     ''' handle mouse presses in gacha mode '''
     if backButtonClicked(app, event, app.margin, 10): # change later
         app.mode = "transitionMode"
+    elif gachaButtonClicked(app, event) == 1:
+        if app.seashells >= 1:
+            gachaPull(app, 1)
+        else:
+            app.showMessage("Not enough Seashells!") # may replace later
+    elif gachaButtonClicked(app, event) == 3:
+        if app.seashells >= 3:
+            gachaPull(app, 3)
+        else:
+            app.showMessage("Not enough Seashells!")
+
+def gachaButtonClicked(app, event):
+    ''' return the pull number (1 or 3) of a gacha button clicked '''
+    event.x, event.y = xClick, yClick
+    oneFifthWidth = app.width // 5
+    oneFifthHeight = app.height // 5
+
+    # pull buttons are at the same y, so compare x values
+    if oneFifthHeight * 4 <= yClick <= oneFifthHeight * 9 // 2:
+        if oneFifthWidth <= xClick <= oneFifthWidth * 2:
+            return 1
+        elif oneFifthWidth * 3 <= xClick <= oneFifthWidth * 4:
+            return 3
+    return None
+
+def gachaPull(app, pullNum):
+    ''' add pullNum characters to the barracks '''
+    if pullNum == 1:
+        pass # change later - pop out of app.toPull, add to team/barracks
+    else: # pullNum == 3
+        pass
