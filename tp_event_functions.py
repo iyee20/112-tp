@@ -24,6 +24,7 @@ def appStarted(app):
     # set up collections
     app.barracks = [app.aqua]
     app.team = [app.aqua]
+    app.selected = None
     app.items = set() # may remove
     app.droplets = app.seashells = 0
     app.moatSize = 25
@@ -139,8 +140,48 @@ def transitionMode_mousePressed(app, event):
 
 def barracksMode_mousePressed(app, event):
     ''' handle mouse presses in barracks mode '''
+    clicked = unitStatusClicked(app, event)
+
     if backButtonClicked(app, event, app.margin, app.margin):
         app.mode = "transitionMode"
+    elif clicked != None:
+        app.selected = clicked
+
+def unitStatusClicked(app, event):
+    ''' return the slot number (1, 2, or 3) of a unit status clicked '''
+    event.y = yClick
+    oneFifthHeight = app.height // 5
+
+    if oneFifthHeight <= yClick <= oneFifthHeight * 2:
+        return 1
+    elif oneFifthHeight * 2 <= yClick <= oneFifthHeight * 3:
+        return 2
+    elif oneFifthHeight * 3 <= yClick <= oneFifthHeight * 4:
+        return 3
+    return None
+
+def barracksMode_keyPressed(app, event):
+    ''' handle key presses in barracks mode '''
+    if app.selected != None:
+        if event.key in ["Up", "Right"]:
+            reorderTeam(app, True)
+        elif event.key in ["Down", "Left"]:
+            reorderTeam(app, False)
+        # insert more options later
+
+def reorderTeam(app, moveUp):
+    ''' change the order of the current team '''
+    # index of currently selected unit
+    curr = app.selected - 1
+
+    if moveUp:
+        toSwap = curr - 1
+    else: # move down
+        toSwap = curr + 1
+    
+    # toSwap must be a valid index
+    if 0 <= toSwap < len(app.team):
+        app.team[curr], app.team[toSwap] = app.team[toSwap], app.team[curr]
 
 ####
 # Battle screen

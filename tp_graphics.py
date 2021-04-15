@@ -215,23 +215,29 @@ def barracksMode_redrawAll(app, canvas):
     oneFifthHeight = app.height // 5
     slotNum = 1
     for unit in app.team:
-        drawStatus(app, canvas, unit, oneFifthHeight * slotNum)
+        drawStatus(app, canvas, unit, oneFifthHeight * slotNum, slotNum)
         slotNum += 1
 
-def drawStatus(app, canvas, unit, topY):
+def drawStatus(app, canvas, unit, topY, slotNum):
     ''' draw a unit's status bar '''
+    # outline selected units in red
+    if app.selected == slotNum:
+        outlineColor = "red"
+    else:
+        outlineColor = "black"
     canvas.create_rectangle(0, topY, app.width, topY + (app.height//5),
-                                fill=app.buttonColor)
+                                fill=app.buttonColor, outline=outlineColor)
 
     # draw unit name and icon
     canvas.create_text(app.margin, topY + app.margin, anchor="nw",
         text=unit.name, color=app.textColor, font=app.dialogueFont)
-    # insert icon here
+    cx = cy = app.margin + (app.cellSize // 2)
+    canvas.create_image(cx, cy, image=ImageTk.PhotoImage(unit.image))
 
     # draw stats and inventory
     offset = (2 * app.margin) + app.cellSize
     drawHPBar(app, canvas, unit, offset, topY)
-    # insert other stats + inventory here (including weapon icon)
+    # insert weapon icon later
     stats = f'''Attack {unit.attack}
 Def {unit.defense}      Res {unit.res}'''
 

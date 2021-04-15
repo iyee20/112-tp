@@ -133,24 +133,18 @@ class Enemy(Unit):
 
 def loadPlayableUnits(app):
     ''' define all playable units '''
-    blankImage = "that's not right"
-    # balance stats, replace images later
-    app.aqua = PlayableChar("Aqua", "pool noodle", 15, 5, 5, 5, 95,
-                            blankImage)
-    giang = PlayableChar("Giang", "water gun", 15, 5, 5, 5, 95,
-                            blankImage)
-    iara = PlayableChar("Iara", "pool noodle", 15, 5, 5, 5, 95,
-                            blankImage)
-    kai = PlayableChar("Kai", "water gun", 15, 5, 5, 5, 95,
-                            blankImage)
+    # balance stats later
+    app.aqua = PlayableChar("Aqua", "pool noodle", 15, 5, 5, 5, 95, app.aquaImg)
+    giang = PlayableChar("Giang", "water gun", 15, 5, 5, 5, 95, app.giangImg)
+    iara = PlayableChar("Iara", "pool noodle", 15, 5, 5, 5, 95, app.iaraImg)
+    kai = PlayableChar("Kai", "water gun", 15, 5, 5, 5, 95, app.kaiImg)
     marina = PlayableChar("Marina", "bubble wand", 15, 5, 5, 5, 95,
-                            blankImage)
+                            app.marinaImg)
     morgan = PlayableChar("Morgan", "bubble wand", 15, 5, 5, 5, 95,
-                            blankImage)
-    naia = PlayableChar("Naia", "water gun", 15, 5, 5, 5, 95,
-                            blankImage)
+                            app.morganImg)
+    naia = PlayableChar("Naia", "water gun", 15, 5, 5, 5, 95, app.naiaImg)
     walter = PlayableChar("Walter", "pool noodle", 15, 5, 5, 5, 95,
-                            blankImage)
+                            app.walterImg)
     
     app.toPull = {giang, iara, kai, marina, morgan, naia, walter}
 
