@@ -21,6 +21,11 @@ def loadImages(app):
     # character fullbodies
 
     # misc
+    app.seashellImg = app.loadImage("images/seashell.png")
+    app.castleCellImg = app.loadImage("images/castle.png")
+    app.duneCellImg = app.loadImage("images/dune.png")
+    app.moatCellImg = app.loadImage("images/moat.png")
+    app.sandCellImg = app.loadImage("images/sand.png")
 
 def loadIcons(app):
     ''' load character icon images '''
@@ -259,40 +264,33 @@ def drawHPBar(app, canvas, unit, topX, topY):
 
 def drawBattleScreen(app, canvas):
     ''' draw the battle screen '''
-    # insert check for menu/status/etc here
+    # insert check for menu/status/etc here later
 
     drawMap(app, canvas, app.map)
     for unit in app.team:
-        pass # draw player team
-    # draw enemies
+        if unit.hp != 0:
+            drawCell(app, canvas, unit.row, unit.col, unit.image)
+    # draw enemies later
 
 def drawMap(app, canvas):
     ''' draw a battle map '''
-    # terrain colors - change later
-    sand = "yellow"
-    dune = "orange"
-    water = "blue"
-    castle = "brown"
-
-    # draw terrain according to map
+    # draw terrain according to 2D list
     rows, cols = len(app.map), len(app.map[0])
     for row in range(rows):
         for col in range(cols):
             cell = app.map[row][col]
             if cell == "O":
-                drawCell(app, canvas, row, col, dune)
+                drawCell(app, canvas, row, col, app.duneCellImg)
             elif cell == "X":
-                drawCell(app, canvas, row, col, water)
+                drawCell(app, canvas, row, col, app.moatCellImg)
             elif cell == "*":
-                drawCell(app, canvas, row, col, castle)
+                drawCell(app, canvas, row, col, app.castleCellImg)
             else:
-                drawCell(app, canvas, row, col, sand)
+                drawCell(app, canvas, row, col, app.sandCellImg)
 
-def drawCell(app, canvas, row, col, color):
+def drawCell(app, canvas, row, col, image):
     ''' draw a cell of a battle map '''
     topX = app.margin + (app.cellSize * col)
     topY = app.mapOffset + (app.cellSize * row)
-    botX = topX + app.cellSize
-    botY = topY + app.cellSize
 
-    canvas.create_rectangle(topX, topY, botX, botY, color=color)
+    canvas.create_image(topX, topY, anchor="nw" image=ImageTk.PhotoImage(image))
