@@ -4,7 +4,6 @@
 ####
 
 from cmu_112_graphics import *
-from tp_event_functions import *
 
 ####
 # Import images

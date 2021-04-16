@@ -96,7 +96,7 @@ def settingsMode_mousePressed(app, event):
         else:
             app.showMessage("Developer extras OFF.")
     elif menuButtonClicked(app, event) == 3: # nothing... (for now)
-        print("Why did you click this button?")
+        app.showMessage("Why did you click this button?")
     elif backButtonClicked(app, event, app.margin, app.margin): # back to main
         app.mode = "mainScreenMode"
 
@@ -354,3 +354,13 @@ def gachaPull(app, pullNum):
         pass # change later - pop out of app.toPull, add to team/barracks
     else: # pullNum == 3
         pass
+
+####
+# Main
+####
+
+def main():
+    runApp(width=500, height=500) # change later
+
+if (__name__ == '__main__'):
+    main()
