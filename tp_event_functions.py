@@ -24,6 +24,7 @@ def appStarted(app):
     # set up collections
     app.barracks = [app.aqua]
     app.team = [app.aqua]
+    app.foundAllUnits = False
     app.selected = None
     app.items = set() # may remove
     app.droplets = app.seashells = 0
@@ -182,6 +183,8 @@ def reorderTeam(app, moveUp):
     # toSwap must be a valid index
     if 0 <= toSwap < len(app.team):
         app.team[curr], app.team[toSwap] = app.team[toSwap], app.team[curr]
+    
+    app.selected = None
 
 ####
 # Battle screen
@@ -189,7 +192,7 @@ def reorderTeam(app, moveUp):
 
 def chooseMap(app):
     ''' set the current map for one battle '''
-    # _ = sand, O = dune, X = water, * = sand castle
+    # _ = sand, O = dune, X = water/moat, * = sand castle
     # A = player unit spawn point, E = enemy unit spawn point
 
     sandCastleMap = [
@@ -306,12 +309,18 @@ def moveIsLegal(app, unit, drow, dcol):
     newRow = unit.row + drow
     newCol = unit.col + dcol
     
+    # check that newRow,newCol is on map
     if newRow < 0 or newRow >= len(app.map):
         return False
     elif newCol < 0 or newCol >= len(app.map):
         return False
-    # insert check for occupied cell here
-    # insert check for terrain here
+
+    # check if cell is occupied later
+
+    # water and moats cannot be walked onto
+    elif app.map[newRow][newCol] == "X":
+        return False
+
     else:
         return True
 
@@ -323,6 +332,9 @@ def gachaMode_mousePressed(app, event):
     ''' handle mouse presses in gacha mode '''
     if backButtonClicked(app, event, app.margin, 10): # change later
         app.mode = "transitionMode"
+    elif app.foundAllUnits:
+        # no more characters can be found if the collection is complete
+        return
     elif gachaButtonClicked(app, event) == 1:
         if app.seashells >= 1:
             gachaPull(app, 1)
@@ -351,9 +363,18 @@ def gachaButtonClicked(app, event):
 def gachaPull(app, pullNum):
     ''' add pullNum characters to the barracks '''
     if pullNum == 1:
-        pass # change later - pop out of app.toPull, add to team/barracks
+        newUnit = app.toPull.pop()
+        app.barracks.append(newUnit)
+        if len(app.team) < 3:
+            app.team.append(newUnit)
+        # change later - play dialogue
     else: # pullNum == 3
         pass
+
+    if app.toPull == set():
+        app.foundAllUnits = True
+        app.showMessage(
+                "Congratulations! You've met all the playable characters!")
 
 ####
 # Main

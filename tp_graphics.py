@@ -58,8 +58,9 @@ def drawBackground(app, canvas, color):
 def drawSeashells(app, canvas, topX, topY):
     ''' draw the player's Seashell count '''
     # draw box and seashell icon
-    canvas.create_rectangle(topX, topY, topX + 40, topY + 20) # change later
-    # insert icon here
+    canvas.create_rectangle(topX, topY, topX + 50, topY + 40) # change X later
+    canvas.create_image(topX + app.margin, topY + app.margin, anchor="nw",
+                            image=ImageTk.PhotoImage(app.seashellImg))
 
     canvas.create_text(topX, topY, text=app.seashells, anchor="nw",
                             font=app.buttonFont)
@@ -184,11 +185,8 @@ def drawDialogue(app, canvas, line, topX, topY):
 def gachaMode_redrawAll(app, canvas):
     ''' draw the gacha screen '''
     # draw Anna dialogue
-    if not app.tutorial:
-        dialogue = '''I wonder who we'll meet today!
+    dialogue = '''I wonder who we'll meet today!
 Each pull costs 1 Seashell.'''
-    else:
-        dialogue = "I haven't written this yet." # change later
     drawDialogueBox(app, canvas, "Anna", dialogue, "top")
 
     drawSeashells(app, canvas, app.margin, 10) # change later
@@ -199,12 +197,19 @@ Each pull costs 1 Seashell.'''
     pass
 
     # draw buttons
+    if app.foundAllUnits: # buttons are inactive
+        pullButtonColor = "gray"
+    else:
+        pullButtonColor = app.buttonColor
+
     oneFifthWidth = app.width // 5
     oneFifthHeight = app.height // 5
     drawButton(app, canvas, oneFifthWidth, oneFifthHeight * 4,
-                oneFifthWidth * 2, oneFifthHeight * 9 // 2, text="1-pull")
+                oneFifthWidth * 2, oneFifthHeight * 9 // 2,
+                color=pullButtonColor, text="1-pull")
     drawButton(app, canvas, oneFifthWidth * 3, oneFifthHeight * 4,
-                oneFifthWidth * 4, oneFifthHeight * 9 // 2, text="3-pull")
+                oneFifthWidth * 4, oneFifthHeight * 9 // 2,
+                color=pullButtonColor, text="3-pull")
 
 ####
 # Team drawing functions
@@ -241,7 +246,7 @@ def drawStatus(app, canvas, unit, topY, slotNum):
     # draw stats and inventory
     offset = (2 * app.margin) + app.cellSize
     drawHPBar(app, canvas, unit, offset, topY)
-    # insert weapon icon later
+    # insert weapon name later
     stats = f'''Attack {unit.attack}
 Def {unit.defense}      Res {unit.res}'''
 
