@@ -44,7 +44,7 @@ def appStarted(app):
 
 def menuButtonClicked(app, event):
     ''' return the number (1, 2, or 3 top-down) of a menu button clicked '''
-    event.x, event.y = xClick, yClick
+    xClick, yClick = event.x, event.y
     oneFifthHeight = app.height // 5
 
     # all 3-button menus are formatted the same, so compare y values
@@ -348,7 +348,7 @@ def gachaMode_mousePressed(app, event):
 
 def gachaButtonClicked(app, event):
     ''' return the pull number (1 or 3) of a gacha button clicked '''
-    event.x, event.y = xClick, yClick
+    xClick, yClick = event.x, event.y
     oneFifthWidth = app.width // 5
     oneFifthHeight = app.height // 5
 

@@ -53,7 +53,7 @@ def loadIcons(app):
 
 def drawBackground(app, canvas, color):
     ''' set the background to a solid color '''
-    canvas.create_rectangle(0, 0, app.width, app.height, color=color, width=0)
+    canvas.create_rectangle(0, 0, app.width, app.height, fill=color, width=0)
 
 def drawSeashells(app, canvas, topX, topY):
     ''' draw the player's Seashell count '''
@@ -65,14 +65,13 @@ def drawSeashells(app, canvas, topX, topY):
     canvas.create_text(topX, topY, text=app.seashells, anchor="nw",
                             font=app.buttonFont)
 
-def drawButton(app, canvas, topX, topY, botX, botY, color=app.buttonColor,
-                text=""):
+def drawButton(app, canvas, topX, topY, botX, botY, color="blue", text=""):
     ''' draw a rectangle representing a button '''
     canvas.create_rectangle(topX, topY, botX, botY, fill=color)
 
-    centerX = botX - topX
-    centerY = botY - topY
-    canvas.create_text(centerX, centerY, text=text, color=app.textColor,
+    centerX = (botX + topX) // 2
+    centerY = (botY + topY) // 2
+    canvas.create_text(centerX, centerY, text=text, fill=app.textColor,
                         font=app.buttonFont)
 
 def drawBackButton(app, canvas, topX, topY):
@@ -86,7 +85,7 @@ def drawBackButton(app, canvas, topX, topY):
 ####
 
 def drawThreeButtonMenu(app, canvas, text1, text2, text3,
-        color1=app.buttonColor, color2=app.buttonColor, color3=app.buttonColor):
+        color1="blue", color2="blue", color3="blue"):
     ''' draw a menu with three buttons '''
     oneFifthHeight = app.height // 5
     drawButton(app, canvas, app.margin, oneFifthHeight, app.width - app.margin,
@@ -120,7 +119,7 @@ def mainScreenMode_redrawAll(app, canvas):
     creditText = '''(C) Isabella Yee 2021 | made with Python | 15-112
 Special thanks to Casper Wong'''
     canvas.create_text(0, app.height, text=creditText, anchor="sw",
-                            color=app.textColor, font=app.buttonFont)
+                            fill=app.textColor, font=app.buttonFont)
 
 def transitionMode_redrawAll(app, canvas):
     ''' draw the transition screen '''
@@ -166,7 +165,7 @@ def drawDialogueBox(app, canvas, name, text, position="bottom"):
     
     # draw text
     canvas.create_text(topX + app.margin, topY + app.margin, anchor="nw",
-        text=name, color=app.textColor, font=app.dialogueFont)
+        text=name, fill=app.textColor, font=app.dialogueFont)
     
     space = 10 # change later
     for line in text.splitlines():
@@ -175,7 +174,7 @@ def drawDialogueBox(app, canvas, name, text, position="bottom"):
 
 def drawDialogue(app, canvas, line, topX, topY):
     ''' draw a line of dialogue '''
-    canvas.create_text(topX, topY, text=line, anchor="nw", color=app.textColor,
+    canvas.create_text(topX, topY, text=line, anchor="nw", fill=app.textColor,
                             font=app.dialogueFont)
 
 ####
@@ -239,7 +238,7 @@ def drawStatus(app, canvas, unit, topY, slotNum):
 
     # draw unit name and icon
     canvas.create_text(app.margin, topY + app.margin, anchor="nw",
-        text=unit.name, color=app.textColor, font=app.dialogueFont)
+        text=unit.name, fill=app.textColor, font=app.dialogueFont)
     cx = cy = app.margin + (app.cellSize // 2)
     canvas.create_image(cx, cy, image=ImageTk.PhotoImage(unit.image))
 
@@ -253,7 +252,7 @@ Def {unit.defense}      Res {unit.res}'''
 def drawHPBar(app, canvas, unit, topX, topY):
     ''' draw a unit's HP bar '''
     canvas.create_text(topX, topY, text=f"{unit.hp} / {unit.maxHP}",
-                        anchor="nw", color=app.textColor, font=app.dialogueFont)
+                        anchor="nw", fill=app.textColor, font=app.dialogueFont)
 
     # draw bar below text
     filled = unit.hp // unit.maxHP
@@ -298,4 +297,5 @@ def drawCell(app, canvas, row, col, image):
     topX = app.margin + (app.cellSize * col)
     topY = app.mapOffset + (app.cellSize * row)
 
-    canvas.create_image(topX, topY, anchor="nw" image=ImageTk.PhotoImage(image))
+    canvas.create_image(topX, topY, anchor="nw",
+                            image=ImageTk.PhotoImage(image))

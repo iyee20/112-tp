@@ -60,9 +60,9 @@ class Unit(object):
         else:
             return False # attack failed
     
-    def heal(self, target, amount=self.attack // 2):
+    def heal(self, target):
         ''' heal a target unit '''
-        # default: bubble wand user healing another unit
+        amount = self.attack // 2
         target.hp += amount
         if target.hp > target.maxHP:
             target.hp = target.maxHP
