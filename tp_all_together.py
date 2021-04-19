@@ -203,8 +203,8 @@ def menuButtonClicked(app, event):
 
 def backButtonClicked(app, event, topX, topY):
     ''' return True if a back arrow button is clicked '''
-    if topX <= event.x <= topX + 10: # change later
-        if topY <= event.y <= topY + 10:
+    if topX <= event.x <= topX + (app.height // 10):
+        if topY <= event.y <= topY + (app.height // 10):
             return True
     return False
 
@@ -253,11 +253,11 @@ def drawBackground(app, canvas, color):
 def drawSeashells(app, canvas, topX, topY):
     ''' draw the player's Seashell count '''
     # draw box and seashell icon
-    canvas.create_rectangle(topX, topY, topX + 50, topY + 40) # change X later
+    canvas.create_rectangle(topX, topY, topX + 70, topY + 40)
     canvas.create_image(topX + app.margin, topY + app.margin, anchor="nw",
                             image=ImageTk.PhotoImage(app.seashellImg))
 
-    canvas.create_text(topX, topY, text=app.seashells, anchor="nw",
+    canvas.create_text(topX + 40, topY + 20, text=app.seashells, anchor="w",
                             font=app.buttonFont)
 
 def drawButton(app, canvas, topX, topY, botX, botY, color="blue", text=""):
@@ -271,8 +271,8 @@ def drawButton(app, canvas, topX, topY, botX, botY, color="blue", text=""):
 
 def drawBackButton(app, canvas, topX, topY):
     ''' draw a back arrow button '''
-    botX = topX + 10 # change later if needed
-    botY = topY + 10
+    botX = topX + (app.height // 10)
+    botY = topY + (app.height // 10)
     drawButton(app, canvas, topX, topY, botX, botY, text="<--")
 
 def drawThreeButtonMenu(app, canvas, text1, text2, text3,
@@ -292,13 +292,13 @@ def drawDialogueBox(app, canvas, name, text, position="bottom"):
     ''' draw a character's dialogue box '''
     if position == "bottom":
         topX = 0
-        topY = app.height - 10 # change later
+        topY = app.height * 4 // 5
         botX = app.width
         botY = app.height
     else: # position == "top"
         topX = topY = 0
         botX = app.width
-        botY = 10 # change later
+        botY = app.height // 5
     
     canvas.create_rectangle(topX, topY, botX, botY, outline=app.borderColor,
         width=5)
@@ -307,7 +307,7 @@ def drawDialogueBox(app, canvas, name, text, position="bottom"):
     canvas.create_text(topX + app.margin, topY + app.margin, anchor="nw",
         text=name, fill=app.textColor, font=app.dialogueFont)
     
-    space = 10 # change later
+    space = 25
     for line in text.splitlines():
         drawDialogue(app, canvas, line, topX + app.margin, topY + space)
         space *= 2
@@ -326,7 +326,8 @@ def mainScreenMode_mousePressed(app, event):
     # only one game mode (story or freeplay) is available at a time 
     if not app.freeplay: # story button
         if menuButtonClicked(app, event) == 1:
-            app.mode = "tutorialMode"
+            #app.mode = "tutorialMode"
+            app.mode = "transitionMode" # change later after testing
     else: # freeplay button
         if menuButtonClicked(app, event) == 2:
             app.mode = "battleMode"
@@ -402,8 +403,8 @@ def settingsMode_redrawAll(app, canvas):
 
 def tutorialMode_mousePressed(app, event):
     ''' handle mouse presses in tutorial mode '''
-    name = app.getUserInput("name??") # change later - limit characters
-    if not name.isspace():
+    name = app.getUserInput("Enter a name.")
+    if name != None and not name.isspace():
         app.aqua.name = name
 
 ####
@@ -415,6 +416,8 @@ def transitionMode_mousePressed(app, event):
     if menuButtonClicked(app, event) == 1: # gacha button
         app.mode = "gachaMode"
     elif menuButtonClicked(app, event) == 2: # battle button
+        chooseMap(app)
+        spawnTeam(app, app.team)
         app.mode = "battleMode"
     elif menuButtonClicked(app, event) == 3: # team button
         app.mode = "barracksMode"
@@ -425,13 +428,13 @@ def transitionMode_redrawAll(app, canvas):
     progress = app.droplets // app.moatSize
     fillLength = (app.width - (2 * app.margin)) * progress
     canvas.create_rectangle(app.margin, app.margin, app.width - app.margin,
-                app.margin + 10, fill="black")
+                app.margin + 30, fill="black")
     canvas.create_rectangle(app.margin, app.margin, app.margin + fillLength,
-                app.margin + 10, fill="blue", width=0)
-    canvas.create_text(app.width // 2, 5, text=f"{app.droplets}/{app.moatSize}",
-                color="white")
+                app.margin + 30, fill="blue", width=0)
+    canvas.create_text(app.width // 2, 15,
+                        text=f"{app.droplets}/{app.moatSize}", fill="white")
 
-    drawSeashells(app, canvas, app.margin, app.margin + 15)
+    drawSeashells(app, canvas, app.margin, app.margin + 35)
 
     drawThreeButtonMenu(app, canvas, "Gacha", "Battle", "Team")
 
@@ -450,7 +453,7 @@ def barracksMode_mousePressed(app, event):
 
 def unitStatusClicked(app, event):
     ''' return the slot number (1, 2, or 3) of a unit status clicked '''
-    event.y = yClick
+    yClick = event.y
     oneFifthHeight = app.height // 5
 
     if oneFifthHeight <= yClick <= oneFifthHeight * 2:
@@ -500,18 +503,21 @@ def barracksMode_redrawAll(app, canvas):
 
 def drawStatus(app, canvas, unit, topY, slotNum):
     ''' draw a unit's status bar '''
+    statusBarHeight = topY + (app.height//5)
+
     # outline selected units in red
     if app.selected == slotNum:
         outlineColor = "red"
     else:
         outlineColor = "black"
-    canvas.create_rectangle(0, topY, app.width, topY + (app.height//5),
+    canvas.create_rectangle(0, topY, app.width, statusBarHeight,
                                 fill=app.buttonColor, outline=outlineColor)
 
     # draw unit name and icon
-    canvas.create_text(app.margin, topY + app.margin, anchor="nw",
+    canvas.create_text(app.margin, statusBarHeight - app.margin, anchor="sw",
         text=unit.name, fill=app.textColor, font=app.dialogueFont)
-    cx = cy = app.margin + (app.cellSize // 2)
+    cx = app.margin + (app.cellSize // 2)
+    cy = cx + topY
     canvas.create_image(cx, cy, image=ImageTk.PhotoImage(unit.image))
 
     # draw stats and inventory
@@ -520,6 +526,8 @@ def drawStatus(app, canvas, unit, topY, slotNum):
     # insert weapon name later
     stats = f'''Attack {unit.attack}
 Def {unit.defense}      Res {unit.res}'''
+    canvas.create_text(offset, topY + 35, text=stats, anchor="nw",
+                        fill=app.textColor, font=app.dialogueFont)
 
 def drawHPBar(app, canvas, unit, topX, topY):
     ''' draw a unit's HP bar '''
@@ -529,9 +537,9 @@ def drawHPBar(app, canvas, unit, topX, topY):
     # draw bar below text
     filled = unit.hp // unit.maxHP
     fillLength = (app.width - topX - app.margin) * filled
-    canvas.create_rectangle(topX, topY + 10, app.width - app.margin, topY + 20,
-                                fill="black") # change Ys later
-    canvas.create_rectangle(topX, topY + 10, topX + fillLength, topY + 20,
+    canvas.create_rectangle(topX, topY + 20, app.width - app.margin, topY + 30,
+                                fill="black")
+    canvas.create_rectangle(topX, topY + 20, topX + fillLength, topY + 30,
                                 fill="green", width=0)
 
 ####
@@ -710,11 +718,11 @@ def moveIsLegal(app, unit, drow, dcol):
     else:
         return True
 
-def drawBattleScreen(app, canvas):
+def battleMode_redrawAll(app, canvas):
     ''' draw the battle screen '''
     # insert check for menu/status/etc here later
 
-    drawMap(app, canvas, app.map)
+    drawMap(app, canvas)
     for unit in app.team:
         if unit.hp != 0:
             drawCell(app, canvas, unit.row, unit.col, unit.image)
@@ -750,7 +758,7 @@ def drawCell(app, canvas, row, col, image):
 
 def gachaMode_mousePressed(app, event):
     ''' handle mouse presses in gacha mode '''
-    if backButtonClicked(app, event, app.margin, 10): # change later
+    if backButtonClicked(app, event, app.margin, (app.height//5) + app.margin):
         app.mode = "transitionMode"
     elif app.foundAllUnits:
         # no more characters can be found if the collection is complete
@@ -803,9 +811,10 @@ def gachaMode_redrawAll(app, canvas):
 Each pull costs 1 Seashell.'''
     drawDialogueBox(app, canvas, "Anna", dialogue, "top")
 
-    drawSeashells(app, canvas, app.margin, 10) # change later
+    offsetFromBox = (app.height//5) + app.margin
+    drawSeashells(app, canvas, (app.height//10) + (2*app.margin), offsetFromBox)
 
-    drawBackButton(app, canvas, app.margin, 10) # change later
+    drawBackButton(app, canvas, app.margin, offsetFromBox)
 
     # draw gacha machine
     pass

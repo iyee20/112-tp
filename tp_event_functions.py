@@ -59,8 +59,8 @@ def menuButtonClicked(app, event):
 
 def backButtonClicked(app, event, topX, topY):
     ''' return True if a back arrow button is clicked '''
-    if topX <= event.x <= topX + 10: # change later
-        if topY <= event.y <= topY + 10:
+    if topX <= event.x <= topX + (app.height // 10):
+        if topY <= event.y <= topY + (app.height // 10):
             return True
     return False
 
@@ -118,8 +118,8 @@ def changeMoatSize(app):
 
 def tutorialMode_mousePressed(app, event):
     ''' handle mouse presses in tutorial mode '''
-    name = app.getUserInput("name??") # change later - limit characters
-    if not name.isspace():
+    name = app.getUserInput("Enter a name.")
+    if name != None and not name.isspace():
         app.aqua.name = name
 
 ####
@@ -131,6 +131,8 @@ def transitionMode_mousePressed(app, event):
     if menuButtonClicked(app, event) == 1: # gacha button
         app.mode = "gachaMode"
     elif menuButtonClicked(app, event) == 2: # battle button
+        chooseMap(app)
+        spawnTeam(app, app.team)
         app.mode = "battleMode"
     elif menuButtonClicked(app, event) == 3: # team button
         app.mode = "barracksMode"
@@ -150,7 +152,7 @@ def barracksMode_mousePressed(app, event):
 
 def unitStatusClicked(app, event):
     ''' return the slot number (1, 2, or 3) of a unit status clicked '''
-    event.y = yClick
+    yClick = event.y
     oneFifthHeight = app.height // 5
 
     if oneFifthHeight <= yClick <= oneFifthHeight * 2:
@@ -330,7 +332,7 @@ def moveIsLegal(app, unit, drow, dcol):
 
 def gachaMode_mousePressed(app, event):
     ''' handle mouse presses in gacha mode '''
-    if backButtonClicked(app, event, app.margin, 10): # change later
+    if backButtonClicked(app, event, app.margin, (app.height//5) + app.margin):
         app.mode = "transitionMode"
     elif app.foundAllUnits:
         # no more characters can be found if the collection is complete
