@@ -18,20 +18,21 @@ def appStarted(app):
     loadPlayableUnits(app)
 
     # define size constants
-    app.margin = 5 # change later
+    app.margin = min(app.width, app.height) // 100
     app.cellSize = 50
-    app.mapOffset = 0 # change later
 
     # set up collections
     app.barracks = [app.aqua]
     app.team = [app.aqua]
     app.foundAllUnits = False
-    app.selected = None
-    app.droplets = app.seashells = 3 # change later after testing
+    app.droplets = app.seashells = 3 # change to 0 later after testing
     app.moatSize = 25
 
+    # set up battle variables
+    app.enemyTeam = []
+    app.selected = None
+
     # define game colors and fonts
-    app.borderColor = "blue"
     app.buttonColor = "blue"
     app.textColor = "black"
     app.buttonFont = "Arial 12 bold"
@@ -198,9 +199,10 @@ def teamSelectionMode_mousePressed(app, event):
         app.mode = "barracksMode"
     elif clicked != None:
         if clicked < len(app.barracks):
-            app.team[app.selected - 1] = app.barracks[clicked]
-            app.selected = None
-            app.mode = "barracksMode"
+            if app.barracks[clicked] not in app.team:
+                app.team[app.selected - 1] = app.barracks[clicked]
+                app.selected = None
+                app.mode = "barracksMode"
 
 def unitIconClicked(app, event):
     ''' return the index in app.barracks of a unit icon clicked '''
@@ -300,11 +302,15 @@ def spawnTeam(app, team, unitType="playable"):
     for unit in team:
         unit.row, unit.col = spawnPoints.pop()
 
-def makeEnemyStats(team, weapon):
+def makeEnemies(app):
+    ''' generate enemies based on the current team size '''
+    pass # change later
+
+def makeEnemyStats(app, weapon):
     ''' generate an enemy's stats based on the current team '''
     # use the lowest player stats
     worstHP = worstAttack = worstDefense = worstRes = 1000
-    for unit in team:
+    for unit in app.team:
         if unit.hp < worstHP: worstHP = unit.hp
         if unit.attack < worstAttack: worstAttack = unit.attack
         if unit.defense < worstDefense: worstDefense = unit.defense

@@ -161,7 +161,7 @@ def drawDialogueBox(app, canvas, name, text, position="bottom"):
         botX = app.width
         botY = app.height // 5
     
-    canvas.create_rectangle(topX, topY, botX, botY, outline=app.borderColor,
+    canvas.create_rectangle(topX, topY, botX, botY, outline=app.buttonColor,
         width=5)
     
     # draw text
@@ -301,6 +301,7 @@ def battleMode_redrawAll(app, canvas):
     # insert check for menu/status/etc here later
 
     drawMap(app, canvas)
+
     for unit in app.team:
         if unit.hp != 0:
             drawCell(app, canvas, unit.row, unit.col, unit.image)
@@ -324,8 +325,11 @@ def drawMap(app, canvas):
 
 def drawCell(app, canvas, row, col, image):
     ''' draw a cell of a map '''
-    topX = app.margin + (app.cellSize * col)
-    topY = app.mapOffset + (app.cellSize * row)
+    mapOffsetX = (app.width - (2*app.margin) - (7*app.cellSize)) // 2
+    mapOffsetY = app.height // 5
+
+    topX = mapOffsetX + (app.cellSize * col)
+    topY = mapOffsetY + (app.cellSize * row)
 
     canvas.create_image(topX, topY, anchor="nw",
                             image=ImageTk.PhotoImage(image))
