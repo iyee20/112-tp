@@ -154,6 +154,9 @@ def loadPlayableUnits(app):
 # Searching algorithm for enemies
 ####
 
+# pseudocode based on:
+# https://en.wikipedia.org/wiki/A*_search_algorithm#Pseudocode
+
 """
 Pseudocode
 
