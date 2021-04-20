@@ -27,8 +27,7 @@ def appStarted(app):
     app.team = [app.aqua]
     app.foundAllUnits = False
     app.selected = None
-    app.items = set() # may remove
-    app.droplets = app.seashells = 0
+    app.droplets = app.seashells = 3 # change later after testing
     app.moatSize = 25
 
     # define game colors and fonts
@@ -36,7 +35,7 @@ def appStarted(app):
     app.buttonColor = "blue"
     app.textColor = "black"
     app.buttonFont = "Arial 12 bold"
-    app.dialogueFont = "Arial 14 bold"
+    app.dialogueFont = "Arial 14"
 
     # define game mode
     app.freeplay = False
@@ -74,7 +73,8 @@ def mainScreenMode_mousePressed(app, event):
     # only one game mode (story or freeplay) is available at a time 
     if not app.freeplay: # story button
         if menuButtonClicked(app, event) == 1:
-            app.mode = "tutorialMode"
+            #app.mode = "tutorialMode"
+            app.mode = "transitionMode" # change later after testing
     else: # freeplay button
         if menuButtonClicked(app, event) == 2:
             app.mode = "battleMode"
@@ -139,7 +139,7 @@ def transitionMode_mousePressed(app, event):
         app.mode = "barracksMode"
 
 ####
-# Barracks screen
+# Barracks screen and team selection screen
 ####
 
 def barracksMode_mousePressed(app, event):
@@ -171,7 +171,8 @@ def barracksMode_keyPressed(app, event):
             reorderTeam(app, True)
         elif event.key in ["Down", "Left"]:
             reorderTeam(app, False)
-        # insert more options later
+        elif event.key == "Enter":
+            app.mode = "teamSelectionMode"
 
 def reorderTeam(app, moveUp):
     ''' change the order of the current team '''
@@ -188,6 +189,35 @@ def reorderTeam(app, moveUp):
         app.team[curr], app.team[toSwap] = app.team[toSwap], app.team[curr]
     
     app.selected = None
+
+def teamSelectionMode_mousePressed(app, event):
+    ''' handle mouse presses in team selection mode '''
+    clicked = unitIconClicked(app, event)
+
+    if backButtonClicked(app, event, app.margin, app.margin):
+        app.mode = "barracksMode"
+    elif clicked != None:
+        if clicked < len(app.barracks):
+            app.team[app.selected - 1] = app.barracks[clicked]
+            app.selected = None
+            app.mode = "barracksMode"
+
+def unitIconClicked(app, event):
+    ''' return the index in app.barracks of a unit icon clicked '''
+    xClick, yClick = event.x, event.y
+
+    gridOffsetX = (app.width - (7*app.cellSize)) // 2
+    gridOffsetY = (app.height - (3*app.cellSize)) // 2
+
+    col = (xClick - gridOffsetX) // 50
+    row = (yClick - gridOffsetY) // 50
+    numCols = 7
+    numRows = 3
+   
+    if 0 <= col < numCols and 0 <= row < numRows:
+        if col % 2 == 0 and row % 2 == 0:
+            return (col//2) + (2*row)
+    return None
 
 ####
 # Battle screen
@@ -378,6 +408,8 @@ def gachaPull(app, pullNum):
         app.foundAllUnits = True
         app.showMessage(
                 "Congratulations! You've met all the playable characters!")
+    
+    app.seashells -= pullNum
 
 ####
 # Main

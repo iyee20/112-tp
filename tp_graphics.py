@@ -125,8 +125,8 @@ Special thanks to Casper Wong'''
 def transitionMode_redrawAll(app, canvas):
     ''' draw the transition screen '''
     # draw progress bar
-    progress = app.droplets // app.moatSize
-    fillLength = (app.width - (2 * app.margin)) * progress
+    progress = app.droplets / app.moatSize
+    fillLength = int((app.width - (2 * app.margin)) * progress)
     canvas.create_rectangle(app.margin, app.margin, app.width - app.margin,
                 app.margin + 30, fill="black")
     canvas.create_rectangle(app.margin, app.margin, app.margin + fillLength,
@@ -166,7 +166,7 @@ def drawDialogueBox(app, canvas, name, text, position="bottom"):
     
     # draw text
     canvas.create_text(topX + app.margin, topY + app.margin, anchor="nw",
-        text=name, fill=app.textColor, font=app.dialogueFont)
+        text=name, fill=app.textColor, font=app.dialogueFont+" bold")
     
     space = 25
     for line in text.splitlines():
@@ -226,8 +226,6 @@ Each pull costs 1 Seashell.'''
 
 def barracksMode_redrawAll(app, canvas):
     ''' draw the current team in the barracks screen '''
-    drawBackground(app, canvas, "blue")
-
     drawBackButton(app, canvas, app.margin, app.margin)
 
     oneFifthHeight = app.height // 5
@@ -277,6 +275,23 @@ def drawHPBar(app, canvas, unit, topX, topY):
     canvas.create_rectangle(topX, topY + 20, topX + fillLength, topY + 30,
                                 fill="green", width=0)
 
+def teamSelectionMode_redrawAll(app, canvas):
+    ''' draw the current found units in the team selection screen '''
+    drawBackButton(app, canvas, app.margin, app.margin)
+
+    gridOffsetX = (app.width - (7*app.cellSize)) // 2
+    gridOffsetY = (app.height - (3*app.cellSize)) // 2
+
+    # draw unit icons in a grid (up to 2 x 4)
+    for unitNum in range(len(app.barracks)):
+        topX = gridOffsetX + (100 * (unitNum%4))
+        topY = gridOffsetY + (100 * (unitNum//4))
+        unit = app.barracks[unitNum]
+        # change to be more informative later
+        canvas.create_rectangle(topX, topY, topX + 50, topY + 50,
+                                    fill=app.buttonColor)
+        canvas.create_image(topX, topY, anchor="nw",
+                            image=ImageTk.PhotoImage(unit.image))
 ####
 # Battle drawing functions
 ####
@@ -308,7 +323,7 @@ def drawMap(app, canvas):
                 drawCell(app, canvas, row, col, app.sandCellImg)
 
 def drawCell(app, canvas, row, col, image):
-    ''' draw a cell of a battle map '''
+    ''' draw a cell of a map '''
     topX = app.margin + (app.cellSize * col)
     topY = app.mapOffset + (app.cellSize * row)
 

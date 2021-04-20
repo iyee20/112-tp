@@ -82,7 +82,6 @@ class PlayableChar(Unit):
         # set stats unique to playable characters
         self.level = 1
         self.toNextLevel = 3 # number of enemies to defeat to advance
-        self.equipped = "" # equipped item (start with none)
     
     def levelUp(self):
         ''' increase stats based on increasing unit level '''
