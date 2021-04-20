@@ -78,14 +78,15 @@ def drawBackButton(app, canvas, topX, topY):
     ''' draw a back arrow button '''
     botX = topX + (app.height // 10)
     botY = topY + (app.height // 10)
-    drawButton(app, canvas, topX, topY, botX, botY, text="<--")
+    drawButton(app, canvas, topX, topY, botX, botY, color=app.buttonColor,
+                text="<--")
 
 ####
 # Menu screen drawing functions
 ####
 
 def drawThreeButtonMenu(app, canvas, text1, text2, text3,
-        color1="blue", color2="blue", color3="blue"):
+                            color1, color2, color3):
     ''' draw a menu with three buttons '''
     oneFifthHeight = app.height // 5
     drawButton(app, canvas, app.margin, oneFifthHeight, app.width - app.margin,
@@ -113,8 +114,7 @@ def mainScreenMode_redrawAll(app, canvas):
         freeplayColor = "gray"
     oneFifthHeight = app.height // 5
     drawThreeButtonMenu(app, canvas, "Story", "Freeplay", "Settings",
-                            color1=storyColor, color2=freeplayColor,
-                            color3=app.buttonColor)
+                            storyColor, freeplayColor, app.buttonColor)
 
     # draw credits
     creditText = '''(C) Isabella Yee 2021 | made with Python | 15-112
@@ -136,14 +136,16 @@ def transitionMode_redrawAll(app, canvas):
 
     drawSeashells(app, canvas, app.margin, app.margin + 35)
 
-    drawThreeButtonMenu(app, canvas, "Gacha", "Battle", "Team")
+    drawThreeButtonMenu(app, canvas, "Gacha", "Battle", "Team",
+                            app.buttonColor, app.buttonColor, app.buttonColor)
 
 def settingsMode_redrawAll(app, canvas):
     ''' draw the settings screen '''
     drawBackButton(app, canvas, app.margin, app.margin)
 
     drawThreeButtonMenu(app, canvas, "Change Moat Size", "Toggle Extras",
-                            "Do Nothing")
+                            "Do Nothing",
+                            app.buttonColor, app.buttonColor, app.buttonColor)
 
 ####
 # Dialogue drawing functions
@@ -168,8 +170,7 @@ def drawDialogueBox(app, canvas, name, text, position="bottom"):
         botX = app.width
         botY = app.height // 5
     
-    canvas.create_rectangle(topX, topY, botX, botY, outline=app.buttonColor,
-        width=5)
+    canvas.create_rectangle(topX, topY, botX, botY, outline=app.buttonColor)
     
     # draw text
     canvas.create_text(topX + app.margin, topY + app.margin, anchor="nw",
@@ -260,18 +261,21 @@ def drawStatus(app, canvas, unit, topY, slotNum):
     cy = cx + topY
     canvas.create_image(cx, cy, image=ImageTk.PhotoImage(unit.image))
 
-    # draw stats and inventory
+    # draw stats and weapon
     offset = (2 * app.margin) + app.cellSize
     drawHPBar(app, canvas, unit, offset, topY)
-    # insert weapon name later
+
     stats = f'''Attack {unit.attack}
 Def {unit.defense}      Res {unit.res}'''
     canvas.create_text(offset, topY + 35, text=stats, anchor="nw",
                         fill=app.textColor, font=app.dialogueFont)
+    
+    canvas.create_text(offset * 5, topY + 35, text=unit.weapon, anchor="nw",
+                        fill=app.textColor, font=app.dialogueFont)
 
 def drawHPBar(app, canvas, unit, topX, topY):
     ''' draw a unit's HP bar '''
-    canvas.create_text(topX, topY, text=f"{unit.hp} / {unit.maxHP}",
+    canvas.create_text(topX, topY, text=f"HP: {unit.hp} / {unit.maxHP}",
                         anchor="nw", fill=app.textColor, font=app.dialogueFont)
 
     # draw bar below text
@@ -316,6 +320,9 @@ def battleMode_redrawAll(app, canvas):
     for enemy in app.enemyTeam:
         if enemy.hp != 0:
             drawCell(app, canvas, enemy.row, enemy.col, enemy.image)
+    
+    if app.selected != None:
+        drawMoveRadius(app, canvas, app.team[app.selected])
 
 def drawMap(app, canvas):
     ''' draw a battle map '''
@@ -343,3 +350,49 @@ def drawCell(app, canvas, row, col, image):
 
     canvas.create_image(topX, topY, anchor="nw",
                             image=ImageTk.PhotoImage(image))
+
+def moveIsLegal(app, unit, drow, dcol):
+    ''' check if a unit can legally move in direction drow,dcol '''
+    newRow = unit.row + drow
+    newCol = unit.col + dcol
+    
+    # check that newRow,newCol is not already occupied
+    for unit in app.team:
+        if unit.row == newRow and unit.col == newCol:
+            return False
+    for enemy in app.enemyTeam:
+        if enemy.row == newRow and enemy.col == newCol:
+            return False
+
+    # check that newRow,newCol is on map
+    if newRow < 0 or newRow >= len(app.map):
+        return False
+    elif newCol < 0 or newCol >= len(app.map):
+        return False
+
+    # water and moats cannot be walked onto
+    elif app.map[newRow][newCol] == "X":
+        return False
+
+    else:
+        return True
+
+def drawMoveRadius(app, canvas, unit):
+    ''' draw rectangles around a unit's possible move locations '''
+    mapOffsetX = (app.width - (2*app.margin) - (7*app.cellSize)) // 2
+    mapOffsetY = app.height // 5
+
+    # units can move up to 2 squares per turn
+    directions = [(0, 1), (1, 0), (0, -1), (-1, 0),
+                    (1, 1), (1, -1), (-1, 1), (-1, -1),
+                    (0, 2), (2, 0), (0, -2), (-2, 0)]
+
+    for drow,dcol in directions:
+        if moveIsLegal(app, unit, drow, dcol):
+            newRow = unit.row + drow
+            newCol = unit.col + dcol
+            topX = mapOffsetX + (app.cellSize * newCol)
+            topY = mapOffsetY + (app.cellSize * newRow)
+            canvas.create_rectangle(topX, topY, topX + app.cellSize,
+                                    topY + app.cellSize, outline="red",
+                                    width=3)

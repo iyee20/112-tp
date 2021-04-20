@@ -33,7 +33,7 @@ def appStarted(app):
     app.selected = None
 
     # define game colors and fonts
-    app.buttonColor = "blue"
+    app.buttonColor = "#699bf0"
     app.textColor = "black"
     app.buttonFont = "Arial 12 bold"
     app.dialogueFont = "Arial 14"
@@ -388,32 +388,6 @@ def inRange(unit, target):
     drow = abs(unit.row - target.row)
     dcol = abs(unit.col - target.col)
     return drow + dcol == unit.range
-
-def moveIsLegal(app, unit, drow, dcol):
-    ''' check if a unit can legally move in direction drow,dcol '''
-    newRow = unit.row + drow
-    newCol = unit.col + dcol
-    
-    # check that newRow,newCol is not already occupied
-    for unit in app.team:
-        if unit.row == newRow and unit.col == newCol:
-            return False
-    for enemy in app.enemyTeam:
-        if enemy.row == newRow and enemy.col == newCol:
-            return False
-
-    # check that newRow,newCol is on map
-    if newRow < 0 or newRow >= len(app.map):
-        return False
-    elif newCol < 0 or newCol >= len(app.map):
-        return False
-
-    # water and moats cannot be walked onto
-    elif app.map[newRow][newCol] == "X":
-        return False
-
-    else:
-        return True
 
 ####
 # Gacha screen
