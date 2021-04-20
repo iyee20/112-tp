@@ -6,6 +6,7 @@
 import random
 from cmu_112_graphics import *
 from tp_graphics import *
+from tp_content import *
 
 ####
 # Main app
