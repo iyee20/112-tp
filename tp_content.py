@@ -62,6 +62,9 @@ class Unit(object):
     
     def heal(self, target):
         ''' heal a target unit '''
+        if self.weapon != "bubble wand":
+            return # only bubble wand users can heal other units
+
         amount = self.attack // 2
         target.hp += amount
         if target.hp > target.maxHP:

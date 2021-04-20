@@ -149,6 +149,13 @@ def settingsMode_redrawAll(app, canvas):
 # Dialogue drawing functions
 ####
 
+def cutsceneMode_redrawAll(app, canvas):
+    ''' draw a cutscene '''
+    # play cutscene for the most recently obtained character
+    cutsceneUnit = app.barracks[-1]
+
+    #add more later
+
 def drawDialogueBox(app, canvas, name, text, position="bottom"):
     ''' draw a character's dialogue box '''
     if position == "bottom":
@@ -302,10 +309,13 @@ def battleMode_redrawAll(app, canvas):
 
     drawMap(app, canvas)
 
+    # draw character icons on map
     for unit in app.team:
         if unit.hp != 0:
             drawCell(app, canvas, unit.row, unit.col, unit.image)
-    # draw enemies later
+    for enemy in app.enemyTeam:
+        if enemy.hp != 0:
+            drawCell(app, canvas, enemy.row, enemy.col, enemy.image)
 
 def drawMap(app, canvas):
     ''' draw a battle map '''

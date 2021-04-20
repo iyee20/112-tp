@@ -78,6 +78,10 @@ def mainScreenMode_mousePressed(app, event):
             app.mode = "transitionMode" # change later after testing
     else: # freeplay button
         if menuButtonClicked(app, event) == 2:
+            chooseMap(app)
+            spawnTeam(app, app.team)
+            makeEnemyTeam(app)
+            spawnTeam(app, app.enemyTeam, unitType="enemy")
             app.mode = "battleMode"
     # settings button
     if menuButtonClicked(app, event) == 3:
@@ -135,6 +139,8 @@ def transitionMode_mousePressed(app, event):
     elif menuButtonClicked(app, event) == 2: # battle button
         chooseMap(app)
         spawnTeam(app, app.team)
+        makeEnemyTeam(app)
+        spawnTeam(app, app.enemyTeam, unitType="enemy")
         app.mode = "battleMode"
     elif menuButtonClicked(app, event) == 3: # team button
         app.mode = "barracksMode"
@@ -225,6 +231,29 @@ def unitIconClicked(app, event):
 # Battle screen
 ####
 
+def battleMode_mousePressed(app, event):
+    ''' handle mouse presses in battle mode '''
+    clickedCell = mapCellClicked(app, event)
+
+    if app.selected == None:
+        for unitNum in range(len(app.team)):
+            unit = app.team[unitNum]
+            if clickedCell[0] == unit.row and clickedCell[1] == unit.col:
+                app.selected = unitNum
+
+    # insert more logic later
+
+def mapCellClicked(app, event):
+    ''' return the row,col of a clicked cell on the map '''
+    xClick, yClick = event.x, event.y
+
+    mapOffsetX = (app.width - (2*app.margin) - (7*app.cellSize)) // 2
+    mapOffsetY = app.height // 5
+
+    col = (xClick - mapOffsetX) // app.cellSize
+    row = (yClick - mapOffsetY) // app.cellSize
+    return row, col
+
 def chooseMap(app):
     ''' set the current map for one battle '''
     # _ = sand, O = dune, X = water/moat, * = sand castle
@@ -302,12 +331,29 @@ def spawnTeam(app, team, unitType="playable"):
     for unit in team:
         unit.row, unit.col = spawnPoints.pop()
 
-def makeEnemies(app):
+def makeEnemyTeam(app):
     ''' generate enemies based on the current team size '''
-    pass # change later
+    # 3 to 5 enemies should be made
+    app.enemyTeam = []
+    numEnemies = len(app.team) + 2
 
-def makeEnemyStats(app, weapon):
-    ''' generate an enemy's stats based on the current team '''
+    # make 1 of each possible type of enemy
+    enemy1 = makeEnemy(app, "Dehydration", "bubble wand", app.dehydrationImg)
+    enemy2 = makeEnemy(app, "Heatstroke", "pool noodle", app.heatstrokeImg)
+    enemy3 = makeEnemy(app, "Salt", "water gun", app.saltImg)
+
+    app.enemyTeam.extend([enemy1, enemy2, enemy3])
+
+    # make extra enemies
+    if numEnemies > 3:
+        enemy4 = makeEnemy(app, "Heatstroke", "pool noodle", app.heatstrokeImg)
+        app.enemyTeam.append(enemy4)
+        if numEnemies > 4:
+            makeEnemy(app, "Salt", "water gun", app.saltImg)
+            app.enemyTeam.append(enemy5)
+
+def makeEnemy(app, name, weapon, image):
+    ''' generate an enemy based on the current team '''
     # use the lowest player stats
     worstHP = worstAttack = worstDefense = worstRes = 1000
     for unit in app.team:
@@ -335,7 +381,7 @@ def makeEnemyStats(app, weapon):
         defense = lowestDefended - 1
         res = lowestDefended
         accuracy = 90
-    return hp, attack, defense, res, accuracy
+    return Unit(name, weapon, hp, attack, defense, res, accuracy, image)
 
 def inRange(unit, target):
     ''' return True if target is within range of unit '''
@@ -348,13 +394,19 @@ def moveIsLegal(app, unit, drow, dcol):
     newRow = unit.row + drow
     newCol = unit.col + dcol
     
+    # check that newRow,newCol is not already occupied
+    for unit in app.team:
+        if unit.row == newRow and unit.col == newCol:
+            return False
+    for enemy in app.enemyTeam:
+        if enemy.row == newRow and enemy.col == newCol:
+            return False
+
     # check that newRow,newCol is on map
     if newRow < 0 or newRow >= len(app.map):
         return False
     elif newCol < 0 or newCol >= len(app.map):
         return False
-
-    # check if cell is occupied later
 
     # water and moats cannot be walked onto
     elif app.map[newRow][newCol] == "X":
@@ -402,11 +454,11 @@ def gachaButtonClicked(app, event):
 def gachaPull(app, pullNum):
     ''' add pullNum characters to the barracks '''
     if pullNum == 1:
+        # move new unit from toPull to barracks
         newUnit = app.toPull.pop()
         app.barracks.append(newUnit)
         if len(app.team) < 3:
             app.team.append(newUnit)
-        # change later - play dialogue
     else: # pullNum == 3
         pass
 
@@ -416,6 +468,15 @@ def gachaPull(app, pullNum):
                 "Congratulations! You've met all the playable characters!")
     
     app.seashells -= pullNum
+    app.mode = "cutsceneMode"
+
+####
+# Cutscenes
+####
+
+def cutsceneMode_keyPressed(app, event):
+    ''' handle key presses in cutscene mode '''
+    pass # change later
 
 ####
 # Main
