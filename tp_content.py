@@ -160,7 +160,7 @@ def loadPlayableUnits(app):
 Pseudocode
 
 destination = nearest cell such that target is in range
-store nodes n: node n-1 in dictionary --> reconstruct path later in helper
+*store nodes n: node n-1 in dictionary --> reconstruct path later in helper
 
 *heuristic h(n) = (estimate) Manhattan/row,col distance to destination from node
 // this doesn't account for terrain in the way
@@ -181,12 +181,12 @@ While loop (while node storage isn't empty):
         *calculated g (from start to neighbor via current) = g(current) +
                 distance from neighbor to current
         if calculated g < g(neighbor): path is the best so far
-            store path to neighbor as current
-            g[neighbor] = calculated g
-            f[neighbor] = g[neighbor] + h(neighbor)
-            if neighbor not in visited nodes: add neighbor to visited nodes
+            *store path to neighbor as current
+            *g[neighbor] = calculated g
+            *f[neighbor] = g[neighbor] + h(neighbor)
+            *if neighbor not in visited nodes: add neighbor to visited nodes
 
-failure condition = node storage is empty without reaching destination
+*failure condition = node storage is empty without reaching destination
 // this shouldn't happen...
 """
 
@@ -199,14 +199,27 @@ def makePathFromNodes(nodes, goal):
     while currNode in nodes.keys():
         currNode = nodes[currNode]
         path = [currNode] + path
-    return path
+    # exclude current node (already there) and goal (occupied cell)
+    return path[1:-1]
 
 def heuristic(node, goal):
     ''' return the Manhattan distance from node to goal '''
     # difference of rows + difference of cols
     return abs(node[0] - goal[0]) + abs(node[1] - goal[1])
 
-def nodeNeighbors(node):
+def findAllNodes(map):
+    ''' return a set of all possible row,col positions in a map '''
+    nodes = set()
+    rows, cols = len(map), len(map[0])
+
+    for row in rows:
+        for col in cols:
+            # cells with water are not valid positions (can't be moved to)
+            if map[row][col] != "X":
+                nodes.add((row, col))
+    return nodes
+
+def nodeNeighbors(node, goal):
     ''' return a set of all the neighbors of a row,col node '''
     currRow, currCol = node
     neighbors = set()
@@ -215,15 +228,19 @@ def nodeNeighbors(node):
                         (-1, 1), (-1, -1)]
     oneCellMoves = [(1, 0), (-1, 0), (0, 1), (0, -1)]
 
-    # only add valid neighbors to set
+    # add valid neighbors (and goal, if possible) to set
     for i in range(len(twoCellMoves)):
         drow, dcol = twoCellMoves[i]
-        if moveIsLegal(app, currRow, currCol, drow, dcol):
-            neighbors.add((currRow + drow, currCol + dcol))
+        newRow = currRow + drow
+        newCol = currCol + dcol
+        if (newRow, newCol) == goal:
+            neighbors.add((newRow, newCol))
+        elif moveIsLegal(app, currRow, currCol, drow, dcol):
+            neighbors.add((newRow, newCol))
         elif i < len(oneCellMoves):
             drow, dcol = oneCellMoves[i]
             if moveIsLegal(app, currRow, currCol, drow, dcol):
-                neighbors.add((currRow + drow, currCol + dcol))
+                neighbors.add((newRow, newCol))
     return neighbors
 
 def aStarSearch(app, startNode, goal, heuristic):
@@ -233,7 +250,7 @@ def aStarSearch(app, startNode, goal, heuristic):
     gCosts = {startNode: 0} # g(n) = cost to get to node n
     fCosts = {startNode: heuristic(startNode, goal)} # f(n) = g(n) + h(n)
 
-    canMoveTo = set() # insert node storage here later
+    canMoveTo = findAllNodes(app.map)
 
     # visit all nodes to find the best path
     while canMoveTo != set():
@@ -243,5 +260,14 @@ def aStarSearch(app, startNode, goal, heuristic):
         canMoveTo.remove(currNode) # travel past current node
 
         # travel to the neighbor node with the lowest f(n) so far
-        for neighbor in nodeNeighbors(currNode):
+        for neighbor in nodeNeighbors(currNode, goal):
             gEstimate = gCosts[currNode] + heuristic(currNode, neighbor)
+            # insert g(n) later
+            # if gEstimate < g(n):
+            #   path[neighbor] = currNode
+            #   gCosts[neighbor] = gEstimate
+            #   fCosts[neighbor] = gEstimate + heuristic(neighbor, goal)
+            #   if neighbor not in visited:
+            #       visited.add(neighbor)
+    # failure: goal is never reached
+    print("uh oh")
