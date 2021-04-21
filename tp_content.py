@@ -173,14 +173,14 @@ Need:
 * dict() for g(n) = cost to get to node n (== 0 for start)
 * dict() for f(n) = g(n) + h(n) (== h(start) for start)
 
-While loop (while node storage isn't empty):
-    current node = the one with the lowest f(n)
+*While loop (while node storage isn't empty):
+    *current node = the one with the lowest f(n)
     *if current node is the destination: return the reconstructed path
     *remove the current node from node storage (represents traveling past it)
-    for each (legal) neighbor of the current node:
+    *for each (legal) neighbor of the current node:
         *calculated g (from start to neighbor via current) = g(current) +
                 distance from neighbor to current
-        if calculated g < g(neighbor): path is the best so far
+        *if calculated g < g(neighbor): path is the best so far
             *store path to neighbor as current
             *g[neighbor] = calculated g
             *f[neighbor] = g[neighbor] + h(neighbor)
@@ -207,17 +207,15 @@ def heuristic(node, goal):
     # difference of rows + difference of cols
     return abs(node[0] - goal[0]) + abs(node[1] - goal[1])
 
-def findAllNodes(map):
-    ''' return a set of all possible row,col positions in a map '''
-    nodes = set()
-    rows, cols = len(map), len(map[0])
-
-    for row in rows:
-        for col in cols:
-            # cells with water are not valid positions (can't be moved to)
-            if map[row][col] != "X":
-                nodes.add((row, col))
-    return nodes
+def lowestFCostNode(nodes, fCosts):
+    ''' return the node with the lowest f(n) (cost to travel to it) '''
+    lowestCost = 1000
+    bestNode = None
+    for node in nodes:
+        if fCosts[node] < lowestCost:
+            lowestCost = fCosts[node]
+            bestNode = node
+    return bestNode
 
 def nodeNeighbors(node, goal):
     ''' return a set of all the neighbors of a row,col node '''
@@ -250,24 +248,23 @@ def aStarSearch(app, startNode, goal, heuristic):
     gCosts = {startNode: 0} # g(n) = cost to get to node n
     fCosts = {startNode: heuristic(startNode, goal)} # f(n) = g(n) + h(n)
 
-    canMoveTo = findAllNodes(app.map)
-
-    # visit all nodes to find the best path
-    while canMoveTo != set():
-        currNode = None # lowest f(n) of canMoveTo (fix later)
+    # visit all nodes to find the best path, using lowest-cost paths
+    while visited != set():
+        currNode = lowestFCostNode(visited, fCosts)
         if currNode == goal:
             return makePathFromNodes(path, goal)
-        canMoveTo.remove(currNode) # travel past current node
+        visited.remove(currNode) # travel past current node
 
         # travel to the neighbor node with the lowest f(n) so far
         for neighbor in nodeNeighbors(currNode, goal):
             gEstimate = gCosts[currNode] + heuristic(currNode, neighbor)
-            # insert g(n) later
-            # if gEstimate < g(n):
-            #   path[neighbor] = currNode
-            #   gCosts[neighbor] = gEstimate
-            #   fCosts[neighbor] = gEstimate + heuristic(neighbor, goal)
-            #   if neighbor not in visited:
-            #       visited.add(neighbor)
+            # compare current estimate g(n) to previous estimate of g(n)
+            gCostSoFar = gCosts.get(neighbor, 1000)
+            if gEstimate < gCostSoFar:
+               path[neighbor] = currNode
+               gCosts[neighbor] = gEstimate
+               fCosts[neighbor] = gEstimate + heuristic(neighbor, goal)
+               if neighbor not in visited:
+                   visited.add(neighbor)
     # failure: goal is never reached
     print("uh oh")
