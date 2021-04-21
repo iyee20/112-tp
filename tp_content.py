@@ -135,17 +135,16 @@ class Enemy(Unit):
 
 def loadPlayableUnits(app):
     ''' define all playable units '''
-    # balance stats later
-    app.aqua = PlayableChar("Aqua", "pool noodle", 15, 5, 5, 5, 95, app.aquaImg)
-    giang = PlayableChar("Giang", "water gun", 15, 5, 5, 5, 95, app.giangImg)
-    iara = PlayableChar("Iara", "pool noodle", 15, 5, 5, 5, 95, app.iaraImg)
-    kai = PlayableChar("Kai", "water gun", 15, 5, 5, 5, 95, app.kaiImg)
-    marina = PlayableChar("Marina", "bubble wand", 15, 5, 5, 5, 95,
+    app.aqua = PlayableChar("Aqua", "pool noodle", 15, 6, 5, 4, 95, app.aquaImg)
+    giang = PlayableChar("Giang", "water gun", 15, 4, 5, 5, 85, app.giangImg)
+    iara = PlayableChar("Iara", "pool noodle", 15, 5, 6, 5, 90, app.iaraImg)
+    kai = PlayableChar("Kai", "water gun", 15, 5, 6, 6, 80, app.kaiImg)
+    marina = PlayableChar("Marina", "bubble wand", 15, 3, 4, 6, 100,
                             app.marinaImg)
-    morgan = PlayableChar("Morgan", "bubble wand", 15, 5, 5, 5, 95,
+    morgan = PlayableChar("Morgan", "bubble wand", 16, 4, 4, 5, 95,
                             app.morganImg)
-    naia = PlayableChar("Naia", "water gun", 15, 5, 5, 5, 95, app.naiaImg)
-    walter = PlayableChar("Walter", "pool noodle", 15, 5, 5, 5, 95,
+    naia = PlayableChar("Naia", "water gun", 16, 5, 5, 5, 80, app.naiaImg)
+    walter = PlayableChar("Walter", "pool noodle", 17, 5, 5, 4, 90,
                             app.walterImg)
     
     app.toPull = {giang, iara, kai, marina, morgan, naia, walter}
@@ -163,16 +162,16 @@ Pseudocode
 destination = nearest cell such that target is in range
 store nodes n: node n-1 in dictionary --> reconstruct path later in helper
 
-heuristic h(n) = (estimate) Manhattan/row,col distance to destination from node
+*heuristic h(n) = (estimate) Manhattan/row,col distance to destination from node
 // this doesn't account for terrain in the way
 // function used as a function param
 
 Need:
-- set (?) of visited nodes (more efficient is a priority queue, but...)
+* set (?) of visited nodes (more efficient is a priority queue, but...)
 // == {startNode} at first
-- empty dict() for path storage
-- dict() for g(n) = cost to get to node n (== 0 for start)
-- dict() for f(n) = g(n) + h(n) (== h(start) for start)
+* empty dict() for path storage
+* dict() for g(n) = cost to get to node n (== 0 for start)
+* dict() for f(n) = g(n) + h(n) (== h(start) for start)
 
 While loop (while node storage isn't empty):
     current node = the one with the lowest f(n)
@@ -190,3 +189,31 @@ While loop (while node storage isn't empty):
 failure condition = node storage is empty without reaching destination
 // this shouldn't happen...
 """
+
+def makePathFromNodes(nodes, goal):
+    ''' construct a path from a dictionary of nodes '''
+    path = [(goal)]
+    currNode = goal
+
+    # start from the end, using keys to find previous nodes
+    while currNode in nodes.keys():
+        currNode = nodes[currNode]
+        path = [currNode] + path
+    return path
+
+def heuristic(node, goal):
+    ''' return the Manhattan distance from node to goal '''
+    # difference of rows + difference of cols
+    return abs(node[0] - goal[0]) + abs(node[1] - goal[1])
+
+def aStarSearch(startNode, goal, heuristic):
+    ''' perform an A* informed search to find a path of nodes to goal '''
+    visited = {startNode}
+    path = dict()
+    gCosts = {startNode: 0} # g(n) = cost to get to node n
+    fCosts = {startNode: heuristic(startNode, goal)} # f(n) = g(n) + h(n)
+
+    canMoveTo = None # insert node storage here
+
+    while canMoveTo != None: # is not empty - replace with proper empty case
+        pass
