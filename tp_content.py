@@ -175,10 +175,10 @@ Need:
 
 While loop (while node storage isn't empty):
     current node = the one with the lowest f(n)
-    if current node is the destination: return the reconstructed path
-    remove the current node from the node storage (represents traveling past it)
+    *if current node is the destination: return the reconstructed path
+    *remove the current node from node storage (represents traveling past it)
     for each (legal) neighbor of the current node:
-        calculated g (from start to neighbor via current) = g(current) +
+        *calculated g (from start to neighbor via current) = g(current) +
                 distance from neighbor to current
         if calculated g < g(neighbor): path is the best so far
             store path to neighbor as current
@@ -206,14 +206,42 @@ def heuristic(node, goal):
     # difference of rows + difference of cols
     return abs(node[0] - goal[0]) + abs(node[1] - goal[1])
 
-def aStarSearch(startNode, goal, heuristic):
+def nodeNeighbors(node):
+    ''' return a set of all the neighbors of a row,col node '''
+    currRow, currCol = node
+    neighbors = set()
+
+    twoCellMoves = [(2, 0), (-2, 0), (0, 2), (0, -2), (1, 1), (1, -1),
+                        (-1, 1), (-1, -1)]
+    oneCellMoves = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+
+    # only add valid neighbors to set
+    for i in range(len(twoCellMoves)):
+        drow, dcol = twoCellMoves[i]
+        if moveIsLegal(app, currRow, currCol, drow, dcol):
+            neighbors.add((currRow + drow, currCol + dcol))
+        elif i < len(oneCellMoves):
+            drow, dcol = oneCellMoves[i]
+            if moveIsLegal(app, currRow, currCol, drow, dcol):
+                neighbors.add((currRow + drow, currCol + dcol))
+    return neighbors
+
+def aStarSearch(app, startNode, goal, heuristic):
     ''' perform an A* informed search to find a path of nodes to goal '''
     visited = {startNode}
     path = dict()
     gCosts = {startNode: 0} # g(n) = cost to get to node n
     fCosts = {startNode: heuristic(startNode, goal)} # f(n) = g(n) + h(n)
 
-    canMoveTo = None # insert node storage here
+    canMoveTo = set() # insert node storage here later
 
-    while canMoveTo != None: # is not empty - replace with proper empty case
-        pass
+    # visit all nodes to find the best path
+    while canMoveTo != set():
+        currNode = None # lowest f(n) of canMoveTo (fix later)
+        if currNode == goal:
+            return makePathFromNodes(path, goal)
+        canMoveTo.remove(currNode) # travel past current node
+
+        # travel to the neighbor node with the lowest f(n) so far
+        for neighbor in nodeNeighbors(currNode):
+            gEstimate = gCosts[currNode] + heuristic(currNode, neighbor)

@@ -351,10 +351,10 @@ def drawCell(app, canvas, row, col, image):
     canvas.create_image(topX, topY, anchor="nw",
                             image=ImageTk.PhotoImage(image))
 
-def moveIsLegal(app, unit, drow, dcol):
+def moveIsLegal(app, currRow, currCol, drow, dcol):
     ''' check if a unit can legally move in direction drow,dcol '''
-    newRow = unit.row + drow
-    newCol = unit.col + dcol
+    newRow = currRow + drow
+    newCol = currCol + dcol
     
     # check that newRow,newCol is not already occupied
     for unit in app.team:
@@ -388,7 +388,7 @@ def drawMoveRadius(app, canvas, unit):
                     (0, 2), (2, 0), (0, -2), (-2, 0)]
 
     for drow,dcol in directions:
-        if moveIsLegal(app, unit, drow, dcol):
+        if moveIsLegal(app, unit.row, unit.col, drow, dcol):
             newRow = unit.row + drow
             newCol = unit.col + dcol
             topX = mapOffsetX + (app.cellSize * newCol)
