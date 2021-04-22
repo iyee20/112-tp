@@ -242,7 +242,7 @@ def barracksMode_redrawAll(app, canvas):
         drawStatus(app, canvas, unit, oneFifthHeight * slotNum, slotNum)
         slotNum += 1
 
-def drawStatus(app, canvas, unit, topY, slotNum):
+def drawStatus(app, canvas, unit, topY, slotNum=-1):
     ''' draw a unit's status bar '''
     statusBarHeight = topY + (app.height//5)
 
@@ -309,8 +309,6 @@ def teamSelectionMode_redrawAll(app, canvas):
 
 def battleMode_redrawAll(app, canvas):
     ''' draw the battle screen '''
-    # insert check for menu/status/etc here later
-
     drawMap(app, canvas)
 
     # draw character icons on map
@@ -322,7 +320,33 @@ def battleMode_redrawAll(app, canvas):
             drawCell(app, canvas, enemy.row, enemy.col, enemy.image)
     
     if app.selected != None:
-        drawMoveRadius(app, canvas, app.team[app.selected])
+        unit = app.team[app.selected]
+        drawStatus(app, canvas, unit, 0)
+        drawMoveRadius(app, canvas, unit)
+    else:
+        drawPlayerMenu(app, canvas)
+
+def drawPlayerMenu(app, canvas):
+    ''' draw a player's menu options in battle mode '''
+    fullHeight = (app.height//5) - (2*app.margin)
+    buttonWidth = app.width // 6
+    buttonHeight = fullHeight // 3
+
+    canvas.create_rectangle(0, 0, app.width, app.height // 5,
+                                fill=app.buttonColor)
+
+    # draw buttons in a 2 x 2 grid
+    drawButton(app, canvas, buttonWidth, app.margin, 2 * buttonWidth,
+                app.margin + buttonHeight, color="white", text="Flee")
+    drawButton(app, canvas, buttonWidth, app.margin + (2*buttonHeight),
+                2 * buttonWidth, app.margin + (3*buttonHeight),
+                color="white", text="End turn")
+    drawButton(app, canvas, 3 * buttonWidth, app.margin, 5 * buttonWidth,
+                app.margin + buttonHeight,
+                color="white", text="Show untapped units")
+    drawButton(app, canvas, 3 * buttonWidth, app.margin + (2*buttonHeight),
+                5 * buttonWidth, app.margin + (3*buttonHeight),
+                color="white", text="Show team summary")
 
 def drawMap(app, canvas):
     ''' draw a battle map '''
@@ -343,7 +367,7 @@ def drawMap(app, canvas):
 def drawCell(app, canvas, row, col, image):
     ''' draw a cell of a map '''
     mapOffsetX = (app.width - (2*app.margin) - (7*app.cellSize)) // 2
-    mapOffsetY = app.height // 5
+    mapOffsetY = (app.height // 5) + app.margin
 
     topX = mapOffsetX + (app.cellSize * col)
     topY = mapOffsetY + (app.cellSize * row)
@@ -380,7 +404,7 @@ def moveIsLegal(app, currRow, currCol, drow, dcol):
 def drawMoveRadius(app, canvas, unit):
     ''' draw rectangles around a unit's possible move locations '''
     mapOffsetX = (app.width - (2*app.margin) - (7*app.cellSize)) // 2
-    mapOffsetY = app.height // 5
+    mapOffsetY = (app.height // 5) + app.margin
 
     # units can move up to 2 squares per turn
     directions = [(0, 1), (1, 0), (0, -1), (-1, 0),
@@ -394,5 +418,5 @@ def drawMoveRadius(app, canvas, unit):
             topX = mapOffsetX + (app.cellSize * newCol)
             topY = mapOffsetY + (app.cellSize * newRow)
             canvas.create_rectangle(topX, topY, topX + app.cellSize,
-                                    topY + app.cellSize, outline="red",
+                                    topY + app.cellSize, outline="blue",
                                     width=3)

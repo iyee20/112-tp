@@ -241,7 +241,25 @@ def battleMode_mousePressed(app, event):
             if clickedCell[0] == unit.row and clickedCell[1] == unit.col:
                 app.selected = unitNum
 
-    # insert more logic later
+    # insert more logic later - turns
+    else:
+        unit = app.team[app.selected]
+        drow = clickedCell[0] - unit.row
+        dcol = clickedCell[1] - unit.col
+        # unit can move up to 2 spaces per turn
+        if -2 <= drow <= 2 and -2 <= dcol <= 2 and abs(drow) + abs(dcol) <= 2:
+            if moveIsLegal(app, unit.row, unit.col, drow, dcol):
+                unit.row += drow
+                unit.col += dcol
+                app.selected = None
+
+def battleMode_keyPressed(app, event):
+    ''' handle key presses in battle mode '''
+    # display player menu
+    if event.key in ["m", "M"]:
+        app.selected = None
+    
+    # add more later
 
 def mapCellClicked(app, event):
     ''' return the row,col of a clicked cell on the map '''
@@ -388,6 +406,94 @@ def inRange(unit, target):
     drow = abs(unit.row - target.row)
     dcol = abs(unit.col - target.col)
     return drow + dcol == unit.range
+
+####
+# Searching algorithm for enemies
+####
+
+# pseudocode based on:
+# https://en.wikipedia.org/wiki/A*_search_algorithm#Pseudocode
+
+def makePathFromNodes(nodes, goal):
+    ''' construct a path from a dictionary of nodes '''
+    path = [(goal)]
+    currNode = goal
+
+    # start from the end, using keys to find previous nodes
+    while currNode in nodes.keys():
+        currNode = nodes[currNode]
+        path = [currNode] + path
+    # exclude current node (already there) and goal (occupied cell)
+    return path[1:-1]
+
+def heuristic(node, goal):
+    ''' return the Manhattan distance from node to goal '''
+    # difference of rows + difference of cols
+    return abs(node[0] - goal[0]) + abs(node[1] - goal[1])
+
+def lowestFCostNode(nodes, fCosts):
+    ''' return the node with the lowest f(n) (cost to travel to it) '''
+    lowestCost = 1000
+    bestNode = None
+    for node in nodes:
+        if fCosts[node] < lowestCost:
+            lowestCost = fCosts[node]
+            bestNode = node
+    return bestNode
+
+def nodeNeighbors(node, goal):
+    ''' return a set of all the neighbors of a row,col node '''
+    currRow, currCol = node
+    neighbors = set()
+
+    # possible drow,dcol values for movement range = 2 cells
+    twoCellMoves = [(2, 0), (-2, 0), (0, 2), (0, -2), (1, 1), (1, -1),
+                        (-1, 1), (-1, -1)]
+    oneCellMoves = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+
+    # add valid neighbors (and goal, if possible) to set
+    for i in range(len(twoCellMoves)):
+        drow, dcol = twoCellMoves[i]
+        newRow = currRow + drow
+        newCol = currCol + dcol
+        if (newRow, newCol) == goal:
+            neighbors.add((newRow, newCol))
+        elif moveIsLegal(app, currRow, currCol, drow, dcol):
+            neighbors.add((newRow, newCol))
+        # only add 1-cell moves if the corresponding 2-cell move is illegal
+        elif i < len(oneCellMoves):
+            drow, dcol = oneCellMoves[i]
+            if moveIsLegal(app, currRow, currCol, drow, dcol):
+                neighbors.add((newRow, newCol))
+    return neighbors
+
+def aStarSearch(app, startNode, goal, heuristic):
+    ''' perform an A* informed search to find a path of nodes to goal '''
+    visited = {startNode}
+    path = dict()
+    gCosts = {startNode: 0} # g(n) = cost to get to node n
+    fCosts = {startNode: heuristic(startNode, goal)} # f(n) = g(n) + h(n)
+
+    # visit all nodes to find the best path, using lowest-cost paths
+    while visited != set():
+        currNode = lowestFCostNode(visited, fCosts)
+        if currNode == goal:
+            return makePathFromNodes(path, goal)
+        visited.remove(currNode) # travel past current node
+
+        # travel to the neighbor node with the lowest f(n) so far
+        for neighbor in nodeNeighbors(currNode, goal):
+            gEstimate = gCosts[currNode] + heuristic(currNode, neighbor)
+            # compare current estimate g(n) to previous estimate of g(n)
+            gCostSoFar = gCosts.get(neighbor, 1000)
+            if gEstimate < gCostSoFar:
+               path[neighbor] = currNode
+               gCosts[neighbor] = gEstimate
+               fCosts[neighbor] = gEstimate + heuristic(neighbor, goal)
+               if neighbor not in visited:
+                   visited.add(neighbor)
+    # failure: goal is never reached
+    print("uh oh")
 
 ####
 # Gacha screen
