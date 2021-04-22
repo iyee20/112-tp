@@ -42,7 +42,7 @@ class Unit(object):
         ''' return a hash value for self '''
         return hash(self.name)
 
-    def attack(self, target):
+    def attackTarget(self, target):
         ''' attack a target unit '''
         # accuracy check
         hitChance = random.randint(0, 100)
@@ -52,23 +52,26 @@ class Unit(object):
                 defended = self.defense
             else:
                 defended = self.res
-            target.hp -= self.attack - defended
+            # unit can't do negative damage
+            amountLost = max(0, self.attack - defended)
+            target.hp -= amountLost
             if target.hp < 0:
                 target.hp = 0
                 target.defeated = True
-            return True # attack succeeded
+            return amountLost # attack succeeded
         else:
             return False # attack failed
     
     def heal(self, target):
         ''' heal a target unit '''
-        if self.weapon != "bubble wand":
-            return # only bubble wand users can heal other units
+        # only bubble wand users can heal, only damaged units can be healed
+        if self.weapon != "bubble wand" or target.hp == target.maxHP:
+            return False
 
-        amount = self.attack // 2
+        # target can only be healed up to max HP
+        amount = min(self.attack // 2, target.maxHP - target.hp)
         target.hp += amount
-        if target.hp > target.maxHP:
-            target.hp = target.maxHP
+        return amount
     
     def resetHP(self):
         ''' reset a unit's HP to max '''
@@ -83,6 +86,7 @@ class PlayableChar(Unit):
                         image)
 
         # set stats unique to playable characters
+        self.playable = True
         self.untapped = True # whether unit can move this turn
         self.level = 1
         self.toNextLevel = 3 # number of enemies to defeat to advance
@@ -105,16 +109,16 @@ class PlayableChar(Unit):
 
 def loadPlayableUnits(app):
     ''' define all playable units '''
-    app.aqua = PlayableChar("Aqua", "pool noodle", 15, 6, 5, 4, 95, app.aquaImg)
-    giang = PlayableChar("Giang", "water gun", 15, 4, 5, 5, 85, app.giangImg)
-    iara = PlayableChar("Iara", "pool noodle", 15, 5, 6, 5, 90, app.iaraImg)
-    kai = PlayableChar("Kai", "water gun", 15, 5, 6, 6, 80, app.kaiImg)
-    marina = PlayableChar("Marina", "bubble wand", 15, 3, 4, 6, 100,
+    app.aqua = PlayableChar("Aqua", "pool noodle", 15, 9, 5, 4, 95, app.aquaImg)
+    giang = PlayableChar("Giang", "water gun", 15, 7, 5, 5, 85, app.giangImg)
+    iara = PlayableChar("Iara", "pool noodle", 15, 8, 6, 5, 90, app.iaraImg)
+    kai = PlayableChar("Kai", "water gun", 15, 8, 6, 6, 80, app.kaiImg)
+    marina = PlayableChar("Marina", "bubble wand", 15, 6, 4, 6, 100,
                             app.marinaImg)
-    morgan = PlayableChar("Morgan", "bubble wand", 16, 4, 4, 5, 95,
+    morgan = PlayableChar("Morgan", "bubble wand", 16, 7, 4, 5, 95,
                             app.morganImg)
-    naia = PlayableChar("Naia", "water gun", 16, 5, 5, 5, 80, app.naiaImg)
-    walter = PlayableChar("Walter", "pool noodle", 17, 5, 5, 4, 90,
+    naia = PlayableChar("Naia", "water gun", 16, 8, 5, 5, 80, app.naiaImg)
+    walter = PlayableChar("Walter", "pool noodle", 17, 8, 5, 4, 90,
                             app.walterImg)
     
     app.toPull = {giang, iara, kai, marina, morgan, naia, walter}
@@ -127,6 +131,7 @@ class Enemy(Unit):
                         image)
 
         # set stats unique to enemies
+        self.playable = False
         self.droplets = random.randint(0, 5) # number of Droplets carried
         self.seashellDropRate = random.randint(0, 100)
     

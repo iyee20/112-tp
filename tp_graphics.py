@@ -170,13 +170,14 @@ def drawDialogueBox(app, canvas, name, text, position="bottom"):
         botX = app.width
         botY = app.height // 5
     
-    canvas.create_rectangle(topX, topY, botX, botY, outline=app.buttonColor)
+    canvas.create_rectangle(topX, topY, botX, botY, fill="white",
+                            outline=app.buttonColor)
     
     # draw text
     canvas.create_text(topX + app.margin, topY + app.margin, anchor="nw",
         text=name, fill=app.textColor, font=app.dialogueFont+" bold")
     
-    space = 25
+    space = 30
     for line in text.splitlines():
         drawDialogue(app, canvas, line, topX + app.margin, topY + space)
         space *= 2
@@ -229,6 +230,146 @@ Each pull costs 1 Seashell.'''
                 color=pullButtonColor, text="3-pull")
 
 ####
+# Cutscene drawing functions
+####
+
+def cutsceneMode_redrawAll(app, canvas):
+    ''' draw a cutscene '''
+    drawBackground(app, canvas, app.buttonColor) # change later
+
+    # play dialogue of most recently acquired character
+    characterName = app.barracks[-1].name
+    allDialogue = chooseCutscene(app, characterName)
+    
+    if app.onCutsceneLine < len(allDialogue):
+        drawDialogueBox(app, canvas, characterName,
+                            allDialogue[app.onCutsceneLine])
+    else:
+        fourFifthsHeight = int(app.height * 4/5)
+        drawButton(app, canvas, 0, fourFifthsHeight, app.width, app.height,
+                        color=app.buttonColor, text="Click to go back to gacha")
+
+def chooseCutscene(app, character=None):
+    ''' return the dialogue corresponding to a cutscene '''
+    if character == "Giang":
+        return giangDialogue(app)
+    elif character == "Iara":
+        return iaraDialogue(app)
+    elif character == "Kai":
+        return kaiDialogue(app)
+    elif character == "Marina":
+        return marinaDialogue(app)
+    elif character == "Morgan":
+        return morganDialogue(app)
+    elif character == "Naia":
+        return naiaDialogue(app)
+    elif character == "Walter":
+        return walterDialogue(app)
+    else: # ending scene
+        return endDialogue(app)
+
+def giangDialogue(app):
+    ''' return Giang's cutscene dialogue '''
+    giangIntro = [
+        '''Oh, hey. This is the Sand Castle, right?
+>>''',
+        '''I thought so... I'm Giang, he/him, by the way.
+>>''',
+        '''I saw a bunch of suspicious characters on my way here, so I wanted to
+check if anyone was taking care of that.
+>>''',
+        "Huh? You want me to help you? ...I guess there's no helping it."
+    ]
+    return giangIntro
+
+def iaraDialogue(app):
+    ''' return Iara's cutscene dialogue '''
+    iaraIntro = [
+        f'''Aren't you {app.aqua.name}? The hero who's helping fill the Moat?
+>>''',
+        '''There's no need to be humble. It's a noble cause. In fact, I'm here
+to lend my aid as well.
+>>''',
+        "My name is Iara, she/her, and my Pool Noodle is at your disposal."
+    ]
+    return iaraIntro
+
+def kaiDialogue(app):
+    ''' return Kai's cutscene dialogue '''
+    kaiIntro = [
+        '''Ah. You saw me.
+>>''',
+        '''I know there's a gatekeeper, but every time I try scouting the Sand
+Castle for places to shoot from, she tries recruiting me to fill the Moat.
+>>''',
+        '''You're doing that too? Hm... if you insist, I'll join you.
+>>''',
+        '''My name is Kai.
+>>''',
+        "Pronouns? ...just avoid referring to me. It's fine."
+    ]
+    return kaiIntro
+
+def marinaDialogue(app):
+    ''' return Marina's cutscene dialogue '''
+    marinaIntro = [
+        '''Such a pretty castle! And so big! Hey, you! It's nice to meet you!
+>>''',
+        '''You can call me Marina! She/her! I'm here to help fill the Moat!
+>>''',
+        "You're doing that too? Wow! I'm glad I came to the right place!"
+    ]
+    return marinaIntro
+
+def morganDialogue(app):
+    ''' return Morgan's cutscene dialogue '''
+    morganIntro = [
+        '''...
+>>''',
+        '''...
+>>''',
+        "...Morgan, he/him. Here to help."
+    ]
+    return morganIntro
+
+def naiaDialogue(app):
+    ''' return Naia's cutscene dialogue '''
+    naiaIntro = [
+        f'''Why, hello. You must be {app.aqua.name}. My name is Naia, she/her.
+Pleased to make your acquaintance.
+>>''',
+        "I've come to assist the Moat-filling effort in any way that I can."
+    ]
+    return naiaIntro
+
+def walterDialogue(app):
+    ''' return Walter's cutscene dialogue '''
+    walterIntro = [
+        '''This is the Sand Castle with a Moat that needs to be filled, right?
+>>''',
+        '''...Don't get the wrong idea! It's not like I'm here to help.
+I just wanted to know.
+>>''',
+        '''Don't look at me like that...! Ugh, fine. Since you need my help so
+badly, I guess I'll lend a hand.
+>>''',
+        "I'm Walter, he/him. The L is silent. Don't get it wrong."
+    ]
+    return walterIntro
+
+def endDialogue(app):
+    ''' return Nerissa's dialogue during the ending cutscene '''
+    endingDialogue = [
+        f'''Hello, {app.aqua.name}. Thank you for your help filling the Moat.
+We couldn't have done it without you!
+>>''',
+        '''Wait, did I forget to introduce myself? I'm Nerissa, the princess of
+the Sand Castle.
+>>'''
+    ] # add more later
+    return endingDialogue
+
+####
 # Team drawing functions
 ####
 
@@ -279,8 +420,8 @@ def drawHPBar(app, canvas, unit, topX, topY):
                         anchor="nw", fill=app.textColor, font=app.dialogueFont)
 
     # draw bar below text
-    filled = unit.hp // unit.maxHP
-    fillLength = (app.width - topX - app.margin) * filled
+    filled = unit.hp / unit.maxHP
+    fillLength = int((app.width - topX - app.margin) * filled)
     canvas.create_rectangle(topX, topY + 20, app.width - app.margin, topY + 30,
                                 fill="black")
     canvas.create_rectangle(topX, topY + 20, topX + fillLength, topY + 30,
@@ -319,12 +460,18 @@ def battleMode_redrawAll(app, canvas):
         if enemy.hp != 0:
             drawCell(app, canvas, enemy.row, enemy.col, enemy.image)
     
+    # draw status bar of selected unit
     if app.selected != None:
         unit = app.team[app.selected]
         drawStatus(app, canvas, unit, 0)
         drawMoveRadius(app, canvas, unit)
     else:
         drawPlayerMenu(app, canvas)
+    
+    if app.battleMessage != None:
+        canvas.create_text(app.width // 2, int(app.height * 0.9),
+                            text=app.battleMessage, font=app.dialogueFont,
+                            justify="center")
 
 def drawPlayerMenu(app, canvas):
     ''' draw a player's menu options in battle mode '''
@@ -367,7 +514,7 @@ def drawMap(app, canvas):
 def drawCell(app, canvas, row, col, image):
     ''' draw a cell of a map '''
     mapOffsetX = (app.width - (2*app.margin) - (7*app.cellSize)) // 2
-    mapOffsetY = (app.height // 5) + app.margin
+    mapOffsetY = ((app.height*4//5) - (2*app.margin) - (7*app.cellSize))
 
     topX = mapOffsetX + (app.cellSize * col)
     topY = mapOffsetY + (app.cellSize * row)
@@ -404,7 +551,7 @@ def moveIsLegal(app, currRow, currCol, drow, dcol):
 def drawMoveRadius(app, canvas, unit):
     ''' draw rectangles around a unit's possible move locations '''
     mapOffsetX = (app.width - (2*app.margin) - (7*app.cellSize)) // 2
-    mapOffsetY = (app.height // 5) + app.margin
+    mapOffsetY = ((app.height*4//5) - (2*app.margin) - (7*app.cellSize))
 
     # units can move up to 2 squares per turn
     directions = [(0, 1), (1, 0), (0, -1), (-1, 0),

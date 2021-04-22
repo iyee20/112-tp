@@ -30,7 +30,7 @@ def appStarted(app):
 
     # set up battle variables
     app.enemyTeam = []
-    app.selected = None
+    app.selected = app.battleMessage = None
 
     # define game colors and fonts
     app.buttonColor = "#699bf0"
@@ -42,6 +42,7 @@ def appStarted(app):
     app.freeplay = False
     app.mode = "mainScreenMode"
     app.cheats = False
+    app.onCutsceneLine = 0
 
 def menuButtonClicked(app, event):
     ''' return the number (1, 2, or 3 top-down) of a menu button clicked '''
@@ -202,6 +203,7 @@ def teamSelectionMode_mousePressed(app, event):
     clicked = unitIconClicked(app, event)
 
     if backButtonClicked(app, event, app.margin, app.margin):
+        app.selected = None
         app.mode = "barracksMode"
     elif clicked != None:
         if clicked < len(app.barracks):
@@ -226,6 +228,76 @@ def unitIconClicked(app, event):
         if col % 2 == 0 and row % 2 == 0:
             return (col//2) + (2*row)
     return None
+
+####
+# Gacha screen
+####
+
+def gachaMode_mousePressed(app, event):
+    ''' handle mouse presses in gacha mode '''
+    if backButtonClicked(app, event, app.margin, (app.height//5) + app.margin):
+        app.mode = "transitionMode"
+    elif app.foundAllUnits:
+        # no more characters can be found if the collection is complete
+        return
+    elif gachaButtonClicked(app, event) == 1:
+        if app.seashells >= 1:
+            gachaPull(app, 1)
+        else:
+            app.showMessage("Not enough Seashells!") # may replace later
+    elif gachaButtonClicked(app, event) == 3:
+        if app.seashells >= 3:
+            gachaPull(app, 3)
+        else:
+            app.showMessage("Not enough Seashells!")
+
+def gachaButtonClicked(app, event):
+    ''' return the pull number (1 or 3) of a gacha button clicked '''
+    xClick, yClick = event.x, event.y
+    oneFifthWidth = app.width // 5
+    oneFifthHeight = app.height // 5
+
+    # pull buttons are at the same y, so compare x values
+    if oneFifthHeight * 4 <= yClick <= oneFifthHeight * 9 // 2:
+        if oneFifthWidth <= xClick <= oneFifthWidth * 2:
+            return 1
+        elif oneFifthWidth * 3 <= xClick <= oneFifthWidth * 4:
+            return 3
+    return None
+
+def gachaPull(app, pullNum):
+    ''' add pullNum characters to the barracks '''
+    if pullNum == 1:
+        # move new unit from toPull to barracks
+        newUnit = app.toPull.pop()
+        app.barracks.append(newUnit)
+        if len(app.team) < 3:
+            app.team.append(newUnit)
+    else: # pullNum == 3
+        pass
+
+    if app.toPull == set():
+        app.foundAllUnits = True
+        app.showMessage(
+                "Congratulations! You've met all the playable characters!")
+    
+    app.seashells -= pullNum
+    app.mode = "cutsceneMode"
+
+####
+# Cutscenes
+####
+
+def cutsceneMode_keyPressed(app, event):
+    ''' handle key presses in cutscene mode '''
+    if event.key == "Enter":
+        app.onCutsceneLine += 1
+
+def cutsceneMode_mousePressed(app, event):
+    ''' handle mouse presses in cutscene mode '''
+    # return to gacha after reading at least part of cutscene
+    if event.y >= int(app.height * 4/5) and app.onCutsceneLine > 1:
+        app.mode = "gachaMode"
 
 ####
 # Battle screen
@@ -258,7 +330,7 @@ def mapCellClicked(app, event):
     xClick, yClick = event.x, event.y
 
     mapOffsetX = (app.width - (2*app.margin) - (7*app.cellSize)) // 2
-    mapOffsetY = app.height // 5
+    mapOffsetY = ((app.height*4//5) - (2*app.margin) - (7*app.cellSize))
 
     col = (xClick - mapOffsetX) // app.cellSize
     row = (yClick - mapOffsetY) // app.cellSize
@@ -282,9 +354,39 @@ def battleMode_keyPressed(app, event):
         elif event.key in ["Up", "Left", "Right", "Down"]:
             target = getTargetFromPosition(app, event.key)
             if isinstance(target, Enemy):
-                unit.attacK(target) # add responses later
+                attackAndCounter(app, unit, target)
             elif target != None:
-                unit.heal(target) # add response later
+                amount = unit.heal(target)
+                if amount != False:
+                    app.battleMessage = f"""{unit.name} healed {target.name}
+for {amount} HP."""
+        
+        app.selected = None
+
+def inRange(unit, target):
+    ''' return True if target is within range of unit '''
+    drow = abs(unit.row - target.row)
+    dcol = abs(unit.col - target.col)
+    return drow + dcol == unit.range
+
+def attackAndCounter(app, unit, target):
+    ''' play through a unit's attack and target's counterattack '''
+    # unit attacks target
+    amount = unit.attackTarget(target)
+    if amount != False:
+        app.battleMessage = f"""{unit.name} attacked {target.name}
+for {amount} damage!"""
+    else:
+        app.battleMessage = f"{unit.name}'s attack missed!"
+    
+    # if possible, target counterattacks unit
+    if inRange(target, unit):
+        counterAmount = target.attackTarget(unit)
+        if counterAmount != False:
+            app.battleMessage = f"""{target.name} counterattacked {unit.name}
+for {amount} damage!"""
+        else:
+            app.battleMessage = f"{target.name}'s counterattack missed!"
 
 def getTargetFromPosition(app, direction):
     ''' return the unit in-range of the current selected character '''
@@ -443,13 +545,7 @@ def makeEnemy(app, name, weapon, image):
         defense = lowestDefended - 1
         res = lowestDefended
         accuracy = 90
-    return Unit(name, weapon, hp, attack, defense, res, accuracy, image)
-
-def inRange(unit, target):
-    ''' return True if target is within range of unit '''
-    drow = abs(unit.row - target.row)
-    dcol = abs(unit.col - target.col)
-    return drow + dcol == unit.range
+    return Enemy(name, weapon, hp, attack, defense, res, accuracy, image)
 
 ####
 # Searching algorithm for enemies
@@ -540,74 +636,11 @@ def aStarSearch(app, startNode, goal, heuristic):
     print("uh oh")
 
 ####
-# Gacha screen
-####
-
-def gachaMode_mousePressed(app, event):
-    ''' handle mouse presses in gacha mode '''
-    if backButtonClicked(app, event, app.margin, (app.height//5) + app.margin):
-        app.mode = "transitionMode"
-    elif app.foundAllUnits:
-        # no more characters can be found if the collection is complete
-        return
-    elif gachaButtonClicked(app, event) == 1:
-        if app.seashells >= 1:
-            gachaPull(app, 1)
-        else:
-            app.showMessage("Not enough Seashells!") # may replace later
-    elif gachaButtonClicked(app, event) == 3:
-        if app.seashells >= 3:
-            gachaPull(app, 3)
-        else:
-            app.showMessage("Not enough Seashells!")
-
-def gachaButtonClicked(app, event):
-    ''' return the pull number (1 or 3) of a gacha button clicked '''
-    xClick, yClick = event.x, event.y
-    oneFifthWidth = app.width // 5
-    oneFifthHeight = app.height // 5
-
-    # pull buttons are at the same y, so compare x values
-    if oneFifthHeight * 4 <= yClick <= oneFifthHeight * 9 // 2:
-        if oneFifthWidth <= xClick <= oneFifthWidth * 2:
-            return 1
-        elif oneFifthWidth * 3 <= xClick <= oneFifthWidth * 4:
-            return 3
-    return None
-
-def gachaPull(app, pullNum):
-    ''' add pullNum characters to the barracks '''
-    if pullNum == 1:
-        # move new unit from toPull to barracks
-        newUnit = app.toPull.pop()
-        app.barracks.append(newUnit)
-        if len(app.team) < 3:
-            app.team.append(newUnit)
-    else: # pullNum == 3
-        pass
-
-    if app.toPull == set():
-        app.foundAllUnits = True
-        app.showMessage(
-                "Congratulations! You've met all the playable characters!")
-    
-    app.seashells -= pullNum
-    app.mode = "cutsceneMode"
-
-####
-# Cutscenes
-####
-
-def cutsceneMode_keyPressed(app, event):
-    ''' handle key presses in cutscene mode '''
-    pass # change later
-
-####
 # Main
 ####
 
 def main():
-    runApp(width=500, height=500) # change later
+    runApp(width=600, height=700) # change later
 
 if (__name__ == '__main__'):
     main()
