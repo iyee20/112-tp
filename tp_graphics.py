@@ -391,7 +391,7 @@ def moveIsLegal(app, currRow, currCol, drow, dcol):
     # check that newRow,newCol is on map
     if newRow < 0 or newRow >= len(app.map):
         return False
-    elif newCol < 0 or newCol >= len(app.map):
+    elif newCol < 0 or newCol >= len(app.map[0]):
         return False
 
     # water and moats cannot be walked onto

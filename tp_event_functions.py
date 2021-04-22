@@ -253,14 +253,6 @@ def battleMode_mousePressed(app, event):
                 unit.col += dcol
                 app.selected = None
 
-def battleMode_keyPressed(app, event):
-    ''' handle key presses in battle mode '''
-    # display player menu
-    if event.key in ["m", "M"]:
-        app.selected = None
-    
-    # add more later
-
 def mapCellClicked(app, event):
     ''' return the row,col of a clicked cell on the map '''
     xClick, yClick = event.x, event.y
@@ -271,6 +263,58 @@ def mapCellClicked(app, event):
     col = (xClick - mapOffsetX) // app.cellSize
     row = (yClick - mapOffsetY) // app.cellSize
     return row, col
+
+def battleMode_keyPressed(app, event):
+    ''' handle key presses in battle mode '''
+    # display player menu
+    if event.key in ["m", "M"]:
+        app.selected = None
+    
+    # add more later
+    elif app.selected != None:
+        unit = app.team[app.selected]
+
+        # finish selected unit's move
+        if event.key == "Enter":
+            unit.untapped = False
+        
+        # attack an enemy or heal a team member in range
+        elif event.key in ["Up", "Left", "Right", "Down"]:
+            target = getTargetFromPosition(app, event.key)
+            if isinstance(target, Enemy):
+                unit.attacK(target) # add responses later
+            elif target != None:
+                unit.heal(target) # add response later
+
+def getTargetFromPosition(app, direction):
+    ''' return the unit in-range of the current selected character '''
+    unit = app.team[app.selected]
+
+    if direction == "Up":
+        drow, dcol = -1 * unit.range, 0
+    elif direction == "Left":
+        drow, dcol = 0, -1 * unit.range
+    elif direction == "Right":
+        drow, dcol = 0, unit.range
+    else: # direction = "Down"
+        drow, dcol = unit.range, 0
+    targetRow = unit.row + drow
+    targetCol = unit.col + dcol
+
+    # target must be on the map
+    if targetRow < 0 or targetRow > len(app.map): return None
+    elif targetCol < 0 or targetCol > len(app.map[0]): return None
+
+    # find enemy to attack
+    for enemy in app.enemyTeam:
+        if enemy.row == targetRow and enemy.col == targetCol: return enemy
+    
+    # find team member to heal
+    if unit.weapon == "bubble wand":
+        for teamMember in app.team:
+            if teamMember.row == targetRow and teamMember.col == targetCol:
+                return teamMember
+    return None # no target in range
 
 def chooseMap(app):
     ''' set the current map for one battle '''

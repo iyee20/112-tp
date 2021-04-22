@@ -83,6 +83,7 @@ class PlayableChar(Unit):
                         image)
 
         # set stats unique to playable characters
+        self.untapped = True # whether unit can move this turn
         self.level = 1
         self.toNextLevel = 3 # number of enemies to defeat to advance
     
@@ -101,6 +102,22 @@ class PlayableChar(Unit):
         for i in range(len(stats)):
             if toIncrease[i]:
                 stats[i] += 1
+
+def loadPlayableUnits(app):
+    ''' define all playable units '''
+    app.aqua = PlayableChar("Aqua", "pool noodle", 15, 6, 5, 4, 95, app.aquaImg)
+    giang = PlayableChar("Giang", "water gun", 15, 4, 5, 5, 85, app.giangImg)
+    iara = PlayableChar("Iara", "pool noodle", 15, 5, 6, 5, 90, app.iaraImg)
+    kai = PlayableChar("Kai", "water gun", 15, 5, 6, 6, 80, app.kaiImg)
+    marina = PlayableChar("Marina", "bubble wand", 15, 3, 4, 6, 100,
+                            app.marinaImg)
+    morgan = PlayableChar("Morgan", "bubble wand", 16, 4, 4, 5, 95,
+                            app.morganImg)
+    naia = PlayableChar("Naia", "water gun", 16, 5, 5, 5, 80, app.naiaImg)
+    walter = PlayableChar("Walter", "pool noodle", 17, 5, 5, 4, 90,
+                            app.walterImg)
+    
+    app.toPull = {giang, iara, kai, marina, morgan, naia, walter}
 
 class Enemy(Unit):
     ''' class for enemies (inherits from Unit class) '''
@@ -132,19 +149,3 @@ class Enemy(Unit):
                     target = unit
                     lowestRest = unit.res
         return target
-
-def loadPlayableUnits(app):
-    ''' define all playable units '''
-    app.aqua = PlayableChar("Aqua", "pool noodle", 15, 6, 5, 4, 95, app.aquaImg)
-    giang = PlayableChar("Giang", "water gun", 15, 4, 5, 5, 85, app.giangImg)
-    iara = PlayableChar("Iara", "pool noodle", 15, 5, 6, 5, 90, app.iaraImg)
-    kai = PlayableChar("Kai", "water gun", 15, 5, 6, 6, 80, app.kaiImg)
-    marina = PlayableChar("Marina", "bubble wand", 15, 3, 4, 6, 100,
-                            app.marinaImg)
-    morgan = PlayableChar("Morgan", "bubble wand", 16, 4, 4, 5, 95,
-                            app.morganImg)
-    naia = PlayableChar("Naia", "water gun", 16, 5, 5, 5, 80, app.naiaImg)
-    walter = PlayableChar("Walter", "pool noodle", 17, 5, 5, 4, 90,
-                            app.walterImg)
-    
-    app.toPull = {giang, iara, kai, marina, morgan, naia, walter}
