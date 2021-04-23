@@ -31,6 +31,8 @@ def appStarted(app):
     # set up battle variables
     app.enemyTeam = []
     app.selected = app.battleMessage = None
+    app.battleMenuDisplay = 0
+    app.playerTurn = True
 
     # define game colors and fonts
     app.buttonColor = "#699bf0"
@@ -39,9 +41,8 @@ def appStarted(app):
     app.dialogueFont = "Arial 14"
 
     # define game mode
-    app.freeplay = False
+    app.freeplay = app.cheats = False
     app.mode = "mainScreenMode"
-    app.cheats = False
     app.onCutsceneLine = 0
 
 def menuButtonClicked(app, event):
@@ -408,7 +409,7 @@ def battleMode_keyPressed(app, event):
         elif event.key in ["Up", "Left", "Right", "Down"]:
             target = getTargetFromPosition(app, event.key)
             if isinstance(target, Enemy):
-                attackAndCounter(app, unit, target)
+                attackAndCounter(app, unit, target, True)
             elif target != None:
                 amount = unit.heal(target)
                 if amount != False:
@@ -423,7 +424,7 @@ def inRange(unit, target):
     dcol = abs(unit.col - target.col)
     return drow + dcol == unit.range
 
-def attackAndCounter(app, unit, target):
+def attackAndCounter(app, unit, target, unitIsPlayer=False):
     ''' play through a unit's attack and target's counterattack '''
     # unit attacks target
     amount = unit.attackTarget(target)
@@ -432,6 +433,8 @@ def attackAndCounter(app, unit, target):
 for {amount} damage!"""
         if target.hp == 0:
             app.battleMessage += f"\n{target.name} was defeated!"
+            if unitIsPlayer: # player unit defeats enemy unit
+                getExperience(app, unit)
     else:
         app.battleMessage = f"{unit.name}'s attack missed!"
 
@@ -443,8 +446,17 @@ for {amount} damage!"""
 for {counterAmount} damage!"""
             if unit.hp == 0:
                 app.battleMessage += f"\n{unit.name} was defeated!"
+                if not unitIsPlayer: # enemy unit is defeated by player unit
+                    getExperience(app, target)
         else:
             app.battleMessage += f"\n{target.name}'s counterattack missed!"
+
+def getExperience(app, unit):
+    ''' grant experience to a player unit after defeating an enemy '''
+    unit.toNextLevel -= 1
+    if unit.toNextLevel <= 0:
+        unit.levelUp()
+        app.battleMessage += f"\n{unit.name} leveled up to level {unit.level}!"
 
 def getTargetFromPosition(app, direction):
     ''' return the unit in-range of the current selected character '''
@@ -604,6 +616,15 @@ def makeEnemy(app, name, weapon, image):
         res = lowestDefended
         accuracy = 90
     return Enemy(name, weapon, hp, attack, defense, res, accuracy, image)
+
+def enemyTurn(app):
+    ''' play through an enemy turn '''
+    for enemy in app.enemyTeam:
+        target = enemy.chooseTarget(app.team)
+        enemy.movePath = aStarSearch(app, (enemy.row, enemy.col),
+                            (target.row, target.col), heuristic)
+        print(enemy.movePath) # remove later
+        # add more later - moving + attacking
 
 ####
 # Searching algorithm for enemies

@@ -159,6 +159,7 @@ class Enemy(Unit):
         self.playable = False
         self.droplets = random.randint(0, 5) # number of Droplets carried
         self.seashellDropRate = random.randint(0, 100)
+        self.movePath = []
     
     def chooseTarget(self, playerTeam):
         ''' choose a player unit to target '''

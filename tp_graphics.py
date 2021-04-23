@@ -469,7 +469,8 @@ def battleMode_redrawAll(app, canvas):
         drawStatus(app, canvas, unit, 0)
         drawMoveRadius(app, canvas, unit)
     else:
-        drawPlayerMenu(app, canvas)
+        if app.battleMenuDisplay == 0:
+            drawPlayerMenu(app, canvas)
     
     if app.battleMessage != None:
         canvas.create_text(app.width // 2, int(app.height * 0.9),
