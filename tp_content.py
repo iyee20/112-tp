@@ -33,6 +33,7 @@ class Unit(object):
         self.defense, self.res = defense, res
         self.accuracy = accuracy
         self.defeated = False
+        self.untapped = True # whether unit can move this turn
     
     def __repr__(self):
         ''' return a value when self is printed '''
@@ -87,7 +88,6 @@ class PlayableChar(Unit):
 
         # set stats unique to playable characters
         self.playable = True
-        self.untapped = True # whether unit can move this turn
         self.level = 1
         self.toNextLevel = 3 # number of enemies to defeat to advance
     

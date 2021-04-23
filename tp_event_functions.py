@@ -307,9 +307,14 @@ def gachaPull(app, pullNum):
             app.team.append(newUnit)
         app.mode = "cutsceneMode"
     else: # pullNum == 3
+        mergeMessage = "Congratulations!"
         for i in range(pullNum):
             unit = random.choice(app.barracks)
             increasedStats = unit.merge() # do something with this dict later
+            for stat in increasedStats:
+                value = increasedStats[stat]
+                mergeMessage += f"\n{unit.name}'s {stat} increased to {value}"
+        app.showMessage(mergeMessage)
 
     if app.toPull == set():
         app.foundAllUnits = True
@@ -338,22 +343,38 @@ def cutsceneMode_mousePressed(app, event):
 
 def battleMode_mousePressed(app, event):
     ''' handle mouse presses in battle mode '''
-    if not app.playerTurn: # enemy turn
+    if not app.playerTurn:
         enemyTurn(app)
         # free player units to move again
         for unit in app.team:
             unit.untapped = True
     else:
         playerTurn(app, event)
+        # free enemy units to move again
+        for enemy in app.enemyTeam:
+            enemy.untapped = True
 
 def enemyTurn(app):
     ''' play through an enemy turn '''
     for enemy in app.enemyTeam:
+        # choose target and find path to target
         target = enemy.chooseTarget(app.team)
         enemy.movePath = aStarSearch(app, (enemy.row, enemy.col),
                             (target.row, target.col), heuristic)
-        print(enemy.name, enemy.movePath) # remove later
-        # add more later - moving + attacking
+
+        # attack if already in range
+        if inRange(enemy, target):
+            attackAndCounter(app, enemy, target)
+
+        # move closer to target and attack if possible
+        if len(enemy.movePath) != 0:
+            enemy.row, enemy.col = enemy.movePath.pop(0)
+            if inRange(enemy, target):
+                attackAndCounter(app, enemy, target)
+        
+        enemy.tapped = False
+
+    app.playerTurn = True
 
 def playerTurn(app, event):
     ''' handle mouse presses in battle mode during the player's turn '''
@@ -366,9 +387,10 @@ def playerTurn(app, event):
         for unitNum in range(len(app.team)):
             unit = app.team[unitNum]
             if clickedCell[0] == unit.row and clickedCell[1] == unit.col:
-                app.selected = unitNum
+                if unit.untapped:
+                    app.selected = unitNum
 
-    # insert more logic later - determine turn end
+    # fix later - don't change selection ? end turn ??
     else:
         unit = app.team[app.selected]
         drow = clickedCell[0] - unit.row
@@ -576,7 +598,7 @@ def chooseMap(app):
     ]
 
     maps = [sandCastleMap, dunesMap, beachMap, tidalMap, islandMap]
-    app.map = islandMap #random.choice(maps) - change back later after testing
+    app.map = random.choice(maps)
 
 def spawnTeam(app, team, unitType="playable"):
     ''' set positions for a team of units based on available spawn points '''
@@ -631,21 +653,21 @@ def makeEnemy(app, name, weapon, image):
 
     # balance stats based on enemy's weapon type
     if weapon == "pool noodle":
-        hp = worstHP + 2
-        attack = worstAttack + 1
-        defense = lowestDefended
-        res = lowestDefended - 1
+        hp = int((worstHP+2) * (2/3))
+        attack = int((worstAttack+1) * (2/3))
+        defense = int(lowestDefended * (2/3))
+        res = int((lowestDefended-1) * (2/3))
         accuracy = 85
     elif weapon == "water gun":
-        hp = worstHP
-        attack = worstAttack
-        defense = res = lowestDefended
+        hp = int(worstHP * (2/3))
+        attack = int(worstAttack * (2/3))
+        defense = res = int(lowestDefended * (2/3))
         accuracy = 80
     else:
-        hp = worstHP - 1
-        attack = worstAttack - 1
-        defense = lowestDefended - 1
-        res = lowestDefended
+        hp = int((worstHP-1) * (2/3))
+        attack = int((worstAttack-1) * (2/3))
+        defense = int((lowestDefended-1) * (2/3))
+        res = int(lowestDefended * (2/3))
         accuracy = 90
     return Enemy(name, weapon, hp, attack, defense, res, accuracy, image)
 
@@ -665,7 +687,8 @@ def makePathFromNodes(nodes, goal):
     while currNode in nodes.keys():
         currNode = nodes[currNode]
         path = [currNode] + path
-    return path
+    # exclude current position and goal position
+    return path[1:-1]
 
 def heuristic(node, goal):
     ''' return the Manhattan distance from node to goal '''
@@ -694,6 +717,7 @@ def nodeNeighbors(app, node, goal):
 
     # add valid neighbors (and goal, if possible) to set
     for i in range(len(twoCellMoves)):
+        # add 2-cell neighbors
         drow, dcol = twoCellMoves[i]
         newRow = currRow + drow
         newCol = currCol + dcol
@@ -701,8 +725,8 @@ def nodeNeighbors(app, node, goal):
             neighbors.add((newRow, newCol))
         elif moveIsLegal(app, currRow, currCol, drow, dcol):
             neighbors.add((newRow, newCol))
-        # only add 1-cell moves if the corresponding 2-cell move is illegal
-        elif i < len(oneCellMoves): # change/fix later??
+        # add 1-cell neighbors
+        if i < len(oneCellMoves):
             drow, dcol = oneCellMoves[i]
             newRow = currRow + drow
             newCol = currCol + dcol
@@ -720,7 +744,6 @@ def aStarSearch(app, startNode, goal, heuristic):
     # visit all nodes to find the best path, using lowest-cost paths
     while visited != set():
         currNode = lowestFCostNode(visited, fCosts)
-        print(currNode)
         if currNode == goal:
             return makePathFromNodes(path, goal)
         visited.remove(currNode) # travel past current node
