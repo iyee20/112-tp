@@ -130,6 +130,7 @@ class PlayableChar(Unit):
         self.maxHP = stats[0]
         self.attack = stats[1]
         self.defense, self.res = stats[2], stats[3]
+        self.resetHP()
         return increasedStats
 
 def loadPlayableUnits(app):

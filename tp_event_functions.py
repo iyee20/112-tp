@@ -307,7 +307,8 @@ def gachaPull(app, pullNum):
             app.team.append(newUnit)
         app.mode = "cutsceneMode"
     else: # pullNum == 3
-        for unit in range(pullNum):
+        for i in range(pullNum):
+            unit = random.choice(app.barracks)
             increasedStats = unit.merge() # do something with this dict later
 
     if app.toPull == set():
@@ -338,9 +339,21 @@ def cutsceneMode_mousePressed(app, event):
 def battleMode_mousePressed(app, event):
     ''' handle mouse presses in battle mode '''
     if not app.playerTurn: # enemy turn
-        pass
+        enemyTurn(app)
+        # free player units to move again
+        for unit in app.team:
+            unit.untapped = True
     else:
         playerTurn(app, event)
+
+def enemyTurn(app):
+    ''' play through an enemy turn '''
+    for enemy in app.enemyTeam:
+        target = enemy.chooseTarget(app.team)
+        enemy.movePath = aStarSearch(app, (enemy.row, enemy.col),
+                            (target.row, target.col), heuristic)
+        print(enemy.name, enemy.movePath) # remove later
+        # add more later - moving + attacking
 
 def playerTurn(app, event):
     ''' handle mouse presses in battle mode during the player's turn '''
@@ -419,7 +432,7 @@ def battleMode_keyPressed(app, event):
     elif app.selected != None:
         unit = app.team[app.selected]
 
-        # finish selected unit's move
+        # finish selected unit's move without attacking
         if event.key == "Enter":
             unit.untapped = False
         
@@ -433,6 +446,7 @@ def battleMode_keyPressed(app, event):
                 if amount != False:
                     app.battleMessage = f"""{unit.name} healed {target.name}
 for {amount} HP."""
+            unit.untapped = False
         
         app.selected = None
 
@@ -562,7 +576,7 @@ def chooseMap(app):
     ]
 
     maps = [sandCastleMap, dunesMap, beachMap, tidalMap, islandMap]
-    app.map = random.choice(maps)
+    app.map = islandMap #random.choice(maps) - change back later after testing
 
 def spawnTeam(app, team, unitType="playable"):
     ''' set positions for a team of units based on available spawn points '''
@@ -635,15 +649,6 @@ def makeEnemy(app, name, weapon, image):
         accuracy = 90
     return Enemy(name, weapon, hp, attack, defense, res, accuracy, image)
 
-def enemyTurn(app):
-    ''' play through an enemy turn '''
-    for enemy in app.enemyTeam:
-        target = enemy.chooseTarget(app.team)
-        enemy.movePath = aStarSearch(app, (enemy.row, enemy.col),
-                            (target.row, target.col), heuristic)
-        print(enemy.movePath) # remove later
-        # add more later - moving + attacking
-
 ####
 # Searching algorithm for enemies
 ####
@@ -660,8 +665,7 @@ def makePathFromNodes(nodes, goal):
     while currNode in nodes.keys():
         currNode = nodes[currNode]
         path = [currNode] + path
-    # exclude current node (already there) and goal (occupied cell)
-    return path[1:-1]
+    return path
 
 def heuristic(node, goal):
     ''' return the Manhattan distance from node to goal '''
@@ -678,7 +682,7 @@ def lowestFCostNode(nodes, fCosts):
             bestNode = node
     return bestNode
 
-def nodeNeighbors(node, goal):
+def nodeNeighbors(app, node, goal):
     ''' return a set of all the neighbors of a row,col node '''
     currRow, currCol = node
     neighbors = set()
@@ -698,8 +702,10 @@ def nodeNeighbors(node, goal):
         elif moveIsLegal(app, currRow, currCol, drow, dcol):
             neighbors.add((newRow, newCol))
         # only add 1-cell moves if the corresponding 2-cell move is illegal
-        elif i < len(oneCellMoves):
+        elif i < len(oneCellMoves): # change/fix later??
             drow, dcol = oneCellMoves[i]
+            newRow = currRow + drow
+            newCol = currCol + dcol
             if moveIsLegal(app, currRow, currCol, drow, dcol):
                 neighbors.add((newRow, newCol))
     return neighbors
@@ -714,12 +720,13 @@ def aStarSearch(app, startNode, goal, heuristic):
     # visit all nodes to find the best path, using lowest-cost paths
     while visited != set():
         currNode = lowestFCostNode(visited, fCosts)
+        print(currNode)
         if currNode == goal:
             return makePathFromNodes(path, goal)
         visited.remove(currNode) # travel past current node
 
         # travel to the neighbor node with the lowest f(n) so far
-        for neighbor in nodeNeighbors(currNode, goal):
+        for neighbor in nodeNeighbors(app, currNode, goal):
             gEstimate = gCosts[currNode] + heuristic(currNode, neighbor)
             # compare current estimate g(n) to previous estimate of g(n)
             gCostSoFar = gCosts.get(neighbor, 1000)
