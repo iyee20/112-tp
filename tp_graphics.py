@@ -454,14 +454,7 @@ def teamSelectionMode_redrawAll(app, canvas):
 def battleMode_redrawAll(app, canvas):
     ''' draw the battle screen '''
     drawMap(app, canvas)
-
-    # draw character icons on map
-    for unit in app.team:
-        if unit.hp != 0:
-            drawCell(app, canvas, unit.row, unit.col, unit.image)
-    for enemy in app.enemyTeam:
-        if enemy.hp != 0:
-            drawCell(app, canvas, enemy.row, enemy.col, enemy.image)
+    drawUnitsOnMap(app, canvas)
     
     # draw status bar of selected unit
     if app.selected != None:
@@ -476,6 +469,15 @@ def battleMode_redrawAll(app, canvas):
         canvas.create_text(app.width // 2, int(app.height * 0.9),
                             text=app.battleMessage, font=app.dialogueFont,
                             justify="center")
+
+def drawUnitsOnMap(app, canvas):
+    ''' draw the icons of undefeated units on the map '''
+    for unit in app.team:
+        if unit.hp != 0:
+            drawCell(app, canvas, unit.row, unit.col, unit.image)
+    for enemy in app.enemyTeam:
+        if enemy.hp != 0:
+            drawCell(app, canvas, enemy.row, enemy.col, enemy.image)
 
 def drawPlayerMenu(app, canvas):
     ''' draw a player's menu options in battle mode '''

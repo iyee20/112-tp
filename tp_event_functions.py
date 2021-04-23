@@ -337,6 +337,13 @@ def cutsceneMode_mousePressed(app, event):
 
 def battleMode_mousePressed(app, event):
     ''' handle mouse presses in battle mode '''
+    if not app.playerTurn: # enemy turn
+        pass
+    else:
+        playerTurn(app, event)
+
+def playerTurn(app, event):
+    ''' handle mouse presses in battle mode during the player's turn '''
     xClick, yClick = event.x, event.y
     clickedCell = mapCellClicked(app, xClick, yClick)
 
@@ -348,7 +355,7 @@ def battleMode_mousePressed(app, event):
             if clickedCell[0] == unit.row and clickedCell[1] == unit.col:
                 app.selected = unitNum
 
-    # insert more logic later - turns
+    # insert more logic later - determine turn end
     else:
         unit = app.team[app.selected]
         drow = clickedCell[0] - unit.row
@@ -359,6 +366,10 @@ def battleMode_mousePressed(app, event):
                 unit.row += drow
                 unit.col += dcol
                 app.selected = None
+    
+    # end turn after all units have moved
+    if allUnitsTapped(app):
+        app.playerTurn = False
 
 def battleMenuButtonClicked(app, xClick, yClick):
     ''' if a battle menu button is clicked, perform the correct action '''
@@ -390,6 +401,13 @@ def mapCellClicked(app, xClick, yClick):
     col = (xClick - mapOffsetX) // app.cellSize
     row = (yClick - mapOffsetY) // app.cellSize
     return row, col
+
+def allUnitsTapped(app):
+    ''' return True if all team members have moved this turn '''
+    for unit in app.team:
+        if unit.untapped:
+            return False
+    return True
 
 def battleMode_keyPressed(app, event):
     ''' handle key presses in battle mode '''
