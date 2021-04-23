@@ -100,9 +100,9 @@ def settingsMode_mousePressed(app, event):
     elif menuButtonClicked(app, event) == 2: # toggle extras/cheats
         app.cheats = not app.cheats
         if app.cheats:
-            app.showMessage("Developer extras ON.")
+            app.showMessage("Developer cheats ON.")
         else:
-            app.showMessage("Developer extras OFF.")
+            app.showMessage("Developer cheats OFF.")
     elif menuButtonClicked(app, event) == 3: # nothing... (for now)
         app.showMessage("Why did you click this button?")
     elif backButtonClicked(app, event, app.margin, app.margin): # back to main
@@ -118,6 +118,33 @@ def changeMoatSize(app):
             return
     # decrease moat size to minimum if moat size is max
     app.moatSize = 10
+
+def settingsMode_keyPressed(app, event):
+    ''' handle key presses in settings mode (only used for cheats) '''
+    if not app.cheats: return
+
+    if event.key in ["c", "C"]:
+        getAllCharacters(app)
+    elif event.key in ["l", "L"]:
+        tenLevelUpAll(app)
+
+def getAllCharacters(app):
+    ''' cheat all characters into the barracks '''
+    while app.toPull != set():
+        newUnit = app.toPull.pop()
+        app.barracks.append(newUnit)
+        if len(app.team) < 3:
+            app.team.append(newUnit)
+    
+    app.showMessage("All the kids are here!")
+
+def tenLevelUpAll(app):
+    ''' cheat all characters in the barracks 10 levels higher '''
+    for character in app.barracks:
+        for level in range(10):
+            character.levelUp()
+    
+    app.showMessage("The kids are more buff now!")
 
 ####
 # Tutorial
@@ -237,16 +264,17 @@ def gachaMode_mousePressed(app, event):
     ''' handle mouse presses in gacha mode '''
     if backButtonClicked(app, event, app.margin, (app.height//5) + app.margin):
         app.mode = "transitionMode"
-    elif app.foundAllUnits:
+    elif gachaButtonClicked(app, event) == 1 and not app.foundAllUnits:
         # no more characters can be found if the collection is complete
-        return
-    elif gachaButtonClicked(app, event) == 1:
         if app.seashells >= 1:
             gachaPull(app, 1)
         else:
-            app.showMessage("Not enough Seashells!") # may replace later
+            app.showMessage("Not enough Seashells!")
     elif gachaButtonClicked(app, event) == 3:
-        if app.seashells >= 3:
+        # there must be at least 3 characters who can randomly be strengthened
+        if len(app.barracks) < 3:
+            app.showMessage("You haven't met enough people yet!")
+        elif app.seashells >= 3:
             gachaPull(app, 3)
         else:
             app.showMessage("Not enough Seashells!")
@@ -254,35 +282,37 @@ def gachaMode_mousePressed(app, event):
 def gachaButtonClicked(app, event):
     ''' return the pull number (1 or 3) of a gacha button clicked '''
     xClick, yClick = event.x, event.y
-    oneFifthWidth = app.width // 5
+    oneEighthWidth = app.width // 8
+    buttonWidth = int(2.5 * oneEighthWidth)
     oneFifthHeight = app.height // 5
 
     # pull buttons are at the same y, so compare x values
     if oneFifthHeight * 4 <= yClick <= oneFifthHeight * 9 // 2:
-        if oneFifthWidth <= xClick <= oneFifthWidth * 2:
+        if oneEighthWidth <= xClick <= oneEighthWidth + buttonWidth:
             return 1
-        elif oneFifthWidth * 3 <= xClick <= oneFifthWidth * 4:
+        elif (oneEighthWidth*7) - buttonWidth <= xClick <= oneEighthWidth * 7:
             return 3
     return None
 
 def gachaPull(app, pullNum):
-    ''' add pullNum characters to the barracks '''
+    ''' get a new character or strengthen 3 characters '''
+    app.seashells -= pullNum
+
     if pullNum == 1:
         # move new unit from toPull to barracks
         newUnit = app.toPull.pop()
         app.barracks.append(newUnit)
         if len(app.team) < 3:
             app.team.append(newUnit)
+        app.mode = "cutsceneMode"
     else: # pullNum == 3
-        pass
+        for unit in range(pullNum):
+            increasedStats = unit.merge() # do something with this dict later
 
     if app.toPull == set():
         app.foundAllUnits = True
         app.showMessage(
                 "Congratulations! You've met all the playable characters!")
-    
-    app.seashells -= pullNum
-    app.mode = "cutsceneMode"
 
 ####
 # Cutscenes

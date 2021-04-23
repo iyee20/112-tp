@@ -143,7 +143,7 @@ def settingsMode_redrawAll(app, canvas):
     ''' draw the settings screen '''
     drawBackButton(app, canvas, app.margin, app.margin)
 
-    drawThreeButtonMenu(app, canvas, "Change Moat Size", "Toggle Extras",
+    drawThreeButtonMenu(app, canvas, "Change Moat Size", "Toggle Cheats",
                             "Do Nothing",
                             app.buttonColor, app.buttonColor, app.buttonColor)
 
@@ -215,19 +215,20 @@ Each pull costs 1 Seashell.'''
     pass
 
     # draw buttons
-    if app.foundAllUnits: # buttons are inactive
+    if app.foundAllUnits: # new character button is inactive
         pullButtonColor = "gray"
     else:
         pullButtonColor = app.buttonColor
 
-    oneFifthWidth = app.width // 5
+    oneEighthWidth = app.width // 8
+    buttonWidth = int(2.5 * oneEighthWidth)
     oneFifthHeight = app.height // 5
-    drawButton(app, canvas, oneFifthWidth, oneFifthHeight * 4,
-                oneFifthWidth * 2, oneFifthHeight * 9 // 2,
-                color=pullButtonColor, text="1-pull")
-    drawButton(app, canvas, oneFifthWidth * 3, oneFifthHeight * 4,
-                oneFifthWidth * 4, oneFifthHeight * 9 // 2,
-                color=pullButtonColor, text="3-pull")
+    drawButton(app, canvas, oneEighthWidth, oneFifthHeight * 4,
+                oneEighthWidth + buttonWidth, oneFifthHeight * 9 // 2,
+                color=pullButtonColor, text="New Character")
+    drawButton(app, canvas, (oneEighthWidth*7) - buttonWidth,
+                oneFifthHeight * 4, oneEighthWidth * 7, oneFifthHeight * 9 // 2,
+                color=app.buttonColor, text="Strengthen 3 Characters")
 
 ####
 # Cutscene drawing functions
@@ -404,15 +405,17 @@ def drawStatus(app, canvas, unit, topY, slotNum=-1):
 
     # draw stats and weapon
     offset = (2 * app.margin) + app.cellSize
-    drawHPBar(app, canvas, unit, offset, topY)
+    canvas.create_text(offset, topY + app.margin, text=f"Level {unit.level}",
+                        anchor="nw", fill=app.textColor, font=app.dialogueFont)
+    drawHPBar(app, canvas, unit, offset, topY + 25)
 
     stats = f'''Attack {unit.attack}
 Def {unit.defense}      Res {unit.res}'''
-    canvas.create_text(offset, topY + 35, text=stats, anchor="nw",
+    canvas.create_text(offset, topY + 60, text=stats, anchor="nw",
                         fill=app.textColor, font=app.dialogueFont)
     
-    canvas.create_text(offset * 5, topY + 35, text=unit.weapon, anchor="nw",
-                        fill=app.textColor, font=app.dialogueFont)
+    canvas.create_text(offset * 4, topY + app.margin, text=unit.weapon,
+                        anchor="nw", fill=app.textColor, font=app.dialogueFont)
 
 def drawHPBar(app, canvas, unit, topX, topY):
     ''' draw a unit's HP bar '''

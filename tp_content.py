@@ -106,6 +106,31 @@ class PlayableChar(Unit):
         for i in range(len(stats)):
             if toIncrease[i]:
                 stats[i] += 1
+        
+        self.maxHP = stats[0]
+        self.attack = stats[1]
+        self.defense, self.res = stats[2], stats[3]
+        self.resetHP()
+    
+    def merge(self):
+        ''' increase stats after merging with a duplicate of unit '''
+        increasedStats = dict()
+        statNames = ["Max HP", "Attack", "Defense", "Resistance"]
+
+        stats = [self.maxHP, self.attack, self.defense, self.res]
+        toIncrease = [True, True, False, False]
+        random.shuffle(toIncrease)
+
+        # randomly increase 2 stats
+        for i in range(len(stats)):
+            if toIncrease[i]:
+                stats[i] += 1
+                increasedStats[statNames[i]] = stats[i]
+
+        self.maxHP = stats[0]
+        self.attack = stats[1]
+        self.defense, self.res = stats[2], stats[3]
+        return increasedStats
 
 def loadPlayableUnits(app):
     ''' define all playable units '''
