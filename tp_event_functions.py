@@ -3,7 +3,7 @@
 # andrewID: iby
 ####
 
-import random
+import random, time
 from cmu_112_graphics import *
 from tp_graphics import *
 from tp_content import *
@@ -327,6 +327,7 @@ def cutsceneMode_mousePressed(app, event):
     ''' handle mouse presses in cutscene mode '''
     # return to gacha after reading at least part of cutscene
     if event.y >= int(app.height * 4/5) and app.onCutsceneLine > 1:
+        app.onCutsceneLine = 0
         app.mode = "gachaMode"
 
 ####
@@ -335,9 +336,12 @@ def cutsceneMode_mousePressed(app, event):
 
 def battleMode_mousePressed(app, event):
     ''' handle mouse presses in battle mode '''
-    clickedCell = mapCellClicked(app, event)
+    xClick, yClick = event.x, event.y
+    clickedCell = mapCellClicked(app, xClick, yClick)
 
+    # activate one of the player menu buttons or make a character selection
     if app.selected == None:
+        if battleMenuButtonClicked(app, xClick, yClick): return
         for unitNum in range(len(app.team)):
             unit = app.team[unitNum]
             if clickedCell[0] == unit.row and clickedCell[1] == unit.col:
@@ -355,10 +359,30 @@ def battleMode_mousePressed(app, event):
                 unit.col += dcol
                 app.selected = None
 
-def mapCellClicked(app, event):
-    ''' return the row,col of a clicked cell on the map '''
-    xClick, yClick = event.x, event.y
+def battleMenuButtonClicked(app, xClick, yClick):
+    ''' if a battle menu button is clicked, perform the correct action '''
+    fullHeight = (app.height//5) - (2*app.margin)
+    buttonWidth = app.width // 6
+    buttonHeight = fullHeight // 3
 
+    # make these do things later
+    if buttonWidth <= xClick <= 2 * buttonWidth:
+        if app.margin <= yClick <= app.margin + buttonHeight: # flee battle
+            return True
+        elif (app.margin + (2*buttonHeight) <= yClick
+                            <= app.margin + (3*buttonHeight)): # end turn
+            return True
+    elif 3 * buttonWidth <= xClick <= 5 * buttonWidth:
+        if app.margin <= yClick <= app.margin + buttonHeight:
+            # display untapped units
+            return True
+        elif (app.margin + (2*buttonHeight) <= yClick
+                            <= app.margin + (3*buttonHeight)): # team summary
+            return True
+    return False # none of the buttons were clicked
+
+def mapCellClicked(app, xClick, yClick):
+    ''' return the row,col of a clicked cell on the map '''
     mapOffsetX = (app.width - (2*app.margin) - (7*app.cellSize)) // 2
     mapOffsetY = ((app.height*4//5) - (2*app.margin) - (7*app.cellSize))
 
@@ -406,17 +430,21 @@ def attackAndCounter(app, unit, target):
     if amount != False:
         app.battleMessage = f"""{unit.name} attacked {target.name}
 for {amount} damage!"""
+        if target.hp == 0:
+            app.battleMessage += f"\n{target.name} was defeated!"
     else:
         app.battleMessage = f"{unit.name}'s attack missed!"
-    
+
     # if possible, target counterattacks unit
-    if inRange(target, unit):
+    if inRange(target, unit) and target.hp != 0:
         counterAmount = target.attackTarget(unit)
         if counterAmount != False:
-            app.battleMessage = f"""{target.name} counterattacked {unit.name}
-for {amount} damage!"""
+            app.battleMessage += f"""\n{target.name} counterattacked {unit.name}
+for {counterAmount} damage!"""
+            if unit.hp == 0:
+                app.battleMessage += f"\n{unit.name} was defeated!"
         else:
-            app.battleMessage = f"{target.name}'s counterattack missed!"
+            app.battleMessage += f"\n{target.name}'s counterattack missed!"
 
 def getTargetFromPosition(app, direction):
     ''' return the unit in-range of the current selected character '''
@@ -543,7 +571,7 @@ def makeEnemyTeam(app):
         enemy4 = makeEnemy(app, "Heatstroke", "pool noodle", app.heatstrokeImg)
         app.enemyTeam.append(enemy4)
         if numEnemies > 4:
-            makeEnemy(app, "Salt", "water gun", app.saltImg)
+            enemy5 = makeEnemy(app, "Salt", "water gun", app.saltImg)
             app.enemyTeam.append(enemy5)
 
 def makeEnemy(app, name, weapon, image):
