@@ -74,7 +74,7 @@ def drawButton(app, canvas, topX, topY, botX, botY, color="blue", text=""):
     centerX = (botX + topX) // 2
     centerY = (botY + topY) // 2
     canvas.create_text(centerX, centerY, text=text, fill=app.textColor,
-                        font=app.buttonFont)
+                        font=app.buttonFont, justify="center")
 
 def drawBackButton(app, canvas, topX, topY):
     ''' draw a back arrow button '''
@@ -103,9 +103,7 @@ def drawThreeButtonMenu(app, canvas, text1, text2, text3,
 def mainScreenMode_redrawAll(app, canvas):
     ''' draw the main screen '''
     drawBackground(app, canvas, "white") # change later
-
-    # draw title
-    pass
+    drawTitle(app, canvas)
 
     # draw buttons
     if app.freeplay:
@@ -123,6 +121,13 @@ def mainScreenMode_redrawAll(app, canvas):
 Special thanks to Casper Wong'''
     canvas.create_text(0, app.height, text=creditText, anchor="sw",
                             fill=app.textColor, font=app.buttonFont)
+
+def drawTitle(app, canvas):
+    ''' draw the game title '''
+    topY = app.height // 9
+
+    canvas.create_text(app.width // 2, topY, text="Water Emblem",
+                        font="Papyrus 30 bold")
 
 def transitionMode_redrawAll(app, canvas):
     ''' draw the transition screen '''
@@ -152,13 +157,6 @@ def settingsMode_redrawAll(app, canvas):
 ####
 # Dialogue drawing functions
 ####
-
-def cutsceneMode_redrawAll(app, canvas):
-    ''' draw a cutscene '''
-    # play cutscene for the most recently obtained character
-    cutsceneUnit = app.barracks[-1]
-
-    #add more later
 
 def drawDialogueBox(app, canvas, name, text, position="bottom"):
     ''' draw a character's dialogue box '''
@@ -240,8 +238,7 @@ Each pull costs 1 Seashell.'''
 
     drawBackButton(app, canvas, app.margin, offsetFromBox)
 
-    # draw gacha machine
-    pass
+    drawGachaMachine(app, canvas)
 
     # draw buttons
     if app.foundAllUnits: # new character button is inactive
@@ -258,6 +255,17 @@ Each pull costs 1 Seashell.'''
     drawButton(app, canvas, (oneEighthWidth*7) - buttonWidth,
                 oneFifthHeight * 4, oneEighthWidth * 7, oneFifthHeight * 9 // 2,
                 color=app.buttonColor, text="Strengthen 3 Characters")
+
+def drawGachaMachine(app, canvas):
+    ''' draw the gacha machine '''
+    topX = app.width // 4
+    botX = app.width - topX
+    topY = app.height // 3
+    botY = app.height - topY
+
+    canvas.create_rectangle(topX, topY, botX, botY, fill=app.buttonColor)
+    drawButton(app, canvas, topX, (topY+botY) // 2, botX, botY,
+                        color="white", text="Gacha")
 
 ####
 # Cutscene drawing functions
@@ -534,6 +542,8 @@ def battleMode_redrawAll(app, canvas):
             pass # change later
         elif app.battleMenuDisplay == 0:
             drawPlayerMenu(app, canvas)
+        elif app.battleMenuDisplay == 2:
+            drawBattleSummary(app, canvas)
     
     if app.battleMessage != None:
         canvas.create_text(app.width // 2, int(app.height * 0.9),
@@ -552,12 +562,12 @@ def drawUnitsOnMap(app, canvas):
 def drawEndOfBattle(app, canvas):
     ''' draw the end-of-battle message '''
     if app.victory:
-        color = "green" # may change later
+        color = "#4fb861"
     else: # app.defeat
-        color = "red"
+        color = "#b62c2c"
     
     drawButton(app, canvas, 0, 0, app.width, app.height // 5,
-                color=color, text=app.endOfBattleMessage, justify="center")
+                color=color, text=app.endOfBattleMessage)
 
 def drawPlayerMenu(app, canvas):
     ''' draw a player's menu options in battle mode '''
@@ -580,6 +590,26 @@ def drawPlayerMenu(app, canvas):
     drawButton(app, canvas, 3 * buttonWidth, app.margin + (2*buttonHeight),
                 5 * buttonWidth, app.margin + (3*buttonHeight),
                 color="white", text="Show HP summary")
+
+def drawBattleSummary(app, canvas):
+    ''' draw summaries for every living unit on the map '''
+    canvas.create_rectangle(0, 0, app.width, app.height // 5,
+                                fill=app.buttonColor)
+
+    livingUnits = []
+    for unit in app.team:
+        if unit.hp != 0:
+            livingUnits.append(unit)
+    for enemy in app.enemyTeam:
+        if enemy.hp != 0:
+            livingUnits.append(enemy)
+
+    # draw unit icons in a grid (up to 2 x 4)
+    for unitNum in range(len(livingUnits)):
+        topX = (app.width//4) * (unitNum%4)
+        topY = (app.height//10) * (unitNum//4)
+        unit = livingUnits[unitNum]
+        drawUnitSummary(app, canvas, unit, topX, topY)
 
 def drawMap(app, canvas):
     ''' draw a battle map '''

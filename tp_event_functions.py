@@ -425,8 +425,8 @@ def playerTurn(app, event):
                 if unit.untapped:
                     app.selected = unitNum
 
-    # move selected unit
-    else:
+    else: # move selected unit
+        app.battleMenuDisplay = 0
         unit = app.team[app.selected]
         drow = clickedCell[0] - unit.row
         dcol = clickedCell[1] - unit.col
@@ -463,14 +463,14 @@ def battleMenuButtonClicked(app, xClick, yClick):
                             <= app.margin + (3*buttonHeight)): # end turn
             app.playerTurn = False
             return True
-    # make these do things later
+    # make this do things later
     elif 3 * buttonWidth <= xClick <= 5 * buttonWidth:
         if app.margin <= yClick <= app.margin + buttonHeight:
             # display untapped units
             return True
         elif (app.margin + (2*buttonHeight) <= yClick
                             <= app.margin + (3*buttonHeight)): # HP summary
-            # abbreviated statuses for all living units on map
+            app.battleMenuDisplay = 2
             return True
     return False # none of the buttons were clicked
 
@@ -607,7 +607,7 @@ def getExperience(app, unit):
 
 def checkBattleEnd(app):
     ''' check if a battle is over and set victory or defeat conditions '''
-    if checkVictory(app):
+    if checkVictory(app) or app.victory:
         app.victory = True
         app.battleMessage = "You win!"
 
@@ -623,7 +623,7 @@ def checkBattleEnd(app):
 a bucket of {dropletsWon} Droplets and {seashellsWon} Seashells.
 Click to go back inside.'''
 
-    elif checkDefeat(app):
+    elif checkDefeat(app) or app.defeat:
         app.defeat = True
         app.battleMessage = "You lose!"
 
@@ -767,21 +767,21 @@ def makeEnemy(app, name, weapon, image):
 
     # balance stats based on enemy's weapon type
     if weapon == "pool noodle":
-        hp = int((worstHP+2) * (2/3))
-        attack = int((worstAttack+1) * (2/3))
-        defense = int(lowestDefended * (2/3))
-        res = int((lowestDefended-1) * (2/3))
+        hp = int((worstHP+2) / 3)
+        attack = int((worstAttack+1) / 3)
+        defense = int(lowestDefended / 3)
+        res = int((lowestDefended-1) / 3)
         accuracy = 85
     elif weapon == "water gun":
-        hp = int(worstHP * (2/3))
-        attack = int(worstAttack * (2/3))
-        defense = res = int(lowestDefended * (2/3))
+        hp = int(worstHP / 3)
+        attack = int(worstAttack / 3)
+        defense = res = int(lowestDefended / 3)
         accuracy = 80
     else:
-        hp = int((worstHP-1) * (2/3))
-        attack = int((worstAttack-1) * (2/3))
-        defense = int((lowestDefended-1) * (2/3))
-        res = int(lowestDefended * (2/3))
+        hp = int((worstHP-1) / 3)
+        attack = int((worstAttack-1) / 3)
+        defense = int((lowestDefended-1) / 3)
+        res = int(lowestDefended / 3)
         accuracy = 90
     return Enemy(name, weapon, hp, attack, defense, res, accuracy, image)
 
@@ -881,7 +881,7 @@ def aStarSearch(app, startNode, goal, heuristic):
 ####
 
 def main():
-    runApp(width=600, height=700)
+    runApp(width=600, height=750)
 
 if (__name__ == '__main__'):
     main()
