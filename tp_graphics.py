@@ -658,10 +658,10 @@ def drawCell(app, canvas, row, col, image):
                             image=ImageTk.PhotoImage(image))
 
 def moveIsLegal(app, currRow, currCol, drow, dcol):
-    ''' check if a unit can legally move in direction drow,dcol '''
+    ''' return True if a unit can legally move in direction drow,dcol '''
     newRow = currRow + drow
     newCol = currCol + dcol
-     # add "obstacles" later - no moving over units or water
+    
     # check that newRow,newCol is not already occupied
     for unit in app.team:
         if unit.row == newRow and unit.col == newCol:
@@ -671,17 +671,38 @@ def moveIsLegal(app, currRow, currCol, drow, dcol):
             return False
 
     # check that newRow,newCol is on map
-    if newRow < 0 or newRow >= len(app.map):
-        return False
-    elif newCol < 0 or newCol >= len(app.map[0]):
-        return False
+    if newRow < 0 or newRow >= len(app.map): return False
+    elif newCol < 0 or newCol >= len(app.map[0]): return False
 
     # water and moats cannot be walked onto
-    elif app.map[newRow][newCol] == "X":
+    elif app.map[newRow][newCol] == "X": return False
+
+    if obstacleInTheWay(app, currRow, currCol, drow, dcol): return False
+
+    return True
+
+def obstacleInTheWay(app, currRow, currCol, drow, dcol):
+    ''' return True if a 1-cell move is illegal before a 2-cell move '''
+    # 1-cell moves and diagonal moves have no obstacles
+    if abs(drow) == 1 or abs(dcol) == 1:
         return False
 
-    else:
+    newRow = currRow + (drow//2)
+    newCol = currCol + (dcol//2)
+    
+    # check that newRow,newCol is not already occupied
+    for unit in app.team:
+        if unit.row == newRow and unit.col == newCol:
+            return True
+    for enemy in app.enemyTeam:
+        if enemy.row == newRow and enemy.col == newCol:
+            return True
+
+    # water and moats cannot be walked onto
+    if app.map[newRow][newCol] == "X":
         return True
+
+    return False
 
 def drawMoveRadius(app, canvas, unit):
     ''' draw rectangles around a unit's possible move locations '''

@@ -341,7 +341,7 @@ def gachaPull(app, pullNum):
         mergeMessage = "Congratulations!"
         for i in range(pullNum):
             unit = random.choice(app.barracks)
-            increasedStats = unit.merge() # do something with this dict later
+            increasedStats = unit.merge()
             for stat in increasedStats:
                 value = increasedStats[stat]
                 mergeMessage += f"\n{unit.name}'s {stat} increased to {value}"
@@ -384,17 +384,19 @@ def battleMode_mousePressed(app, event):
         return
 
     if not app.playerTurn:
+        # click to see each enemy unit's turn
         enemyTurn(app)
         # free player units to move again
         for unit in app.team:
             unit.untapped = unit.canMove = True
+        app.selected = None
     else:
         playerTurn(app, event)
         # free enemy units to move again
         for enemy in app.enemyTeam:
             enemy.untapped = enemy.canMove = True
 
-def enemyTurn(app): # separate moves later
+def enemyTurn(app):
     ''' play through an enemy turn '''
     for enemy in app.enemyTeam:
         if enemy.untapped and enemy.hp != 0:
@@ -415,9 +417,12 @@ def enemyTurn(app): # separate moves later
                 if inRange(enemy, target):
                     attackAndCounter(app, enemy, target)
         
-        enemy.untapped = False
+            enemy.untapped = False
+            break # separate each enemy's move with mouse presses
 
-    app.playerTurn = True
+    # end turn after all enemies have moved
+    if allUnitsTapped(app.enemyTeam):
+        app.playerTurn = True
 
 def playerTurn(app, event):
     ''' handle mouse presses in battle mode during the player's turn '''
@@ -427,31 +432,50 @@ def playerTurn(app, event):
     # activate one of the player menu buttons or make a character selection
     if app.selected == None:
         if battleMenuButtonClicked(app, xClick, yClick): return
-        for unitNum in range(len(app.team)):
-            unit = app.team[unitNum]
-            if clickedCell[0] == unit.row and clickedCell[1] == unit.col:
-                if unit.untapped:
-                    app.selected = unitNum
+        selectUnit(app, clickedCell)
 
     else: # move selected unit
         app.battleMenuDisplay = 0
         unit = app.team[app.selected]
-        drow = clickedCell[0] - unit.row
-        dcol = clickedCell[1] - unit.col
-        # unit can move up to 2 spaces per turn
-        if -2 <= drow <= 2 and -2 <= dcol <= 2 and abs(drow) + abs(dcol) <= 2:
-            if moveIsLegal(app, unit.row, unit.col, drow, dcol):
-                unit.row += drow
-                unit.col += dcol
-                unit.canMove = False
+        if unit.canMove: movePlayableCharacter(app, unit, clickedCell)
     
     # end turn after all units have moved
-    if allUnitsTapped(app):
+    if allUnitsTapped(app.team):
         app.playerTurn = False
 
-def allUnitsTapped(app):
+def selectUnit(app, clickedCell):
+    ''' set app.selected to the appropriate unit number '''
+    for unitNum in range(len(app.team)):
+        unit = app.team[unitNum]
+        if clickedCell[0] == unit.row and clickedCell[1] == unit.col:
+            if unit.untapped:
+                app.selected = unitNum
+
+def movePlayableCharacter(app, unit, clickedCell):
+    ''' move a playable character to a clicked cell if possible '''
+    drow = clickedCell[0] - unit.row
+    dcol = clickedCell[1] - unit.col
+
+    # unit can move up to 2 spaces per turn
+    if -2 <= drow <= 2 and -2 <= dcol <= 2 and abs(drow) + abs(dcol) <= 2:
+        if moveIsLegal(app, unit.row, unit.col, drow, dcol):
+            unit.row += drow
+            unit.col += dcol
+            unit.canMove = False
+
+            # adjust battle message based on unit type
+            attackKeys = "an arrow key"
+            if unit.range == 2:
+                attackKeys += " or WESD"
+            instruction = "attack"
+            if unit.weapon == "bubble wand":
+                instruction = " or heal"
+            app.battleMessage = f'''Press {attackKeys} to {instruction}
+or Enter to wait.'''
+
+def allUnitsTapped(team):
     ''' return True if all team members have moved this turn '''
-    for unit in app.team:
+    for unit in team:
         if unit.untapped:
             return False
     return True
