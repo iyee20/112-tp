@@ -431,19 +431,19 @@ def barracksMode_redrawAll(app, canvas):
 
 def drawStatus(app, canvas, unit, topY, slotNum=-1):
     ''' draw a unit's status bar '''
-    statusBarHeight = topY + (app.height//5)
+    botY = topY + (app.height//5)
 
     # outline selected units in red
     if app.selected == slotNum:
         outlineColor = "red"
     else:
         outlineColor = "black"
-    canvas.create_rectangle(0, topY, app.width, statusBarHeight,
+    canvas.create_rectangle(0, topY, app.width, botY,
                                 fill=app.buttonColor, outline=outlineColor)
 
     # draw unit name and icon
-    canvas.create_text(app.margin, statusBarHeight - app.margin, anchor="sw",
-        text=unit.name, fill=app.textColor, font=app.dialogueFont)
+    canvas.create_text(app.margin, botY - app.margin, anchor="sw",
+                    text=unit.name, fill=app.textColor, font=app.dialogueFont)
     cx = app.margin + (app.cellSize // 2)
     cy = cx + topY
     canvas.create_image(cx, cy, image=ImageTk.PhotoImage(unit.image))
@@ -452,7 +452,8 @@ def drawStatus(app, canvas, unit, topY, slotNum=-1):
     offset = (2 * app.margin) + app.cellSize
     canvas.create_text(offset, topY + app.margin, text=f"Level {unit.level}",
                         anchor="nw", fill=app.textColor, font=app.dialogueFont)
-    drawHPBar(app, canvas, unit, offset, topY + 25)
+    drawHPBar(app, canvas, unit, offset, topY + 25,
+                        app.width - app.margin - offset, app.dialogueFont)
 
     stats = f'''Attack {unit.attack}
 Def {unit.defense}      Res {unit.res}'''
@@ -462,15 +463,15 @@ Def {unit.defense}      Res {unit.res}'''
     canvas.create_text(offset * 4, topY + app.margin, text=unit.weapon,
                         anchor="nw", fill=app.textColor, font=app.dialogueFont)
 
-def drawHPBar(app, canvas, unit, topX, topY):
+def drawHPBar(app, canvas, unit, topX, topY, barLength, font):
     ''' draw a unit's HP bar '''
     canvas.create_text(topX, topY, text=f"HP: {unit.hp} / {unit.maxHP}",
-                        anchor="nw", fill=app.textColor, font=app.dialogueFont)
+                        anchor="nw", fill=app.textColor, font=font)
 
     # draw bar below text
     filled = unit.hp / unit.maxHP
-    fillLength = int((app.width - topX - app.margin) * filled)
-    canvas.create_rectangle(topX, topY + 20, app.width - app.margin, topY + 30,
+    fillLength = int(barLength * filled)
+    canvas.create_rectangle(topX, topY + 20, topX + barLength, topY + 30,
                                 fill="black")
     canvas.create_rectangle(topX, topY + 20, topX + fillLength, topY + 30,
                                 fill="green", width=0)
@@ -479,19 +480,37 @@ def teamSelectionMode_redrawAll(app, canvas):
     ''' draw the current found units in the team selection screen '''
     drawBackButton(app, canvas, app.margin, app.margin)
 
-    gridOffsetX = (app.width - (7*app.cellSize)) // 2
-    gridOffsetY = (app.height - (3*app.cellSize)) // 2
+    gridOffsetY = (app.height - (2*app.height//10)) // 2
 
     # draw unit icons in a grid (up to 2 x 4)
     for unitNum in range(len(app.barracks)):
-        topX = gridOffsetX + (100 * (unitNum%4))
-        topY = gridOffsetY + (100 * (unitNum//4))
+        topX = (app.width//4) * (unitNum%4)
+        topY = gridOffsetY + ((app.height//10) * (unitNum//4))
         unit = app.barracks[unitNum]
-        # change to be more informative later
-        canvas.create_rectangle(topX, topY, topX + 50, topY + 50,
-                                    fill=app.buttonColor)
-        canvas.create_image(topX, topY, anchor="nw",
+        drawUnitSummary(app, canvas, unit, topX, topY)
+
+def drawUnitSummary(app, canvas, unit, topX, topY):
+    ''' draw a unit's abbreviated status bar '''
+    botX = topX + (app.width//4)
+    botY = topY + (app.height//10)
+
+    canvas.create_rectangle(topX, topY, botX, botY, fill=app.buttonColor)
+
+    # draw unit name and icon
+    canvas.create_text(app.margin + topX, botY - app.margin, anchor="sw",
+                    text=unit.name, fill=app.textColor, font=app.summaryFont)
+    canvas.create_image(topX, topY, anchor="nw",
                             image=ImageTk.PhotoImage(unit.image))
+
+    # draw HP and weapon
+    offset = (2 * app.margin) + app.cellSize + topX
+    barLength = botX - offset - app.margin
+    drawHPBar(app, canvas, unit, offset, topY + app.margin,
+                    barLength, app.summaryFont)
+    
+    canvas.create_text(offset, topY + 35 + app.margin, text=unit.weapon,
+                        anchor="nw", fill=app.textColor, font=app.summaryFont)
+
 ####
 # Battle drawing functions
 ####
@@ -508,7 +527,8 @@ def battleMode_redrawAll(app, canvas):
     elif app.selected != None:
         unit = app.team[app.selected]
         drawStatus(app, canvas, unit, 0)
-        drawMoveRadius(app, canvas, unit)
+        if unit.canMove:
+            drawMoveRadius(app, canvas, unit)
     else:
         if app.tutorial:
             pass # change later
@@ -537,7 +557,7 @@ def drawEndOfBattle(app, canvas):
         color = "red"
     
     drawButton(app, canvas, 0, 0, app.width, app.height // 5,
-                color=color, text=app.endOfBattleMessage)
+                color=color, text=app.endOfBattleMessage, justify="center")
 
 def drawPlayerMenu(app, canvas):
     ''' draw a player's menu options in battle mode '''
@@ -559,7 +579,7 @@ def drawPlayerMenu(app, canvas):
                 color="white", text="Show untapped units")
     drawButton(app, canvas, 3 * buttonWidth, app.margin + (2*buttonHeight),
                 5 * buttonWidth, app.margin + (3*buttonHeight),
-                color="white", text="Show team summary")
+                color="white", text="Show HP summary")
 
 def drawMap(app, canvas):
     ''' draw a battle map '''

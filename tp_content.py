@@ -33,7 +33,8 @@ class Unit(object):
         self.defense, self.res = defense, res
         self.accuracy = accuracy
         self.defeated = False
-        self.untapped = True # whether unit can move this turn
+        self.untapped = True # whether unit can attack this turn
+        self.canMove = True # whether unit can move this turn
     
     def __repr__(self):
         ''' return a value when self is printed '''

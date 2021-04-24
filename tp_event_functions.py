@@ -35,7 +35,6 @@ def appStarted(app):
     # define game mode
     app.freeplay = app.cheats = False
     app.mode = "mainScreenMode"
-    app.onCutsceneLine = 0
     app.tutorial = True
 
 def setColorsAndFonts(app):
@@ -44,6 +43,7 @@ def setColorsAndFonts(app):
     app.textColor = "black"
     app.buttonFont = "Arial 12 bold"
     app.dialogueFont = "Arial 14"
+    app.summaryFont = "Arial 11"
 
 def resetBattleVars(app):
     ''' reset battle-related variables '''
@@ -53,6 +53,7 @@ def resetBattleVars(app):
     app.playerTurn = True
     app.victory = app.defeat = False
     app.endOfBattleMessage = ""
+    app.onCutsceneLine = 0
 
 def menuButtonClicked(app, event):
     ''' return the number (1, 2, or 3 top-down) of a menu button clicked '''
@@ -269,17 +270,15 @@ def unitIconClicked(app, event):
     ''' return the index in app.barracks of a unit icon clicked '''
     xClick, yClick = event.x, event.y
 
-    gridOffsetX = (app.width - (7*app.cellSize)) // 2
-    gridOffsetY = (app.height - (3*app.cellSize)) // 2
+    gridOffsetY = (app.height - (2*app.height//10)) // 2
 
-    col = (xClick - gridOffsetX) // 50
-    row = (yClick - gridOffsetY) // 50
-    numCols = 7
-    numRows = 3
+    col = xClick // (app.width//4)
+    row = (yClick - gridOffsetY) // (app.height//10)
+    numCols = 4
+    numRows = 2
    
     if 0 <= col < numCols and 0 <= row < numRows:
-        if col % 2 == 0 and row % 2 == 0:
-            return (col//2) + (2*row)
+        return col + (row*4)
     return None
 
 ####
@@ -373,6 +372,7 @@ def battleMode_mousePressed(app, event):
         resetBattleVars(app)
         for unit in app.team:
             unit.resetHP()
+            unit.untapped = unit.canMove = True
         app.mode = "transitionMode"
         return
 
@@ -380,12 +380,12 @@ def battleMode_mousePressed(app, event):
         enemyTurn(app)
         # free player units to move again
         for unit in app.team:
-            unit.untapped = True
+            unit.untapped = unit.canMove = True
     else:
         playerTurn(app, event)
         # free enemy units to move again
         for enemy in app.enemyTeam:
-            enemy.untapped = True
+            enemy.untapped = enemy.canMove = True
 
 def enemyTurn(app):
     ''' play through an enemy turn '''
@@ -398,14 +398,16 @@ def enemyTurn(app):
         # attack if already in range
         if inRange(enemy, target):
             attackAndCounter(app, enemy, target)
+            enemy.canMove = False
 
         # move closer to target and attack if possible
-        if len(enemy.movePath) != 0:
+        if len(enemy.movePath) != 0 and enemy.canMove:
             enemy.row, enemy.col = enemy.movePath.pop(0)
+            enemy.canMove = False
             if inRange(enemy, target):
                 attackAndCounter(app, enemy, target)
         
-        enemy.tapped = False
+        enemy.untapped = False
 
     app.playerTurn = True
 
@@ -423,7 +425,7 @@ def playerTurn(app, event):
                 if unit.untapped:
                     app.selected = unitNum
 
-    # fix later - don't change selection ? end turn ??
+    # move selected unit
     else:
         unit = app.team[app.selected]
         drow = clickedCell[0] - unit.row
@@ -433,11 +435,18 @@ def playerTurn(app, event):
             if moveIsLegal(app, unit.row, unit.col, drow, dcol):
                 unit.row += drow
                 unit.col += dcol
-                app.selected = None
+                unit.canMove = False
     
     # end turn after all units have moved
     if allUnitsTapped(app):
         app.playerTurn = False
+
+def allUnitsTapped(app):
+    ''' return True if all team members have moved this turn '''
+    for unit in app.team:
+        if unit.untapped:
+            return False
+    return True
 
 def battleMenuButtonClicked(app, xClick, yClick):
     ''' if a battle menu button is clicked, perform the correct action '''
@@ -445,19 +454,23 @@ def battleMenuButtonClicked(app, xClick, yClick):
     buttonWidth = app.width // 6
     buttonHeight = fullHeight // 3
 
-    # make these do things later
     if buttonWidth <= xClick <= 2 * buttonWidth:
         if app.margin <= yClick <= app.margin + buttonHeight: # flee battle
+            app.defeat = True
+            checkBattleEnd(app)
             return True
         elif (app.margin + (2*buttonHeight) <= yClick
                             <= app.margin + (3*buttonHeight)): # end turn
+            app.playerTurn = False
             return True
+    # make these do things later
     elif 3 * buttonWidth <= xClick <= 5 * buttonWidth:
         if app.margin <= yClick <= app.margin + buttonHeight:
             # display untapped units
             return True
         elif (app.margin + (2*buttonHeight) <= yClick
-                            <= app.margin + (3*buttonHeight)): # team summary
+                            <= app.margin + (3*buttonHeight)): # HP summary
+            # abbreviated statuses for all living units on map
             return True
     return False # none of the buttons were clicked
 
@@ -469,13 +482,6 @@ def mapCellClicked(app, xClick, yClick):
     col = (xClick - mapOffsetX) // app.cellSize
     row = (yClick - mapOffsetY) // app.cellSize
     return row, col
-
-def allUnitsTapped(app):
-    ''' return True if all team members have moved this turn '''
-    for unit in app.team:
-        if unit.untapped:
-            return False
-    return True
 
 def battleMode_keyPressed(app, event):
     ''' handle key presses in battle mode '''
@@ -490,12 +496,12 @@ def battleMode_keyPressed(app, event):
     elif app.selected != None:
         unit = app.team[app.selected]
 
-        # finish selected unit's move without attacking
-        if event.key == "Enter": unit.untapped = False
+        # finish selected unit's turn without attacking or moving
+        if event.key == "Enter": unit.untapped = unit.canMove = False
         
         # attack an enemy or heal a team member in range
-        elif event.key in ["Up", "Left", "Right", "Down"]:
-            # fix to work for diagonals later
+        elif event.key in ["Up", "Left", "Right", "Down",
+                            "W", "w", "E", "e", "S", "s", "D", "d"]:
             target = getTargetFromPosition(app, event.key)
             if isinstance(target, Enemy):
                 attackAndCounter(app, unit, target, True)
@@ -504,15 +510,58 @@ def battleMode_keyPressed(app, event):
                 if amount != False:
                     app.battleMessage = f'''{unit.name} healed {target.name}
 for {amount} HP.'''
-            unit.untapped = False
+            unit.untapped = unit.canMove = False
         
         app.selected = None
 
-def inRange(unit, target):
-    ''' return True if target is within range of unit '''
-    drow = abs(unit.row - target.row)
-    dcol = abs(unit.col - target.col)
-    return drow + dcol == unit.range
+def getTargetFromPosition(app, key):
+    ''' return the unit in-range of the current selected character '''
+    unit = app.team[app.selected]
+
+    drow, dcol = dRowAndColFromKey(app, key)
+    targetRow = unit.row + drow
+    targetCol = unit.col + dcol
+
+    # target must be on the map
+    if targetRow < 0 or targetRow > len(app.map): return None
+    elif targetCol < 0 or targetCol > len(app.map[0]): return None
+
+    # find enemy to attack
+    for enemy in app.enemyTeam:
+        if enemy.row == targetRow and enemy.col == targetCol: return enemy
+    
+    # find team member to heal
+    if unit.weapon == "bubble wand":
+        for teamMember in app.team:
+            if teamMember.row == targetRow and teamMember.col == targetCol:
+                return teamMember
+    return None # no target in range
+
+def dRowAndColFromKey(app, key):
+    ''' return a drow,dcol move based on the entered key '''
+    unit = app.team[app.selected]
+
+    # cardinal directions
+    if key == "Up":
+        drow, dcol = -1 * unit.range, 0
+    elif key == "Left":
+        drow, dcol = 0, -1 * unit.range
+    elif key == "Right":
+        drow, dcol = 0, unit.range
+    elif key == "Down":
+        drow, dcol = unit.range, 0
+    
+    # diagonals
+    elif key in "Ww":
+        drow, dcol = -1, -1
+    elif key in "Ee":
+        drow, dcol = -1, 1
+    elif key in "Ss":
+        drow, dcol = 1, -1
+    else: # key == D
+        drow, dcol = 1, 1
+
+    return drow, dcol
 
 def attackAndCounter(app, unit, target, unitIsPlayer=False):
     ''' play through a unit's attack and target's counterattack '''
@@ -543,42 +592,18 @@ for {counterAmount} damage!'''
     
     checkBattleEnd(app)
 
+def inRange(unit, target):
+    ''' return True if target is within range of unit '''
+    drow = abs(unit.row - target.row)
+    dcol = abs(unit.col - target.col)
+    return drow + dcol == unit.range
+
 def getExperience(app, unit):
     ''' grant experience to a player unit after defeating an enemy '''
     unit.toNextLevel -= 1
     if unit.toNextLevel <= 0:
         unit.levelUp()
         app.battleMessage += f"\n{unit.name} leveled up to level {unit.level}!"
-
-def getTargetFromPosition(app, direction):
-    ''' return the unit in-range of the current selected character '''
-    unit = app.team[app.selected]
-
-    if direction == "Up":
-        drow, dcol = -1 * unit.range, 0
-    elif direction == "Left":
-        drow, dcol = 0, -1 * unit.range
-    elif direction == "Right":
-        drow, dcol = 0, unit.range
-    else: # direction = "Down"
-        drow, dcol = unit.range, 0
-    targetRow = unit.row + drow
-    targetCol = unit.col + dcol
-
-    # target must be on the map
-    if targetRow < 0 or targetRow > len(app.map): return None
-    elif targetCol < 0 or targetCol > len(app.map[0]): return None
-
-    # find enemy to attack
-    for enemy in app.enemyTeam:
-        if enemy.row == targetRow and enemy.col == targetCol: return enemy
-    
-    # find team member to heal
-    if unit.weapon == "bubble wand":
-        for teamMember in app.team:
-            if teamMember.row == targetRow and teamMember.col == targetCol:
-                return teamMember
-    return None # no target in range
 
 def checkBattleEnd(app):
     ''' check if a battle is over and set victory or defeat conditions '''
@@ -603,7 +628,7 @@ Click to go back inside.'''
         app.battleMessage = "You lose!"
 
         # lose some Droplets
-        dropletsLost = random.int(1, (app.droplets//3) + 1)
+        dropletsLost = random.randint(1, (app.droplets//3) + 1)
         app.droplets -= dropletsLost
         app.endOfBattleMessage = f'''The enemy made off with
 a bucket of {dropletsLost} Droplets.
