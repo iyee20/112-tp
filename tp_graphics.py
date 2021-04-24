@@ -12,20 +12,22 @@ from cmu_112_graphics import *
 def loadImages(app):
     ''' import images from local files '''
     # backgrounds
+    pass
 
     # map-related images
+    app.castleCellImg = app.loadImage("images/castle.png")
+    app.duneCellImg = app.loadImage("images/dune.png")
+    app.moatCellImg = app.loadImage("images/moat.png")
+    app.sandCellImg = app.loadImage("images/sand.png")
     
     # character icons
     loadIcons(app)
 
     # character fullbodies
+    app.nerissaImg = app.loadImage("images/aqua.png") # fix later
 
     # misc
     app.seashellImg = app.loadImage("images/seashell.png")
-    app.castleCellImg = app.loadImage("images/castle.png")
-    app.duneCellImg = app.loadImage("images/dune.png")
-    app.moatCellImg = app.loadImage("images/moat.png")
-    app.sandCellImg = app.loadImage("images/sand.png")
 
 def loadIcons(app):
     ''' load character icon images '''
@@ -193,7 +195,34 @@ def drawDialogue(app, canvas, line, topX, topY):
 
 def tutorialMode_redrawAll(app, canvas):
     ''' draw tutorial screen '''
-    pass
+    drawBackground(app, canvas, "white") # change later
+
+    canvas.create_image(app.width // 2, app.height // 2,
+                            image=ImageTk.PhotoImage(app.annaImg))
+
+    allDialogue = openingDialogue(app)
+
+    if app.onCutsceneLine < len(allDialogue):
+        drawDialogueBox(app, canvas, "Anna", allDialogue[app.onCutsceneLine])
+
+def openingDialogue(app):
+    ''' return the game's opening dialogue '''
+    openingDialogue = [
+        f'''Hey there, stranger. Welcome to the Sand Castle. What’s your name?
+CLICK TO ENTER NAME >>>''',
+        f'''{app.aqua.name}, huh? I’m Anna, the gatekeeper.
+PRESS SPACE TO CONTINUE >>''',
+        '''Bottom text? What do you mean? ...Maybe you’re imagining things.
+It probably won’t happen again.
+>>''',
+        '''By the way, here’s a message from the programmer…
+"Please don’t resize the window or I WILL cry :(("
+>>''',
+        '''I wonder what that’s about. A sign of being overworked, maybe?
+>>''',
+        "Huh? What was that?"
+    ]
+    return openingDialogue
 
 ####
 # Gacha drawing functions
@@ -236,11 +265,11 @@ Each pull costs 1 Seashell.'''
 
 def cutsceneMode_redrawAll(app, canvas):
     ''' draw a cutscene '''
-    drawBackground(app, canvas, app.buttonColor) # change later
+    drawBackground(app, canvas, "white") # change later
 
     # play dialogue of most recently acquired character
     characterName = app.barracks[-1].name
-    allDialogue = chooseCutscene(app, characterName)
+    allDialogue, image = chooseCutscene(app, characterName)
     
     if app.onCutsceneLine < len(allDialogue):
         drawDialogueBox(app, canvas, characterName,
@@ -249,25 +278,41 @@ def cutsceneMode_redrawAll(app, canvas):
         fourFifthsHeight = int(app.height * 4/5)
         drawButton(app, canvas, 0, fourFifthsHeight, app.width, app.height,
                         color=app.buttonColor, text="Click to go back to gacha")
+    
+    # draw Aqua and character together
+    drawAquaWithImage(app, canvas, image)
+
+def drawAquaWithImage(app, canvas, image):
+    ''' draw Aqua's icon next to another image at the center of the canvas '''
+    imageWidth, imageHeight = image.size
+    fullWidth = (app.cellSize*2) + imageWidth
+
+    aquaLeftX = (app.width-fullWidth) // 2
+    imageLeftX = aquaLeftX + (2*app.cellSize)
+
+    canvas.create_image(aquaLeftX, app.width // 2, anchor="w",
+                            image=ImageTk.PhotoImage(app.aquaImg))
+    canvas.create_image(imageLeftX, app.width //2, anchor="w",
+                            image=ImageTk.PhotoImage(image))
 
 def chooseCutscene(app, character=None):
-    ''' return the dialogue corresponding to a cutscene '''
+    ''' return the dialogue and character image corresponding to a cutscene '''
     if character == "Giang":
-        return giangDialogue(app)
+        return giangDialogue(app), app.giangImg
     elif character == "Iara":
-        return iaraDialogue(app)
+        return iaraDialogue(app), app.iaraImg
     elif character == "Kai":
-        return kaiDialogue(app)
+        return kaiDialogue(app), app.kaiImg
     elif character == "Marina":
-        return marinaDialogue(app)
+        return marinaDialogue(app), app.marinaImg
     elif character == "Morgan":
-        return morganDialogue(app)
+        return morganDialogue(app), app.morganImg
     elif character == "Naia":
-        return naiaDialogue(app)
+        return naiaDialogue(app), app.naiaImg
     elif character == "Walter":
-        return walterDialogue(app)
+        return walterDialogue(app), app.walterImg
     else: # ending scene
-        return endDialogue(app)
+        return endDialogue(app), app.nerissaImg
 
 def giangDialogue(app):
     ''' return Giang's cutscene dialogue '''
@@ -462,7 +507,9 @@ def battleMode_redrawAll(app, canvas):
         drawStatus(app, canvas, unit, 0)
         drawMoveRadius(app, canvas, unit)
     else:
-        if app.battleMenuDisplay == 0:
+        if app.tutorial:
+            pass # change later
+        elif app.battleMenuDisplay == 0:
             drawPlayerMenu(app, canvas)
     
     if app.battleMessage != None:

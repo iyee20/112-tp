@@ -44,6 +44,7 @@ def appStarted(app):
     app.freeplay = app.cheats = False
     app.mode = "mainScreenMode"
     app.onCutsceneLine = 0
+    app.tutorial = True
 
 def menuButtonClicked(app, event):
     ''' return the number (1, 2, or 3 top-down) of a menu button clicked '''
@@ -76,8 +77,7 @@ def mainScreenMode_mousePressed(app, event):
     # only one game mode (story or freeplay) is available at a time 
     if not app.freeplay: # story button
         if menuButtonClicked(app, event) == 1:
-            #app.mode = "tutorialMode"
-            app.mode = "transitionMode" # change later after testing
+            app.mode = "tutorialMode"
     else: # freeplay button
         if menuButtonClicked(app, event) == 2:
             chooseMap(app)
@@ -153,9 +153,24 @@ def tenLevelUpAll(app):
 
 def tutorialMode_mousePressed(app, event):
     ''' handle mouse presses in tutorial mode '''
-    name = app.getUserInput("Enter a name.")
-    if name != None and not name.isspace():
-        app.aqua.name = name
+    if app.aqua.name == "Aqua":
+        name = app.getUserInput("Enter a name.") # limit characters later
+        if name != None and not name.isspace():
+            app.aqua.name = name.title()
+            app.onCutsceneLine += 1
+
+def tutorialMode_keyPressed(app, event):
+    ''' handle key presses in tutorial mode '''
+    if event.key == "Space":
+        app.onCutsceneLine += 1
+        allDialogue = openingDialogue(app)
+        if app.onCutsceneLine >= len(allDialogue):
+            app.onCutsceneLine = 0
+            chooseMap(app)
+            spawnTeam(app, app.team)
+            makeEnemyTeam(app)
+            spawnTeam(app, app.enemyTeam, unitType="enemy")
+            app.mode = "battleMode"
 
 ####
 # Transition screen
@@ -327,7 +342,7 @@ def gachaPull(app, pullNum):
 
 def cutsceneMode_keyPressed(app, event):
     ''' handle key presses in cutscene mode '''
-    if event.key == "Enter":
+    if event.key == "Space":
         app.onCutsceneLine += 1
 
 def cutsceneMode_mousePressed(app, event):
@@ -466,8 +481,8 @@ def battleMode_keyPressed(app, event):
             elif target != None:
                 amount = unit.heal(target)
                 if amount != False:
-                    app.battleMessage = f"""{unit.name} healed {target.name}
-for {amount} HP."""
+                    app.battleMessage = f'''{unit.name} healed {target.name}
+for {amount} HP.'''
             unit.untapped = False
         
         app.selected = None
@@ -483,8 +498,8 @@ def attackAndCounter(app, unit, target, unitIsPlayer=False):
     # unit attacks target
     amount = unit.attackTarget(target)
     if amount != False:
-        app.battleMessage = f"""{unit.name} attacked {target.name}
-for {amount} damage!"""
+        app.battleMessage = f'''{unit.name} attacked {target.name}
+for {amount} damage!'''
         if target.hp == 0:
             app.battleMessage += f"\n{target.name} was defeated!"
             if unitIsPlayer: # player unit defeats enemy unit
@@ -496,8 +511,8 @@ for {amount} damage!"""
     if inRange(target, unit) and target.hp != 0:
         counterAmount = target.attackTarget(unit)
         if counterAmount != False:
-            app.battleMessage += f"""\n{target.name} counterattacked {unit.name}
-for {counterAmount} damage!"""
+            app.battleMessage += f'''\n{target.name} counterattacked {unit.name}
+for {counterAmount} damage!'''
             if unit.hp == 0:
                 app.battleMessage += f"\n{unit.name} was defeated!"
                 if not unitIsPlayer: # enemy unit is defeated by player unit
@@ -556,6 +571,10 @@ def chooseMap(app):
         ["_", "_", "X", "X", "X", "E", "_"],
         ["_", "_", "X", "*", "X", "_", "_"],
     ]
+
+    if app.tutorial: # choose the sand castle map for the tutorial
+        app.map = sandCastleMap
+        return
 
     dunesMap = [
         ["O", "_", "_", "_", "_", "E", "_"],
@@ -630,6 +649,10 @@ def makeEnemyTeam(app):
     enemy2 = makeEnemy(app, "Heatstroke", "pool noodle", app.heatstrokeImg)
     enemy3 = makeEnemy(app, "Salt", "water gun", app.saltImg)
 
+    if app.tutorial: # only make 1 enemy for the tutorial
+        app.enemyTeam.append(enemy1)
+        return
+    
     app.enemyTeam.extend([enemy1, enemy2, enemy3])
 
     # make extra enemies
