@@ -501,8 +501,11 @@ def battleMode_redrawAll(app, canvas):
     drawMap(app, canvas)
     drawUnitsOnMap(app, canvas)
     
+    # display victory or defeat message
+    if app.victory or app.defeat:
+        drawEndOfBattle(app, canvas)
     # draw status bar of selected unit
-    if app.selected != None:
+    elif app.selected != None:
         unit = app.team[app.selected]
         drawStatus(app, canvas, unit, 0)
         drawMoveRadius(app, canvas, unit)
@@ -525,6 +528,16 @@ def drawUnitsOnMap(app, canvas):
     for enemy in app.enemyTeam:
         if enemy.hp != 0:
             drawCell(app, canvas, enemy.row, enemy.col, enemy.image)
+
+def drawEndOfBattle(app, canvas):
+    ''' draw the end-of-battle message '''
+    if app.victory:
+        color = "green" # may change later
+    else: # app.defeat
+        color = "red"
+    
+    drawButton(app, canvas, 0, 0, app.width, app.height // 5,
+                color=color, text=app.endOfBattleMessage)
 
 def drawPlayerMenu(app, canvas):
     ''' draw a player's menu options in battle mode '''

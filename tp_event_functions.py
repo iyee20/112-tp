@@ -3,7 +3,7 @@
 # andrewID: iby
 ####
 
-import random, time
+import random
 from cmu_112_graphics import *
 from tp_graphics import *
 from tp_content import *
@@ -13,6 +13,8 @@ from tp_content import *
 ####
 
 def appStarted(app):
+    setColorsAndFonts(app)
+
     # import images and create playable characters
     loadImages(app)
     loadPlayableUnits(app)
@@ -28,23 +30,29 @@ def appStarted(app):
     app.droplets = app.seashells = 3 # change to 0 later after testing
     app.moatSize = 25
 
-    # set up battle variables
-    app.enemyTeam = []
-    app.selected = app.battleMessage = None
-    app.battleMenuDisplay = 0
-    app.playerTurn = True
-
-    # define game colors and fonts
-    app.buttonColor = "#699bf0"
-    app.textColor = "black"
-    app.buttonFont = "Arial 12 bold"
-    app.dialogueFont = "Arial 14"
-
+    resetBattleVars(app)
+    
     # define game mode
     app.freeplay = app.cheats = False
     app.mode = "mainScreenMode"
     app.onCutsceneLine = 0
     app.tutorial = True
+
+def setColorsAndFonts(app):
+    ''' define game colors and fonts '''
+    app.buttonColor = "#699bf0"
+    app.textColor = "black"
+    app.buttonFont = "Arial 12 bold"
+    app.dialogueFont = "Arial 14"
+
+def resetBattleVars(app):
+    ''' reset battle-related variables '''
+    app.enemyTeam = []
+    app.selected = app.battleMessage = None
+    app.battleMenuDisplay = 0
+    app.playerTurn = True
+    app.victory = app.defeat = False
+    app.endOfBattleMessage = ""
 
 def menuButtonClicked(app, event):
     ''' return the number (1, 2, or 3 top-down) of a menu button clicked '''
@@ -77,7 +85,9 @@ def mainScreenMode_mousePressed(app, event):
     # only one game mode (story or freeplay) is available at a time 
     if not app.freeplay: # story button
         if menuButtonClicked(app, event) == 1:
-            app.mode = "tutorialMode"
+            #app.mode = "tutorialMode" - change back later
+            app.tutorial = False
+            app.mode = "transitionMode"
     else: # freeplay button
         if menuButtonClicked(app, event) == 2:
             chooseMap(app)
@@ -154,8 +164,8 @@ def tenLevelUpAll(app):
 def tutorialMode_mousePressed(app, event):
     ''' handle mouse presses in tutorial mode '''
     if app.aqua.name == "Aqua":
-        name = app.getUserInput("Enter a name.") # limit characters later
-        if name != None and not name.isspace():
+        name = app.getUserInput("Enter a name with 6 characters or less.")
+        if name != None and name.isalpha() and len(name) <= 6:
             app.aqua.name = name.title()
             app.onCutsceneLine += 1
 
@@ -358,6 +368,14 @@ def cutsceneMode_mousePressed(app, event):
 
 def battleMode_mousePressed(app, event):
     ''' handle mouse presses in battle mode '''
+    if app.victory or app.defeat:
+        # reset all battle-related variables before going back
+        resetBattleVars(app)
+        for unit in app.team:
+            unit.resetHP()
+        app.mode = "transitionMode"
+        return
+
     if not app.playerTurn:
         enemyTurn(app)
         # free player units to move again
@@ -461,20 +479,23 @@ def allUnitsTapped(app):
 
 def battleMode_keyPressed(app, event):
     ''' handle key presses in battle mode '''
+    if app.victory or app.defeat: return
+
+    # move through tutorial dialogue
+    if app.tutorial and event.key == "Space": app.onCutsceneLine += 1
+
     # display player menu
-    if event.key in ["m", "M"]:
-        app.selected = None
+    if event.key in ["m", "M"]: app.selected = None
     
-    # add more later
     elif app.selected != None:
         unit = app.team[app.selected]
 
         # finish selected unit's move without attacking
-        if event.key == "Enter":
-            unit.untapped = False
+        if event.key == "Enter": unit.untapped = False
         
         # attack an enemy or heal a team member in range
         elif event.key in ["Up", "Left", "Right", "Down"]:
+            # fix to work for diagonals later
             target = getTargetFromPosition(app, event.key)
             if isinstance(target, Enemy):
                 attackAndCounter(app, unit, target, True)
@@ -519,6 +540,8 @@ for {counterAmount} damage!'''
                     getExperience(app, target)
         else:
             app.battleMessage += f"\n{target.name}'s counterattack missed!"
+    
+    checkBattleEnd(app)
 
 def getExperience(app, unit):
     ''' grant experience to a player unit after defeating an enemy '''
@@ -556,6 +579,49 @@ def getTargetFromPosition(app, direction):
             if teamMember.row == targetRow and teamMember.col == targetCol:
                 return teamMember
     return None # no target in range
+
+def checkBattleEnd(app):
+    ''' check if a battle is over and set victory or defeat conditions '''
+    if checkVictory(app):
+        app.victory = True
+        app.battleMessage = "You win!"
+
+        # get rewards for winning
+        dropletsWon = seashellsWon = 0
+        for enemy in app.enemyTeam:
+            dropletsWon += enemy.droplets
+            if enemy.seashellDropRate > random.randint(0, 75):
+                seashellsWon += 1
+        app.droplets += dropletsWon
+        app.seashells += seashellsWon
+        app.endOfBattleMessage = f'''The enemy fled, leaving behind
+a bucket of {dropletsWon} Droplets and {seashellsWon} Seashells.
+Click to go back inside.'''
+
+    elif checkDefeat(app):
+        app.defeat = True
+        app.battleMessage = "You lose!"
+
+        # lose some Droplets
+        dropletsLost = random.int(1, (app.droplets//3) + 1)
+        app.droplets -= dropletsLost
+        app.endOfBattleMessage = f'''The enemy made off with
+a bucket of {dropletsLost} Droplets.
+Click to go back inside.'''
+
+def checkVictory(app):
+    ''' return True if a battle has been won by the player '''
+    for enemy in app.enemyTeam:
+        if enemy.hp != 0:
+            return False
+    return True
+
+def checkDefeat(app):
+    ''' return True if a battle has been lost by the player '''
+    for unit in app.team:
+        if unit.hp != 0:
+            return False
+    return True
 
 def chooseMap(app):
     ''' set the current map for one battle '''
@@ -790,7 +856,7 @@ def aStarSearch(app, startNode, goal, heuristic):
 ####
 
 def main():
-    runApp(width=600, height=700) # change later
+    runApp(width=600, height=700)
 
 if (__name__ == '__main__'):
     main()

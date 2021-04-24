@@ -87,7 +87,6 @@ class PlayableChar(Unit):
                         image)
 
         # set stats unique to playable characters
-        self.playable = True
         self.level = 1
         self.toNextLevel = 3 # number of enemies to defeat to advance
     
@@ -157,8 +156,7 @@ class Enemy(Unit):
                         image)
 
         # set stats unique to enemies
-        self.playable = False
-        self.droplets = random.randint(0, 5) # number of Droplets carried
+        self.droplets = random.randint(1, 5) # number of Droplets carried
         self.seashellDropRate = random.randint(0, 100)
         self.movePath = []
     
