@@ -135,9 +135,9 @@ def settingsMode_keyPressed(app, event):
     ''' handle key presses in settings mode (only used for cheats) '''
     if not app.cheats: return
 
-    if event.key in ["c", "C"]:
+    if event.key in "Cc":
         getAllCharacters(app)
-    elif event.key in ["l", "L"]:
+    elif event.key in "Ll":
         tenLevelUpAll(app)
 
 def getAllCharacters(app):
@@ -199,6 +199,13 @@ def transitionMode_mousePressed(app, event):
         app.mode = "battleMode"
     elif menuButtonClicked(app, event) == 3: # team button
         app.mode = "barracksMode"
+
+def transitionMode_keyPressed(app, event):
+    ''' handle key presses in transition mode (only used for cheats) '''
+    if not app.cheats: return
+
+    if event.key in "Hh": # go back to main screen
+        app.mode = "mainScreenMode"
 
 ####
 # Barracks screen and team selection screen
@@ -387,25 +394,26 @@ def battleMode_mousePressed(app, event):
         for enemy in app.enemyTeam:
             enemy.untapped = enemy.canMove = True
 
-def enemyTurn(app):
+def enemyTurn(app): # separate moves later
     ''' play through an enemy turn '''
     for enemy in app.enemyTeam:
-        # choose target and find path to target
-        target = enemy.chooseTarget(app.team)
-        enemy.movePath = aStarSearch(app, (enemy.row, enemy.col),
-                            (target.row, target.col), heuristic)
+        if enemy.untapped and enemy.hp != 0:
+            # choose target and find path to target
+            target = enemy.chooseTarget(app.team)
+            enemy.movePath = aStarSearch(app, (enemy.row, enemy.col),
+                                (target.row, target.col), heuristic)
 
-        # attack if already in range
-        if inRange(enemy, target):
-            attackAndCounter(app, enemy, target)
-            enemy.canMove = False
-
-        # move closer to target and attack if possible
-        if len(enemy.movePath) != 0 and enemy.canMove:
-            enemy.row, enemy.col = enemy.movePath.pop(0)
-            enemy.canMove = False
+            # attack if already in range
             if inRange(enemy, target):
                 attackAndCounter(app, enemy, target)
+                enemy.canMove = False
+
+            # move closer to target and attack if possible
+            if len(enemy.movePath) != 0 and enemy.canMove:
+                enemy.row, enemy.col = enemy.movePath.pop(0)
+                enemy.canMove = False
+                if inRange(enemy, target):
+                    attackAndCounter(app, enemy, target)
         
         enemy.untapped = False
 
@@ -467,6 +475,7 @@ def battleMenuButtonClicked(app, xClick, yClick):
     elif 3 * buttonWidth <= xClick <= 5 * buttonWidth:
         if app.margin <= yClick <= app.margin + buttonHeight:
             # display untapped units
+            app.battleMenuDisplay = 1
             return True
         elif (app.margin + (2*buttonHeight) <= yClick
                             <= app.margin + (3*buttonHeight)): # HP summary
@@ -572,6 +581,7 @@ def attackAndCounter(app, unit, target, unitIsPlayer=False):
 for {amount} damage!'''
         if target.hp == 0:
             app.battleMessage += f"\n{target.name} was defeated!"
+            target.row = target.col = -1
             if unitIsPlayer: # player unit defeats enemy unit
                 getExperience(app, unit)
     else:
@@ -585,6 +595,7 @@ for {amount} damage!'''
 for {counterAmount} damage!'''
             if unit.hp == 0:
                 app.battleMessage += f"\n{unit.name} was defeated!"
+                unit.row = unit.col = -1
                 if not unitIsPlayer: # enemy unit is defeated by player unit
                     getExperience(app, target)
         else:
@@ -628,8 +639,11 @@ Click to go back inside.'''
         app.battleMessage = "You lose!"
 
         # lose some Droplets
-        dropletsLost = random.randint(1, (app.droplets//3) + 1)
-        app.droplets -= dropletsLost
+        if app.droplets > 0:
+            dropletsLost = random.randint(1, (app.droplets//3) + 1)
+            app.droplets -= dropletsLost
+        else:
+            dropletsLost = 0
         app.endOfBattleMessage = f'''The enemy made off with
 a bucket of {dropletsLost} Droplets.
 Click to go back inside.'''

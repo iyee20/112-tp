@@ -529,8 +529,8 @@ def battleMode_redrawAll(app, canvas):
     drawUnitsOnMap(app, canvas)
     
     # display victory or defeat message
-    if app.victory or app.defeat:
-        drawEndOfBattle(app, canvas)
+    if app.victory or app.defeat: drawEndOfBattle(app, canvas)
+    
     # draw status bar of selected unit
     elif app.selected != None:
         unit = app.team[app.selected]
@@ -540,10 +540,9 @@ def battleMode_redrawAll(app, canvas):
     else:
         if app.tutorial:
             pass # change later
-        elif app.battleMenuDisplay == 0:
-            drawPlayerMenu(app, canvas)
-        elif app.battleMenuDisplay == 2:
-            drawBattleSummary(app, canvas)
+        elif app.battleMenuDisplay == 0: drawPlayerMenu(app, canvas)
+        elif app.battleMenuDisplay == 1: drawUntappedUnits(app, canvas)
+        elif app.battleMenuDisplay == 2: drawBattleSummary(app, canvas)
     
     if app.battleMessage != None:
         canvas.create_text(app.width // 2, int(app.height * 0.9),
@@ -591,11 +590,31 @@ def drawPlayerMenu(app, canvas):
                 5 * buttonWidth, app.margin + (3*buttonHeight),
                 color="white", text="Show HP summary")
 
+def drawUntappedUnits(app, canvas):
+    ''' draw summaries for ever untapped team member '''
+    canvas.create_rectangle(0, 0, app.width, app.height // 5,
+                                fill=app.buttonColor)
+
+    # determine untapped units
+    untappedUnits = []
+    for unit in app.team:
+        if unit.untapped or unit.canMove:
+            untappedUnits.append(unit)
+
+    # draw unit summaries in a row
+    offsetX = app.width // 16
+    for unitNum in range(len(untappedUnits)):
+        topX = (offsetX * (unitNum+1)) + ((app.width//4) * unitNum)
+        topY = app.height // 20
+        unit = untappedUnits[unitNum]
+        drawUnitSummary(app, canvas, unit, topX, topY)
+
 def drawBattleSummary(app, canvas):
     ''' draw summaries for every living unit on the map '''
     canvas.create_rectangle(0, 0, app.width, app.height // 5,
                                 fill=app.buttonColor)
 
+    # determine living units
     livingUnits = []
     for unit in app.team:
         if unit.hp != 0:
@@ -604,7 +623,7 @@ def drawBattleSummary(app, canvas):
         if enemy.hp != 0:
             livingUnits.append(enemy)
 
-    # draw unit icons in a grid (up to 2 x 4)
+    # draw unit summaries in a grid (up to 2 x 4)
     for unitNum in range(len(livingUnits)):
         topX = (app.width//4) * (unitNum%4)
         topY = (app.height//10) * (unitNum//4)
@@ -642,7 +661,7 @@ def moveIsLegal(app, currRow, currCol, drow, dcol):
     ''' check if a unit can legally move in direction drow,dcol '''
     newRow = currRow + drow
     newCol = currCol + dcol
-    
+     # add "obstacles" later - no moving over units or water
     # check that newRow,newCol is not already occupied
     for unit in app.team:
         if unit.row == newRow and unit.col == newCol:
