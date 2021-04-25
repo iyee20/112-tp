@@ -150,7 +150,7 @@ def settingsMode_redrawAll(app, canvas):
     drawBackButton(app, canvas, app.margin, app.margin)
 
     drawThreeButtonMenu(app, canvas, "Change Moat Size", "Toggle Cheats",
-                            "Do Nothing",
+                            "Toggle Game Mode",
                             app.buttonColor, app.buttonColor, app.buttonColor)
 
 ####
@@ -179,7 +179,7 @@ def drawDialogueBox(app, canvas, name, text, position="bottom"):
     space = 30
     for line in text.splitlines():
         drawDialogue(app, canvas, line, topX + app.margin, topY + space)
-        space *= 2
+        space += 30
 
 def drawDialogue(app, canvas, line, topX, topY):
     ''' draw a line of dialogue '''
@@ -464,7 +464,8 @@ def drawStatus(app, canvas, unit, topY, slotNum=-1):
 
     # draw unit name and icon
     canvas.create_text(app.margin, botY - app.margin, anchor="sw",
-                    text=unit.name, fill=app.textColor, font=app.dialogueFont)
+                    text=unit.name, fill=app.textColor,
+                    font=app.dialogueFont+" bold")
     cx = app.margin + (app.cellSize // 2)
     cy = cx + topY
     canvas.create_image(cx, cy, image=ImageTk.PhotoImage(unit.image))
@@ -551,11 +552,12 @@ def battleMode_redrawAll(app, canvas):
         if unit.canMove:
             drawMoveRadius(app, canvas, unit)
     else:
-        if app.tutorial:
-            pass # change later
-        elif app.battleMenuDisplay == 0: drawPlayerMenu(app, canvas)
+        if app.tutorial and app.onCutsceneLine < 4:
+            drawTutorialBattleIntro(app, canvas)
+        if app.battleMenuDisplay == 0: drawPlayerMenu(app, canvas)
         elif app.battleMenuDisplay == 1: drawUntappedUnits(app, canvas)
         elif app.battleMenuDisplay == 2: drawBattleSummary(app, canvas)
+        elif app.battleMenuDisplay == 3: drawFreeplayIntro(app, canvas)
     
     if app.battleMessage != None:
         canvas.create_text(app.width // 2, int(app.height * 0.9),
@@ -580,6 +582,34 @@ def drawEndOfBattle(app, canvas):
     
     drawButton(app, canvas, 0, 0, app.width, app.height // 5,
                 color=color, text=app.endOfBattleMessage)
+
+def drawTutorialBattleIntro(app, canvas):
+    ''' draw the introduction to battle mode during the tutorial '''
+    allDialogue = battleIntroDialogue(app)
+    
+    if app.onCutsceneLine < len(allDialogue):
+        drawDialogueBox(app, canvas, "Anna", allDialogue[app.onCutsceneLine])
+
+def battleIntroDialogue(app):
+    ''' return Anna's dialogue during the tutorial battle '''
+    enemy = app.enemyTeam[0]
+
+    battleIntro = [
+        f'''Enemies approaching! Everyone to battle stations! Even you,
+{app.aqua.name}! Pick up your Pool Noodle and fight!
+>>''',
+        '''What are you looking so confused for? Don’t you know about the
+Surf War?
+>>''',
+        f'''That {enemy.name} is here to steal Droplets from the Moat in front
+of the Sand Castle.
+>>''',
+        f'''You’re right there, so why don’t you try attacking the
+{enemy.name}? Click your icon and click to where you want to move.
+Then attack with the correct arrow key!'''
+    ]
+
+    return battleIntro
 
 def drawPlayerMenu(app, canvas):
     ''' draw a player's menu options in battle mode '''
@@ -642,6 +672,12 @@ def drawBattleSummary(app, canvas):
         topY = (app.height//10) * (unitNum//4)
         unit = livingUnits[unitNum]
         drawUnitSummary(app, canvas, unit, topX, topY)
+
+def drawFreeplayIntro(app, canvas):
+    ''' draw the introduction to freeplay mode '''
+    freeplayIntro = '''Now that the Moat is full, we can let loose, but we
+can’t rest easy yet! Keep defending the Sand Castle from enemies!'''
+    drawDialogueBox(app, canvas, "Anna", freeplayIntro, "top")
 
 def drawMap(app, canvas):
     ''' draw a battle map '''

@@ -27,7 +27,7 @@ def appStarted(app):
     app.barracks = [app.aqua]
     app.team = [app.aqua]
     app.foundAllUnits = False
-    app.droplets = app.seashells = 3 # change to 0 later after testing
+    app.droplets = app.seashells = 0
     app.moatSize = 25
 
     resetBattleVars(app)
@@ -86,11 +86,11 @@ def mainScreenMode_mousePressed(app, event):
     # only one game mode (story or freeplay) is available at a time 
     if not app.freeplay: # story button
         if menuButtonClicked(app, event) == 1:
-            #app.mode = "tutorialMode" - change back later
-            app.tutorial = False
-            app.mode = "transitionMode"
+            app.mode = "tutorialMode"
     else: # freeplay button
         if menuButtonClicked(app, event) == 2:
+            app.storyModeEnd = False
+            app.battleMenuDisplay = 3
             chooseMap(app)
             spawnTeam(app, app.team)
             makeEnemyTeam(app)
@@ -115,8 +115,16 @@ def settingsMode_mousePressed(app, event):
             app.showMessage("Developer cheats ON.")
         else:
             app.showMessage("Developer cheats OFF.")
-    elif menuButtonClicked(app, event) == 3: # nothing... (for now)
-        app.showMessage("Why did you click this button?")
+    elif menuButtonClicked(app, event) == 3: # toggle game mode
+        app.freeplay = not app.freeplay
+        if app.freeplay:
+            app.battleMenuDisplay = 3
+            app.tutorial = False
+            app.showMessage("Story mode skipped.")
+        else:
+            app.battleMenuDisplay = 0
+            app.tutorial = True
+            app.showMessage("Now in story mode.")
     elif backButtonClicked(app, event, app.margin, app.margin): # back to main
         app.mode = "mainScreenMode"
 
@@ -535,7 +543,6 @@ def battleMenuButtonClicked(app, xClick, yClick):
                             <= app.margin + (3*buttonHeight)): # end turn
             app.playerTurn = False
             return True
-    # make this do things later
     elif 3 * buttonWidth <= xClick <= 5 * buttonWidth:
         if app.margin <= yClick <= app.margin + buttonHeight:
             # display untapped units
