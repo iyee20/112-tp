@@ -11,8 +11,8 @@ from cmu_112_graphics import *
 
 def loadImages(app):
     ''' import images from local files '''
-    # backgrounds
-    pass
+    # background
+    app.sandCastleImg = app.loadImage("images/sandCastle.png")
 
     # map-related images
     app.castleCellImg = app.loadImage("images/castle.png")
@@ -23,8 +23,8 @@ def loadImages(app):
     # character icons
     loadIcons(app)
 
-    # character fullbodies
-    app.nerissaImg = app.loadImage("images/aqua.png") # fix later
+    # character fullbody
+    app.nerissaImg = app.loadImage("images/nerissa.png")
 
     # misc
     app.seashellImg = app.loadImage("images/seashell.png")
@@ -53,9 +53,9 @@ def loadIcons(app):
 # General drawing functions
 ####
 
-def drawBackground(app, canvas, color):
-    ''' set the background to a solid color '''
-    canvas.create_rectangle(0, 0, app.width, app.height, fill=color, width=0)
+def drawBackground(app, canvas, image):
+    ''' set the background to an image '''
+    canvas.create_image(0, 0, anchor="nw", image=ImageTk.PhotoImage(image))
 
 def drawSeashells(app, canvas, topX, topY):
     ''' draw the player's Seashell count '''
@@ -102,7 +102,6 @@ def drawThreeButtonMenu(app, canvas, text1, text2, text3,
 
 def mainScreenMode_redrawAll(app, canvas):
     ''' draw the main screen '''
-    drawBackground(app, canvas, "white") # change later
     drawTitle(app, canvas)
 
     # draw buttons
@@ -193,7 +192,7 @@ def drawDialogue(app, canvas, line, topX, topY):
 
 def tutorialMode_redrawAll(app, canvas):
     ''' draw tutorial screen '''
-    drawBackground(app, canvas, "white") # change later
+    drawBackground(app, canvas, app.sandCastleImg)
 
     canvas.create_image(app.width // 2, app.height // 2,
                             image=ImageTk.PhotoImage(app.annaImg))
@@ -273,10 +272,13 @@ def drawGachaMachine(app, canvas):
 
 def cutsceneMode_redrawAll(app, canvas):
     ''' draw a cutscene '''
-    drawBackground(app, canvas, "white") # change later
+    drawBackground(app, canvas, app.sandCastleImg)
 
-    # play dialogue of most recently acquired character
-    characterName = app.barracks[-1].name
+    if not app.storyModeEnd:
+        # play dialogue of most recently acquired character
+        characterName = app.barracks[-1].name
+    else: # ending scene
+        characterName = "Nerissa"
     allDialogue, image = chooseCutscene(app, characterName)
     
     if app.onCutsceneLine < len(allDialogue):
@@ -284,26 +286,31 @@ def cutsceneMode_redrawAll(app, canvas):
                             allDialogue[app.onCutsceneLine])
     else:
         fourFifthsHeight = int(app.height * 4/5)
+        if not app.storyModeEnd:
+            text = "Click to go back to gacha"
+        else:
+            text = "Click to return to main screen"
         drawButton(app, canvas, 0, fourFifthsHeight, app.width, app.height,
-                        color=app.buttonColor, text="Click to go back to gacha")
+                        color=app.buttonColor, text=text)
     
     # draw Aqua and character together
     drawAquaWithImage(app, canvas, image)
 
 def drawAquaWithImage(app, canvas, image):
-    ''' draw Aqua's icon next to another image at the center of the canvas '''
+    ''' draw Aqua's icon next to another image '''
     imageWidth, imageHeight = image.size
     fullWidth = (app.cellSize*2) + imageWidth
 
     aquaLeftX = (app.width-fullWidth) // 2
     imageLeftX = aquaLeftX + (2*app.cellSize)
+    cy = app.height - 150 - max(imageHeight//2, 50)
 
-    canvas.create_image(aquaLeftX, app.width // 2, anchor="w",
+    canvas.create_image(aquaLeftX, cy, anchor="w",
                             image=ImageTk.PhotoImage(app.aquaImg))
-    canvas.create_image(imageLeftX, app.width //2, anchor="w",
+    canvas.create_image(imageLeftX, cy, anchor="w",
                             image=ImageTk.PhotoImage(image))
 
-def chooseCutscene(app, character=None):
+def chooseCutscene(app, character):
     ''' return the dialogue and character image corresponding to a cutscene '''
     if character == "Giang":
         return giangDialogue(app), app.giangImg
@@ -380,7 +387,7 @@ def morganDialogue(app):
     morganIntro = [
         '''...
 >>''',
-        '''...
+        '''......
 >>''',
         "...Morgan, he/him. Here to help."
     ]
@@ -419,8 +426,14 @@ We couldn't have done it without you!
 >>''',
         '''Wait, did I forget to introduce myself? I'm Nerissa, the princess of
 the Sand Castle.
->>'''
-    ] # add more later
+>>''',
+        '''I heard from Anna how dedicated everyone was. It's all thanks to you!
+>>''',
+        '''Now that the Moat is full, we can win the Surf War!
+>>''',
+        f'''I hope that you have a great summer, {app.aqua.name}. You've earned
+it!'''
+    ]
     return endingDialogue
 
 ####

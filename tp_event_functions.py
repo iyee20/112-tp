@@ -33,7 +33,7 @@ def appStarted(app):
     resetBattleVars(app)
     
     # define game mode
-    app.freeplay = app.cheats = False
+    app.freeplay = app.cheats = app.storyModeEnd = False
     app.mode = "mainScreenMode"
     app.tutorial = True
 
@@ -363,10 +363,20 @@ def cutsceneMode_keyPressed(app, event):
 
 def cutsceneMode_mousePressed(app, event):
     ''' handle mouse presses in cutscene mode '''
-    # return to gacha after reading at least part of cutscene
-    if event.y >= int(app.height * 4/5) and app.onCutsceneLine > 1:
-        app.onCutsceneLine = 0
-        app.mode = "gachaMode"
+    # normal cutscenes can be partially skipped
+    if not app.storyModeEnd:
+        # return to gacha after reading at least part of cutscene
+        if event.y >= int(app.height * 4/5) and app.onCutsceneLine > 1:
+            app.onCutsceneLine = 0
+            app.mode = "gachaMode"
+    
+    # ending cutscene can't be skipped
+    else:
+        cutSceneLines = 4
+        if app.onCutsceneLine > cutSceneLines:
+            app.onCutsceneLine = 0
+            app.freeplay = True
+            app.mode = "mainScreenMode"
 
 ####
 # Battle screen
@@ -380,7 +390,12 @@ def battleMode_mousePressed(app, event):
         for unit in app.team:
             unit.resetHP()
             unit.untapped = unit.canMove = True
-        app.mode = "transitionMode"
+        if app.droplets >= app.moatSize and not app.storyModeEnd:
+            app.droplets = app.moatSize
+            app.storyModeEnd = True
+            app.mode = "cutsceneMode"
+        else:
+            app.mode = "transitionMode"
         return
 
     if not app.playerTurn:
@@ -404,6 +419,8 @@ def enemyTurn(app):
             target = enemy.chooseTarget(app.team)
             enemy.movePath = aStarSearch(app, (enemy.row, enemy.col),
                                 (target.row, target.col), heuristic)
+            if enemy.range == 1 and len(enemy.movePath) != 0:
+                findAdjacentCell(enemy, target.row, target.col)
 
             # attack if already in range
             if inRange(enemy, target):
@@ -423,6 +440,29 @@ def enemyTurn(app):
     # end turn after all enemies have moved
     if allUnitsTapped(app.enemyTeam):
         app.playerTurn = True
+
+def findAdjacentCell(unit, targetRow, targetCol):
+    ''' add a position to unit.movePath so that the target will be in range '''
+    lastRow, lastCol = unit.movePath[-1]
+    
+    # unit will reach a cell with target in range
+    if targetRow == lastRow and targetCol == lastCol:
+        return
+    
+    # add nearest cell with target in range
+    else:
+        goalRow = (lastRow+targetRow) // 2
+        goalCol = (lastCol+targetCol) // 2
+
+        # prevent stacking 1-cell moves by replacing worse moves
+        if abs(unit.row - goalRow) + abs(unit.col - goalCol) <= 2:
+            unit.movePath.remove((lastRow, lastCol))
+        elif len(unit.movePath) >= 2:
+            rowBeforeLast, colBeforeLast = unit.movePath[-2]
+            if abs(rowBeforeLast - goalRow) + abs(colBeforeLast - goalCol) <= 2:
+                unit.movePath.remove((lastRow, lastCol))
+        
+        unit.movePath.append((goalRow, goalCol))
 
 def playerTurn(app, event):
     ''' handle mouse presses in battle mode during the player's turn '''
@@ -474,9 +514,9 @@ def movePlayableCharacter(app, unit, clickedCell):
 or Enter to wait.'''
 
 def allUnitsTapped(team):
-    ''' return True if all team members have moved this turn '''
+    ''' return True if all living team members have moved this turn '''
     for unit in team:
-        if unit.untapped:
+        if unit.untapped and unit.hp != 0:
             return False
     return True
 
