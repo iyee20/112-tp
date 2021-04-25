@@ -234,6 +234,7 @@ def barracksMode_mousePressed(app, event):
     if backButtonClicked(app, event, app.margin, app.margin):
         if app.tutorial:
             app.tutorial = False
+        app.selected = None
         app.mode = "transitionMode"
     elif clicked != None:
         app.selected = clicked
