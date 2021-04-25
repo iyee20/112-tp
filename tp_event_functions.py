@@ -198,21 +198,29 @@ def tutorialMode_keyPressed(app, event):
 def transitionMode_mousePressed(app, event):
     ''' handle mouse presses in transition mode '''
     if menuButtonClicked(app, event) == 1: # gacha button
+        if app.tutorial:
+            app.onCutsceneLine = 0
         app.mode = "gachaMode"
     elif menuButtonClicked(app, event) == 2: # battle button
+        if app.tutorial: return # button is unusable during tutorial
         chooseMap(app)
         spawnTeam(app, app.team)
         makeEnemyTeam(app)
         spawnTeam(app, app.enemyTeam, unitType="enemy")
         app.mode = "battleMode"
     elif menuButtonClicked(app, event) == 3: # team button
+        # button is unlocked during tutorial
+        if app.tutorial and len(app.team) == 1: return
         app.mode = "barracksMode"
 
 def transitionMode_keyPressed(app, event):
-    ''' handle key presses in transition mode (only used for cheats) '''
-    if not app.cheats: return
+    ''' handle key presses in transition mode '''
+    # move through tutorial dialogue
+    if app.tutorial and event.key == "Space":
+        app.onCutsceneLine += 1
 
-    if event.key in "Hh": # go back to main screen
+    # go back to main screen
+    if app.cheats and event.key in "Hh":
         app.mode = "mainScreenMode"
 
 ####
@@ -224,6 +232,8 @@ def barracksMode_mousePressed(app, event):
     clicked = unitStatusClicked(app, event)
 
     if backButtonClicked(app, event, app.margin, app.margin):
+        if app.tutorial:
+            app.tutorial = False
         app.mode = "transitionMode"
     elif clicked != None:
         app.selected = clicked
@@ -243,6 +253,9 @@ def unitStatusClicked(app, event):
 
 def barracksMode_keyPressed(app, event):
     ''' handle key presses in barracks mode '''
+    if app.tutorial and event.key == "Space":
+        app.onCutsceneLine += 1
+
     if app.selected != None:
         if event.key in ["Up", "Right"]:
             reorderTeam(app, True)
@@ -392,6 +405,9 @@ def cutsceneMode_mousePressed(app, event):
 
 def battleMode_mousePressed(app, event):
     ''' handle mouse presses in battle mode '''
+    # make sure that tutorial dialogue disappears after reading
+    if app.tutorial: app.onCutsceneLine += 1
+
     if app.victory or app.defeat:
         # reset all battle-related variables before going back
         resetBattleVars(app)
@@ -530,6 +546,8 @@ def allUnitsTapped(team):
 
 def battleMenuButtonClicked(app, xClick, yClick):
     ''' if a battle menu button is clicked, perform the correct action '''
+    if app.tutorial: return # player menu is locked during tutorial
+
     fullHeight = (app.height//5) - (2*app.margin)
     buttonWidth = app.width // 6
     buttonHeight = fullHeight // 3
@@ -693,17 +711,7 @@ def checkBattleEnd(app):
         app.victory = True
         app.battleMessage = "You win!"
 
-        # get rewards for winning
-        dropletsWon = seashellsWon = 0
-        for enemy in app.enemyTeam:
-            dropletsWon += enemy.droplets
-            if enemy.seashellDropRate > random.randint(0, 75):
-                seashellsWon += 1
-        app.droplets += dropletsWon
-        app.seashells += seashellsWon
-        app.endOfBattleMessage = f'''The enemy fled, leaving behind
-a bucket of {dropletsWon} Droplets and {seashellsWon} Seashells.
-Click to go back inside.'''
+        victoryRewards(app)
 
     elif checkDefeat(app) or app.defeat:
         app.defeat = True
@@ -732,6 +740,24 @@ def checkDefeat(app):
         if unit.hp != 0:
             return False
     return True
+
+def victoryRewards(app):
+    ''' earn Droplets and Seashells after winning a battle '''
+    dropletsWon = seashellsWon = 0
+
+    if not app.tutorial:
+        for enemy in app.enemyTeam:
+            dropletsWon += enemy.droplets
+            if enemy.seashellDropRate > random.randint(0, 75):
+                seashellsWon += 1
+    else:
+        dropletsWon = seashellsWon = 1
+
+    app.droplets += dropletsWon
+    app.seashells += seashellsWon
+    app.endOfBattleMessage = f'''The enemy fled, leaving behind
+a bucket of {dropletsWon} Droplets and {seashellsWon} Seashells.
+Click to go back inside.'''
 
 def chooseMap(app):
     ''' set the current map for one battle '''

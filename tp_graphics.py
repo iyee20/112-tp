@@ -20,10 +20,8 @@ def loadImages(app):
     app.moatCellImg = app.loadImage("images/moat.png")
     app.sandCellImg = app.loadImage("images/sand.png")
     
-    # character icons
+    # character images
     loadIcons(app)
-
-    # character fullbody
     app.nerissaImg = app.loadImage("images/nerissa.png")
 
     # misc
@@ -128,6 +126,18 @@ def drawTitle(app, canvas):
     canvas.create_text(app.width // 2, topY, text="Water Emblem",
                         font="Papyrus 30 bold")
 
+def settingsMode_redrawAll(app, canvas):
+    ''' draw the settings screen '''
+    drawBackButton(app, canvas, app.margin, app.margin)
+
+    drawThreeButtonMenu(app, canvas, "Change Moat Size", "Toggle Cheats",
+                            "Toggle Game Mode",
+                            app.buttonColor, app.buttonColor, app.buttonColor)
+
+####
+# Transition screen drawing functions
+####
+
 def transitionMode_redrawAll(app, canvas):
     ''' draw the transition screen '''
     # draw progress bar
@@ -142,16 +152,48 @@ def transitionMode_redrawAll(app, canvas):
 
     drawSeashells(app, canvas, app.margin, app.margin + 35)
 
+    if app.tutorial: # deactivate buttons at some steps of the tutorial
+        drawTutorialTransition(app, canvas)
+        if len(app.team) == 1:
+            color1 = app.buttonColor
+            color2 = color3 = "gray"
+        else:
+            color2 = "gray"
+            color1 = color3 = app.buttonColor
+    else:
+        color1 = color2 = color3 = app.buttonColor
+
     drawThreeButtonMenu(app, canvas, "Gacha", "Battle", "Team",
-                            app.buttonColor, app.buttonColor, app.buttonColor)
+                                                        color1, color2, color3)
 
-def settingsMode_redrawAll(app, canvas):
-    ''' draw the settings screen '''
-    drawBackButton(app, canvas, app.margin, app.margin)
+def drawTutorialTransition(app, canvas):
+    ''' draw the prompts in transition mode during the tutorial '''
+    if len(app.team) == 1:
+        allDialogue = enterGachaDialogue()
+    else:
+        allDialogue = enterBarracksDialogue()
+    
+    if app.onCutsceneLine < len(allDialogue):
+        drawDialogueBox(app, canvas, "Anna", allDialogue[app.onCutsceneLine])
 
-    drawThreeButtonMenu(app, canvas, "Change Moat Size", "Toggle Cheats",
-                            "Toggle Game Mode",
-                            app.buttonColor, app.buttonColor, app.buttonColor)
+def enterGachaDialogue():
+    ''' return the prompt to enter the gacha screen '''
+    enterGachaDialogue = [
+        '''Nice work! We're one Droplet closer to filling the Moat now. And it
+looks like you picked up a Seashell, too.
+>>''',
+        '''I hear that Seashells can be used to make wishes that actually come
+true. Why don't you go to the Gacha area and see for yourself?'''
+    ]
+    return enterGachaDialogue
+
+def enterBarracksDialogue():
+    ''' return the prompt to enter the barracks screen '''
+    enterBarracksDialogue = [
+        '''Looks like we have a new friend! Let's try changing the order of the
+team in the Team area.'''
+    ]
+    return enterBarracksDialogue
 
 ####
 # Dialogue drawing functions
@@ -187,7 +229,7 @@ def drawDialogue(app, canvas, line, topX, topY):
                             font=app.dialogueFont)
 
 ####
-# Tutorial drawing functions
+# Tutorial (opening) drawing functions
 ####
 
 def tutorialMode_redrawAll(app, canvas):
@@ -229,7 +271,8 @@ def gachaMode_redrawAll(app, canvas):
     ''' draw the gacha screen '''
     # draw Anna dialogue
     dialogue = '''I wonder who we'll meet today!
-Each pull costs 1 Seashell.'''
+Use 1 Seashell to wish for a new character, or use
+3 Seashells to power up 3 random characters in the barracks.'''
     drawDialogueBox(app, canvas, "Anna", dialogue, "top")
 
     offsetFromBox = (app.height//5) + app.margin
@@ -287,9 +330,9 @@ def cutsceneMode_redrawAll(app, canvas):
     else:
         fourFifthsHeight = int(app.height * 4/5)
         if not app.storyModeEnd:
-            text = "Click to go back to gacha"
+            text = "Click here to go back to gacha"
         else:
-            text = "Click to return to main screen"
+            text = "Click here to return to main screen"
         drawButton(app, canvas, 0, fourFifthsHeight, app.width, app.height,
                         color=app.buttonColor, text=text)
     
@@ -313,23 +356,23 @@ def drawAquaWithImage(app, canvas, image):
 def chooseCutscene(app, character):
     ''' return the dialogue and character image corresponding to a cutscene '''
     if character == "Giang":
-        return giangDialogue(app), app.giangImg
+        return giangDialogue(), app.giangImg
     elif character == "Iara":
         return iaraDialogue(app), app.iaraImg
     elif character == "Kai":
-        return kaiDialogue(app), app.kaiImg
+        return kaiDialogue(), app.kaiImg
     elif character == "Marina":
-        return marinaDialogue(app), app.marinaImg
+        return marinaDialogue(), app.marinaImg
     elif character == "Morgan":
-        return morganDialogue(app), app.morganImg
+        return morganDialogue(), app.morganImg
     elif character == "Naia":
         return naiaDialogue(app), app.naiaImg
     elif character == "Walter":
-        return walterDialogue(app), app.walterImg
+        return walterDialogue(), app.walterImg
     else: # ending scene
         return endDialogue(app), app.nerissaImg
 
-def giangDialogue(app):
+def giangDialogue():
     ''' return Giang's cutscene dialogue '''
     giangIntro = [
         '''Oh, hey. This is the Sand Castle, right?
@@ -355,7 +398,7 @@ to lend my aid as well.
     ]
     return iaraIntro
 
-def kaiDialogue(app):
+def kaiDialogue():
     ''' return Kai's cutscene dialogue '''
     kaiIntro = [
         '''Ah. You saw me.
@@ -371,7 +414,7 @@ Castle for places to shoot from, she tries recruiting me to fill the Moat.
     ]
     return kaiIntro
 
-def marinaDialogue(app):
+def marinaDialogue():
     ''' return Marina's cutscene dialogue '''
     marinaIntro = [
         '''Such a pretty castle! And so big! Hey, you! It's nice to meet you!
@@ -382,7 +425,7 @@ def marinaDialogue(app):
     ]
     return marinaIntro
 
-def morganDialogue(app):
+def morganDialogue():
     ''' return Morgan's cutscene dialogue '''
     morganIntro = [
         '''...
@@ -403,7 +446,7 @@ Pleased to make your acquaintance.
     ]
     return naiaIntro
 
-def walterDialogue(app):
+def walterDialogue():
     ''' return Walter's cutscene dialogue '''
     walterIntro = [
         '''This is the Sand Castle with a Moat that needs to be filled, right?
@@ -449,6 +492,29 @@ def barracksMode_redrawAll(app, canvas):
     for unit in app.team:
         drawStatus(app, canvas, unit, oneFifthHeight * slotNum, slotNum)
         slotNum += 1
+    
+    if app.tutorial:
+        drawTutorialBarracks(app, canvas)
+
+def drawTutorialBarracks(app, canvas):
+    ''' draw the prompt in barracks mode during the tutorial '''
+    allDialogue = tutorialBarracksDialogue()
+
+    if app.onCutsceneLine < len(allDialogue):
+        drawDialogueBox(app, canvas, "Anna", allDialogue[app.onCutsceneLine])
+
+def tutorialBarracksDialogue():
+    ''' return the tutorial barracks dialogue '''
+    barracksIntro = [
+        '''Welcome to the barracks! You can click on a unit and use the arrow
+keys to change the order of the team. A team has up to 3 members.
+>>''',
+        '''Once you meet more people, you can click on a unit and press Enter
+to change which units you take into battle.
+>>''',
+        "Alright, now you're ready to fight!"
+    ]
+    return barracksIntro
 
 def drawStatus(app, canvas, unit, topY, slotNum=-1):
     ''' draw a unit's status bar '''
@@ -552,7 +618,7 @@ def battleMode_redrawAll(app, canvas):
         if unit.canMove:
             drawMoveRadius(app, canvas, unit)
     else:
-        if app.tutorial and app.onCutsceneLine < 4:
+        if app.tutorial and app.onCutsceneLine < 5:
             drawTutorialBattleIntro(app, canvas)
         if app.battleMenuDisplay == 0: drawPlayerMenu(app, canvas)
         elif app.battleMenuDisplay == 1: drawUntappedUnits(app, canvas)
@@ -606,7 +672,10 @@ of the Sand Castle.
 >>''',
         f'''You’re right there, so why don’t you try attacking the
 {enemy.name}? Click your icon and click to where you want to move.
-Then attack with the correct arrow key!'''
+Then attack with the correct arrow key!
+>>''',
+        '''At the end of your turn, don't forget to click through the play-by-
+play of the enemy turn.'''
     ]
 
     return battleIntro
@@ -620,18 +689,23 @@ def drawPlayerMenu(app, canvas):
     canvas.create_rectangle(0, 0, app.width, app.height // 5,
                                 fill=app.buttonColor)
 
+    if app.tutorial: # inactive buttons
+        color = "gray"
+    else:
+        color = "white"
+
     # draw buttons in a 2 x 2 grid
     drawButton(app, canvas, buttonWidth, app.margin, 2 * buttonWidth,
-                app.margin + buttonHeight, color="white", text="Flee")
+                app.margin + buttonHeight, color=color, text="Flee")
     drawButton(app, canvas, buttonWidth, app.margin + (2*buttonHeight),
                 2 * buttonWidth, app.margin + (3*buttonHeight),
-                color="white", text="End turn")
+                color=color, text="End turn")
     drawButton(app, canvas, 3 * buttonWidth, app.margin, 5 * buttonWidth,
                 app.margin + buttonHeight,
-                color="white", text="Show untapped units")
+                color=color, text="Show untapped units")
     drawButton(app, canvas, 3 * buttonWidth, app.margin + (2*buttonHeight),
                 5 * buttonWidth, app.margin + (3*buttonHeight),
-                color="white", text="Show HP summary")
+                color=color, text="Show HP summary")
 
 def drawUntappedUnits(app, canvas):
     ''' draw summaries for ever untapped team member '''
