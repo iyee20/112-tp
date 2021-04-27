@@ -134,20 +134,82 @@ class PlayableChar(Unit):
         return increasedStats
 
 def makePlayableUnits(app):
-    ''' define all playable units '''
-    app.aqua = PlayableChar("Aqua", "pool noodle", 15, 9, 5, 4, 95, app.aquaImg)
-    giang = PlayableChar("Giang", "water gun", 15, 7, 5, 5, 85, app.giangImg)
-    iara = PlayableChar("Iara", "pool noodle", 15, 8, 6, 5, 90, app.iaraImg)
-    kai = PlayableChar("Kai", "water gun", 15, 8, 6, 6, 80, app.kaiImg)
-    marina = PlayableChar("Marina", "bubble wand", 15, 6, 4, 6, 100,
-                            app.marinaImg)
-    morgan = PlayableChar("Morgan", "bubble wand", 16, 7, 4, 5, 95,
-                            app.morganImg)
-    naia = PlayableChar("Naia", "water gun", 16, 8, 5, 5, 80, app.naiaImg)
-    walter = PlayableChar("Walter", "pool noodle", 17, 8, 5, 4, 90,
-                            app.walterImg)
+    ''' define all playable units at level 1 '''
+    makeAqua(app)
+    giang = makeGiang()
+    iara = makeIara()
+    kai = makeKai()
+    marina = makeMarina()
+    morgan = makeMorgan()
+    naia = makeNaia()
+    walter = makeWalter()
     
     app.toPull = {giang, iara, kai, marina, morgan, naia, walter}
+
+def makeAqua(app, name="Aqua", hp=15, attack=9, defense=5, res=4, level=1):
+    ''' define an instance of PlayableChar (the player's own character) '''
+    app.aqua = PlayableChar(name, "pool noodle", hp, attack, defense,
+                                res, 95, app.aquaImg, level)
+
+def makeGiang(hp=15, attack=7, defense=5, res=5, level=1):
+    ''' return an instance of PlayableChar (Giang) '''
+    return PlayableChar("Giang", "water gun", hp, attack, defense,
+                                res, 85, app.giangImg, level)
+
+def makeIara(hp=15, attack=8, defense=6, res=5, level=1):
+    ''' return an instance of PlayableChar (Iara) '''
+    return PlayableChar("Iara", "pool noodle", hp, attack, defense,
+                                res, 90, app.iaraImg, level)
+
+def makeKai(hp=15, attack=8, defense=6, res=6, level=1):
+    ''' return an instance of PlayableChar (Kai) '''
+    return PlayableChar("Kai", "water gun", hp, attack, defense,
+                                res, 80, app.kaiImg, level)
+
+def makeMarina(hp=15, attack=6, defense=4, res=6, level=1):
+    ''' return an instance of PlayableChar (Marina) '''
+    return PlayableChar("Marina", "bubble wand", hp, attack, defense,
+                                res, 100, app.marinaImg, level)
+
+def makeMorgan(hp=16, attack=7, defense=4, res=5, level=1):
+    ''' return an instance of PlayableChar (Morgan) '''
+    return PlayableChar("Morgan", "bubble wand", hp, attack, defense,
+                                res, 95, app.morganImg, level)
+
+def makeNaia(hp=16, attack=8, defense=5, res=5, level=1):
+    ''' return an instance of PlayableChar (Naia) '''
+    return PlayableChar("Naia", "water gun", hp, attack, defense,
+                                res, 80, app.naiaImg, level)
+
+def makeWalter(hp=17, attack=8, defense=5, res=4, level=1):
+    ''' return an instance of PlayableChar (Walter) '''
+    return PlayableChar("Walter", "pool noodle", hp, attack, defense,
+                                res, 90, app.walterImg, level)
+
+def loadPlayableUnits(app, saveData):
+    ''' define playable units, barracks, and team members from save data '''
+    app.barracks = []
+    app.team = []
+    addingToBarracks = addingToTeam = False
+    currName = ""
+
+    for line in saveData.splitlines():
+        if line == "Barracks":
+            addingToBarracks = True
+        elif line == "Team":
+            addingToBarracks = False
+            addingToTeam = True
+        elif addingToBarracks:
+            pass # something
+        elif addingToTeam:
+            for unit in app.team:
+                if unit.name == line:
+                    app.team.append(unit)
+
+    if len(app.barracks) == 8:
+        app.foundAllUnits = True
+    else:
+        app.foundAllUnits = False
 
 class Enemy(Unit):
     ''' class for enemies (inherits from Unit class) '''

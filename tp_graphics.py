@@ -82,13 +82,14 @@ def drawBackButton(app, canvas, topX, topY):
                 text="<--")
 
 ####
-# Menu screen drawing functions
+# Menu-only screen drawing functions
 ####
 
 def drawThreeButtonMenu(app, canvas, text1, text2, text3,
                             color1, color2, color3):
     ''' draw a menu with three buttons '''
     oneFifthHeight = app.height // 5
+
     drawButton(app, canvas, app.margin, oneFifthHeight, app.width - app.margin,
             (oneFifthHeight*2) - app.margin, color=color1, text=text1)
     drawButton(app, canvas, app.margin, oneFifthHeight * 2,
@@ -103,15 +104,14 @@ def mainScreenMode_redrawAll(app, canvas):
     drawTitle(app, canvas)
 
     # draw buttons
-    if app.freeplay:
-        storyColor = "gray"
-        freeplayColor = app.buttonColor
+    if app.saveFilePath == None:
+        # a save file must be chosen before the game can begin
+        playColor = "gray"
     else:
-        storyColor = app.buttonColor
-        freeplayColor = "gray"
+        playColor = app.buttonColor
     oneFifthHeight = app.height // 5
-    drawThreeButtonMenu(app, canvas, "Story", "Freeplay", "Settings",
-                            storyColor, freeplayColor, app.buttonColor)
+    drawThreeButtonMenu(app, canvas, "Choose Save File", "Play", "Settings",
+                                    app.buttonColor, playColor, app.buttonColor)
 
     # draw credits
     creditText = '''(C) Isabella Yee 2021 | made with Python | 15-112
@@ -133,6 +133,33 @@ def settingsMode_redrawAll(app, canvas):
     drawThreeButtonMenu(app, canvas, "Change Moat Size", "Toggle Cheats",
                             "Toggle Game Mode",
                             app.buttonColor, app.buttonColor, app.buttonColor)
+
+def saveMode_redrawAll(app, canvas):
+    ''' draw the save file choice screen '''
+    drawBackButton(app, canvas, app.margin, app.margin)
+
+    name1, name2 = getSaveNames(app)
+    drawButton(app, canvas, app.margin, app.height // 3,
+                    (app.width - app.margin) // 2, app.height // 3 * 2,
+                    color=app.buttonColor, text=f"Save 1\n{name1}")
+    drawButton(app, canvas, (app.width + app.margin) // 2, app.height // 3,
+                    app.width - app.margin, app.height // 3 * 2,
+                    color=app.buttonColor, text=f"Save 2\n{name2}")
+
+def getSaveNames(app):
+    ''' return the player name corresponding to a save, or Empty for no save '''
+    # the first line of a filled save file is the player name
+    try:
+        name1 = readFile("saves/save1.txt").splitlines()[0]
+    except:
+        name1 = "Empty"
+    
+    try:
+        name2 = readFile("saves/save2.txt").splitlines()[0]
+    except:
+        name2 = "Empty"
+    
+    return name1, name2
 
 ####
 # Transition screen drawing functions

@@ -25,6 +25,7 @@ def appStarted(app):
     resetBattleVars(app)
 
     app.mode = "mainScreenMode"
+    app.saveFilePath = None
     newSave(app) # remove later after new feature is added
 
 def setColorsAndFonts(app):
@@ -77,12 +78,14 @@ def backButtonClicked(app, event, topX, topY):
 
 def mainScreenMode_mousePressed(app, event):
     ''' handle mouse presses in main screen mode '''
-    # only one game mode (story or freeplay) is available at a time 
-    if not app.freeplay: # story button
-        if menuButtonClicked(app, event) == 1:
-            app.mode = "tutorialMode"
-    else: # freeplay button
-        if menuButtonClicked(app, event) == 2:
+    # save file choice button
+    if menuButtonClicked(app, event) == 1:
+        app.mode = "saveMode"
+
+    # play button
+    elif app.saveFilePath != None and menuButtonClicked(app, event) == 2:
+        # only one game mode (story or freeplay) is available at a time 
+        if app.freeplay:
             app.storyModeEnd = False
             app.battleMenuDisplay = 3
             chooseMap(app)
@@ -90,16 +93,38 @@ def mainScreenMode_mousePressed(app, event):
             makeEnemyTeam(app)
             spawnTeam(app, app.enemyTeam, unitType="enemy")
             app.mode = "battleMode"
+        elif app.tutorial:
+            app.mode = "tutorialMode"
+        else:
+            app.mode = "transitionMode"
+    
     # settings button
-    if menuButtonClicked(app, event) == 3:
+    elif menuButtonClicked(app, event) == 3:
         app.mode = "settingsMode"
 
-"""
-if saveIsBlank(path):
-    newSave(app)
-else:
-    loadSave(app)
-""" # add this chunk later after revamping main screen buttons
+####
+# Save/load file (and save screen) functions
+####
+
+def saveMode_mousePressed(app, event):
+    ''' handle mouse presses in save mode '''
+    # go back to main screen
+    if backButtonClicked(app, event, app.margin, app.margin):
+        app.mode = "mainScreenMode"
+    
+    # choose a save file to use
+    elif saveFileChosen(app, event) == 1:
+        app.saveFilePath = "saves/save1.txt"
+        if saveIsBlank(app.saveFilePath):
+            newSave(app)
+        else:
+            loadSave(app)
+    elif saveFileChosen(app, event) == 2:
+        app.saveFilePath = "saves/save2.txt"
+        if saveIsBlank(app.saveFilePath):
+            newSave(app)
+        else:
+            loadSave(app)
 
 def saveIsBlank(path):
     ''' return True if a .txt file is empty '''
@@ -114,9 +139,16 @@ def readFile(path):
     with open(path, "rt") as f:
         return f.read()
 
-####
-# Save/load file functions
-####
+def saveFileChosen(app, event):
+    ''' return the file number (1 or 2) of a chosen save file '''
+    xClick, yClick = event.x, event.y
+
+    if app.height // 3 <= yClick <= app.height // 3 * 2:
+        if app.margin <= xClick <= (app.width - app.margin) // 2:
+            return 1
+        elif (app.width + app.margin) // 2 <= xClick <= app.width - app.margin:
+            return 2
+    return None
 
 def newSave(app):
     ''' define characters and other variables for a new save file '''
@@ -132,12 +164,17 @@ def newSave(app):
     # define game mode
     app.freeplay = app.cheats = app.storyModeEnd = False
     app.tutorial = True
-    #app.mode = "tutorialMode" # uncomment later after new feature is added
-    app.saveFilePath = None # change later
 
 def loadSave(app):
     ''' define characters and other variables from a previous save file '''
-    pass
+    saveData = readFile(app.saveFilePath)
+
+    loadPlayableUnits(app, saveData)
+
+    loadMoatAndSeashells(app, saveData)
+
+    # saving is unlocked after tutorial, cheats are toggled after every load
+    app.cheats = app.storyModeEnd = app.tutorial = False
 
 def saveGame(app):
     ''' save a player's game data to the chosen save file '''
@@ -148,7 +185,8 @@ def saveGame(app):
 
     # delete old file and write a new one
     deleteFile(app.saveFilePath)
-    # insert save here later
+    saveContents = writeSaveContents(app)
+    writeFile(app.saveFilePath, saveContents)
 
 def overwriteSaveOkay(app):
     ''' return False if a user cancels saving over a previous file '''
@@ -162,21 +200,28 @@ Type CANCEL to cancel the save.''')
 
 def writeSaveContents(app):
     ''' return the contents of a new save file '''
+    # player name
     contents = f"{app.aqua.name}"
 
+    # collected characters
     contents += "\nBarracks"
-    for character in app.barracks:
-        pass # add character names + stats later (include level!)
+    for unit in app.barracks:
+        contents += f'''
+{unit.name}:
+{unit.maxHP}, {unit.attack}, {unit.defense}, {unit.res}, {unit.level}'''
 
+    # current team
     contents += "\nTeam"
-    for character in app.team:
-        pass # add character names later
+    for unit in app.team:
+        contents += f"\n{unit.name}"
 
+    # game progress status
     contents += "\nGame Status"
     contents += f'''
-Freeplay: {app.freeplay}
-Droplets: {app.droplets}
-Seashells: {app.seashells}'''
+Freeplay {app.freeplay}
+MoatSize {app.moatSize}
+Droplets {app.droplets}
+Seashells {app.seashells}'''
 
     return contents
 
@@ -193,16 +238,21 @@ def writeFile(path, contents):
 
 def settingsMode_mousePressed(app, event):
     ''' handle mouse presses in settings mode '''
-    if menuButtonClicked(app, event) == 1: # change moat size
+    # change moat size
+    if menuButtonClicked(app, event) == 1:
         changeMoatSize(app)
         app.showMessage(f"Moat size is now {app.moatSize} Droplets.")
-    elif menuButtonClicked(app, event) == 2: # toggle extras/cheats
+
+    # toggle cheats
+    elif menuButtonClicked(app, event) == 2:
         app.cheats = not app.cheats
         if app.cheats:
             app.showMessage("Developer cheats ON.")
         else:
             app.showMessage("Developer cheats OFF.")
-    elif menuButtonClicked(app, event) == 3: # toggle game mode
+
+    # toggle game mode (story or freeplay)
+    elif menuButtonClicked(app, event) == 3: 
         app.freeplay = not app.freeplay
         if app.freeplay:
             app.battleMenuDisplay = 3
@@ -212,7 +262,9 @@ def settingsMode_mousePressed(app, event):
             app.battleMenuDisplay = 0
             app.tutorial = True
             app.showMessage("Now in story mode.")
-    elif backButtonClicked(app, event, app.margin, app.margin): # back to main
+
+    # go back to main screen
+    elif backButtonClicked(app, event, app.margin, app.margin):
         app.mode = "mainScreenMode"
 
 def changeMoatSize(app):
