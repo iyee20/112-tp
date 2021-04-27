@@ -42,7 +42,7 @@ class Unit(object):
 
     def __hash__(self):
         ''' return a hash value for self '''
-        return hash(self.name)
+        return hash( (self.name, self.weapon) )
 
     def attackTarget(self, target):
         ''' attack a target unit '''

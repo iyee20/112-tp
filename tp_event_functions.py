@@ -262,8 +262,19 @@ def tutorialMode_mousePressed(app, event):
     if app.aqua.name == "Aqua":
         name = app.getUserInput("Enter a name with 6 characters or less.")
         if name != None and name.isalpha() and len(name) <= 6:
-            app.aqua.name = name.title()
-            app.onCutsceneLine += 1
+            name = name.title()
+            if nameInUse(name):
+                app.showMessage('''Someone else has that name.
+Please pick a different one. A nickname, maybe?''')
+            else:
+                app.aqua.name = name
+                app.onCutsceneLine += 1
+
+def nameInUse(name):
+    ''' return True if a name is already used in the game '''
+    names = {"Anna", "Nerissa", "Giang", "Iara", "Kai", "Marina", "Morgan",
+                "Naia", "Walter", "Dehydration", "Heatstroke", "Salt"}
+    return name in names
 
 def tutorialMode_keyPressed(app, event):
     ''' handle key presses in tutorial mode '''
