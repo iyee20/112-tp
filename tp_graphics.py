@@ -4,6 +4,7 @@
 ####
 
 from cmu_112_graphics import *
+from tp_event_functions import readFile
 
 ####
 # Import images
@@ -145,6 +146,16 @@ def saveMode_redrawAll(app, canvas):
     drawButton(app, canvas, (app.width + app.margin) // 2, app.height // 3,
                     app.width - app.margin, app.height // 3 * 2,
                     color=app.buttonColor, text=f"Save 2\n{name2}")
+    
+    # display current selected save file
+    if app.saveFilePath == "saves/save1.txt":
+        canvas.create_text(app.width // 2, app.height - 30,
+                            text="Currently using save file 1",
+                            font=app.dialogueFont)
+    elif app.saveFilePath == "saves/save2.txt":
+        canvas.create_text(app.width // 2, app.height - 30,
+                            text="Currently using save file 2",
+                            font=app.dialogueFont)
 
 def getSaveNames(app):
     ''' return the player name corresponding to a save, or Empty for no save '''

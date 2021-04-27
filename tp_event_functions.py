@@ -26,7 +26,6 @@ def appStarted(app):
 
     app.mode = "mainScreenMode"
     app.saveFilePath = None
-    newSave(app) # remove later after new feature is added
 
 def setColorsAndFonts(app):
     ''' define game colors and fonts '''
@@ -171,10 +170,30 @@ def loadSave(app):
 
     loadPlayableUnits(app, saveData)
 
-    loadMoatAndSeashells(app, saveData)
+    loadProgress(app, saveData)
 
     # saving is unlocked after tutorial, cheats are toggled after every load
     app.cheats = app.storyModeEnd = app.tutorial = False
+
+def loadProgress(app, saveData):
+    ''' load saved progress and Seashells '''
+    for line in saveData.splitlines():
+        try:
+            firstWord = line.split(" ")[0]
+            secondWord = line.split(" ")[1]
+        except:
+            continue
+        if firstWord == "Freeplay":
+            if secondWord == "True":
+                app.freeplay = True
+            else:
+                app.freeplay = False
+        elif firstWord == "MoatSize":
+            app.moatSize = int(secondWord)
+        elif firstWord == "Droplets":
+            app.droplets = int(secondWord)
+        elif firstWord == "Seashells":
+            app.seashells = int(secondWord)
 
 def saveGame(app):
     ''' save a player's game data to the chosen save file '''
@@ -360,7 +379,9 @@ def transitionMode_mousePressed(app, event):
         app.mode = "battleMode"
     elif menuButtonClicked(app, event) == 3: # team button
         # button is unlocked during tutorial
-        if app.tutorial and len(app.team) == 1: return
+        if app.tutorial:
+            if len(app.team) == 1: return
+            else: app.onCutsceneLine = 0
         app.mode = "barracksMode"
 
 def transitionMode_keyPressed(app, event):
@@ -369,8 +390,12 @@ def transitionMode_keyPressed(app, event):
     if app.tutorial and event.key == "Space":
         app.onCutsceneLine += 1
 
+    # save the game
+    elif event.key in "Ss":
+        saveGame(app)
+
     # go back to main screen
-    if app.cheats and event.key in "Hh":
+    elif app.cheats and event.key in "Hh":
         app.mode = "mainScreenMode"
 
 ####
