@@ -7,35 +7,25 @@ import random
 from cmu_112_graphics import *
 from tp_graphics import *
 from tp_content import *
+from os import remove as deleteFile
 
 ####
 # Main app
 ####
 
 def appStarted(app):
+    # graphics
     setColorsAndFonts(app)
-
-    # import images and create playable characters
     loadImages(app)
-    loadPlayableUnits(app)
 
     # define size constants
     app.margin = min(app.width, app.height) // 100
     app.cellSize = 50
 
-    # set up collections
-    app.barracks = [app.aqua]
-    app.team = [app.aqua]
-    app.foundAllUnits = False
-    app.droplets = app.seashells = 0
-    app.moatSize = 25
-
     resetBattleVars(app)
-    
-    # define game mode
-    app.freeplay = app.cheats = app.storyModeEnd = False
+
     app.mode = "mainScreenMode"
-    app.tutorial = True
+    newSave(app) # remove later after new feature is added
 
 def setColorsAndFonts(app):
     ''' define game colors and fonts '''
@@ -44,6 +34,10 @@ def setColorsAndFonts(app):
     app.buttonFont = "Arial 12 bold"
     app.dialogueFont = "Arial 14"
     app.summaryFont = "Arial 11"
+
+####
+# Functions used in multiple screens
+####
 
 def resetBattleVars(app):
     ''' reset battle-related variables '''
@@ -99,6 +93,99 @@ def mainScreenMode_mousePressed(app, event):
     # settings button
     if menuButtonClicked(app, event) == 3:
         app.mode = "settingsMode"
+
+"""
+if saveIsBlank(path):
+    newSave(app)
+else:
+    loadSave(app)
+""" # add this chunk later after revamping main screen buttons
+
+def saveIsBlank(path):
+    ''' return True if a .txt file is empty '''
+    if readFile(path) == "":
+        return True
+    return False
+
+# from:
+# https://www.cs.cmu.edu/~112/notes/notes-strings.html#basicFileIO
+def readFile(path):
+    ''' return the contents of a .txt file '''
+    with open(path, "rt") as f:
+        return f.read()
+
+####
+# Save/load file functions
+####
+
+def newSave(app):
+    ''' define characters and other variables for a new save file '''
+    makePlayableUnits(app)
+
+    # set up collections
+    app.barracks = [app.aqua]
+    app.team = [app.aqua]
+    app.foundAllUnits = False
+    app.droplets = app.seashells = 0
+    app.moatSize = 25
+
+    # define game mode
+    app.freeplay = app.cheats = app.storyModeEnd = False
+    app.tutorial = True
+    #app.mode = "tutorialMode" # uncomment later after new feature is added
+    app.saveFilePath = None # change later
+
+def loadSave(app):
+    ''' define characters and other variables from a previous save file '''
+    pass
+
+def saveGame(app):
+    ''' save a player's game data to the chosen save file '''
+    # confirm that user wants to overwrite a previous save file
+    if not saveIsBlank(app.saveFilePath):
+        if not overwriteSaveOkay(app):
+            return
+
+    # delete old file and write a new one
+    deleteFile(app.saveFilePath)
+    # insert save here later
+
+def overwriteSaveOkay(app):
+    ''' return False if a user cancels saving over a previous file '''
+    confirmation = app.getUserInput('''Saving will overwrite the previous save.
+Type CANCEL to cancel the save.''')
+    if confirmation != None and confirmation.isalpha():
+        if confirmation.upper() == "CANCEL":
+            app.showMessage("Save cancelled.")
+            return False
+    return True
+
+def writeSaveContents(app):
+    ''' return the contents of a new save file '''
+    contents = f"{app.aqua.name}"
+
+    contents += "\nBarracks"
+    for character in app.barracks:
+        pass # add character names + stats later (include level!)
+
+    contents += "\nTeam"
+    for character in app.team:
+        pass # add character names later
+
+    contents += "\nGame Status"
+    contents += f'''
+Freeplay: {app.freeplay}
+Droplets: {app.droplets}
+Seashells: {app.seashells}'''
+
+    return contents
+
+# from:
+# https://www.cs.cmu.edu/~112/notes/notes-strings.html#basicFileIO
+def writeFile(path, contents):
+    ''' add to the contents of a .txt file '''
+    with open(path, "wt") as f:
+        f.write(contents)
 
 ####
 # Settings
@@ -879,21 +966,21 @@ def makeEnemy(app, name, weapon, image):
 
     # balance stats based on enemy's weapon type
     if weapon == "pool noodle":
-        hp = int((worstHP+2) / 3)
-        attack = int((worstAttack+1) / 3)
-        defense = int(lowestDefended / 3)
-        res = int((lowestDefended-1) / 3)
+        hp = max(int((worstHP+2) / 3), 1)
+        attack = max(int((worstAttack+1) / 3), 1)
+        defense = max(int(lowestDefended / 3), 1)
+        res = max(int((lowestDefended-1) / 3), 1)
         accuracy = 85
     elif weapon == "water gun":
-        hp = int(worstHP / 3)
-        attack = int(worstAttack / 3)
-        defense = res = int(lowestDefended / 3)
+        hp = max(int(worstHP / 3), 1)
+        attack = max(int(worstAttack / 3), 1)
+        defense = res = max(int(lowestDefended / 3), 1)
         accuracy = 80
     else:
-        hp = int((worstHP-1) / 3)
-        attack = int((worstAttack-1) / 3)
-        defense = int((lowestDefended-1) / 3)
-        res = int(lowestDefended / 3)
+        hp = max(int((worstHP-1) / 3), 1)
+        attack = max(int((worstAttack-1) / 3), 1)
+        defense = max(int((lowestDefended-1) / 3), 1)
+        res = max(int(lowestDefended / 3), 1)
         accuracy = 90
     return Enemy(name, weapon, hp, attack, defense, res, accuracy, image)
 

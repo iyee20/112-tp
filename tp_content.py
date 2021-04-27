@@ -83,12 +83,12 @@ class Unit(object):
 class PlayableChar(Unit):
     ''' class for playable characters (inherits from Unit class) '''
     def __init__(self, name, weapon, maxHP, attack, defense, res, accuracy,
-                    image):
+                    image, level=1):
         Unit.__init__(self, name, weapon, maxHP, attack, defense, res, accuracy,
                         image)
 
         # set stats unique to playable characters
-        self.level = 1
+        self.level = level
         self.toNextLevel = 3 # number of enemies to defeat to advance
     
     def levelUp(self):
@@ -133,7 +133,7 @@ class PlayableChar(Unit):
         self.resetHP()
         return increasedStats
 
-def loadPlayableUnits(app):
+def makePlayableUnits(app):
     ''' define all playable units '''
     app.aqua = PlayableChar("Aqua", "pool noodle", 15, 9, 5, 4, 95, app.aquaImg)
     giang = PlayableChar("Giang", "water gun", 15, 7, 5, 5, 85, app.giangImg)
