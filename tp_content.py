@@ -204,7 +204,7 @@ def loadPlayableUnits(app, saveData):
         elif addingToBarracks:
             # extract obtained character information
             if line.endswith(":"):
-                currName = line[-1]
+                currName = line[:-1]
             elif line[0].isdigit():
                 character = makeCharacter(app, currName, line)
                 app.barracks.append(character)
@@ -220,42 +220,72 @@ def loadPlayableUnits(app, saveData):
         app.foundAllUnits = False
         makeRemainingUnits(app)
 
-def makeCharacter(app, character, stats):
+def makeCharacter(app, character, stats=None):
     ''' call a function to create the specified character with given stats '''
-    stats = stats.split(", ")
-    hp = stats[0]
-    attack = stats[1]
-    defense = stats[2]
-    res = stats[3]
-    level = stats[4]
+    if stats != None:
+        stats = stats.split(", ")
+        hp = stats[0]
+        attack = stats[1]
+        defense = stats[2]
+        res = stats[3]
+        level = stats[4]
 
     if character == "Giang":
-        return makeGiang(app, hp, attack, defense, res, level)
+        if stats != None: return makeGiang(app, hp, attack, defense, res, level)
+        else: return makeGiang(app)
     elif character == "Iara":
-        return makeIara(app, hp, attack, defense, res, level)
+        if stats != None: return makeIara(app, hp, attack, defense, res, level)
+        else: return makeIara(app)
     elif character == "Kai":
-        return makeKai(app, hp, attack, defense, res, level)
+        if stats != None: return makeKai(app, hp, attack, defense, res, level)
+        else: return makeKai(app)
     elif character == "Marina":
-        return makeMarina(app, hp, attack, defense, res, level)
-    elif character == "Morgan":
-        return makeMorgan(app, hp, attack, defense, res, level)
+        if stats != None:
+            return makeMarina(app, hp, attack, defense, res, level)
+        else: return makeMarina(app)
+    else: # check second half of characters
+        return makeCharacter2(app, character, stats)
+
+def makeCharacter2(app, character, stats):
+    ''' call a function to create the specified character with given stats '''
+    if stats != None:
+        hp = stats[0]
+        attack = stats[1]
+        defense = stats[2]
+        res = stats[3]
+        level = stats[4]
+
+    if character == "Morgan":
+        if stats != None:
+            return makeMorgan(app, hp, attack, defense, res, level)
+        else: return makeMorgan(app)
     elif character == "Naia":
-        return makeNaia(app, hp, attack, defense, res, level)
+        if stats != None: return makeNaia(app, hp, attack, defense, res, level)
+        else: return makeNaia(app)
     elif character == "Walter":
-        return makeWalter(app, hp, attack, defense, res, level)
+        if stats != None:
+            return makeWalter(app, hp, attack, defense, res, level)
+        else: return makeWalter(app)
     else: # character == player's character
-        return makeAqua(app, hp, attack, defense, res, level)
+        if stats != None:
+            return makeAqua(app, character, hp, attack, defense, res, level)
 
 def makeRemainingUnits(app):
     ''' define unobtained playable units at level 1 '''
-    # make app.toPull a set of all characters other than Aqua at level 1
-    makePlayableUnits(app, False)
+    app.toPull = set()
+    names = {"Giang", "Iara", "Kai", "Marina", "Morgan", "Naia", "Walter"}
 
-    # remove all "duplicate" characters from toPull
-    for character in app.toPull:
-        for unit in app.barracks:
-            if character.name == unit.name:
-                app.toPull.remove(character)
+    for name in names:
+        if not nameInBarracks(app, name):
+            character = makeCharacter(app, name)
+            app.toPull.add(character)
+    
+def nameInBarracks(app, name):
+    ''' return True if name is the name of a character in the barracks '''
+    for unit in app.barracks:
+        if unit.name == name:
+            return True
+    return False
 
 class Enemy(Unit):
     ''' class for enemies (inherits from Unit class) '''
