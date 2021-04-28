@@ -4,11 +4,14 @@ Fwizz:
 15, 9, 5, 4, 1
 Giang:
 15, 7, 5, 5, 1
+Kai:
+15, 8, 6, 6, 1
 Team
 Fwizz
 Giang
+Kai
 Game Status
 Freeplay False
 MoatSize 25
-Droplets 1
-Seashells 0
+Droplets 14
+Seashells 1

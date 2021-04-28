@@ -224,11 +224,11 @@ def makeCharacter(app, character, stats=None):
     ''' call a function to create the specified character with given stats '''
     if stats != None:
         stats = stats.split(", ")
-        hp = stats[0]
-        attack = stats[1]
-        defense = stats[2]
-        res = stats[3]
-        level = stats[4]
+        hp = int(stats[0])
+        attack = int(stats[1])
+        defense = int(stats[2])
+        res = int(stats[3])
+        level = int(stats[4])
 
     if character == "Giang":
         if stats != None: return makeGiang(app, hp, attack, defense, res, level)
@@ -249,11 +249,11 @@ def makeCharacter(app, character, stats=None):
 def makeCharacter2(app, character, stats):
     ''' call a function to create the specified character with given stats '''
     if stats != None:
-        hp = stats[0]
-        attack = stats[1]
-        defense = stats[2]
-        res = stats[3]
-        level = stats[4]
+        hp = int(stats[0])
+        attack = int(stats[1])
+        defense = int(stats[2])
+        res = int(stats[3])
+        level = int(stats[4])
 
     if character == "Morgan":
         if stats != None:

@@ -5,6 +5,7 @@
 
 from cmu_112_graphics import *
 from tp_event_functions import readFile
+from tp_content import PlayableChar
 
 ####
 # Import images
@@ -818,7 +819,7 @@ def drawCell(app, canvas, row, col, image):
     canvas.create_image(topX, topY, anchor="nw",
                             image=ImageTk.PhotoImage(image))
 
-def moveIsLegal(app, currRow, currCol, drow, dcol):
+def moveIsLegal(app, currRow, currCol, drow, dcol, isPlayer=True):
     ''' return True if a unit can legally move in direction drow,dcol '''
     newRow = currRow + drow
     newCol = currCol + dcol
@@ -838,11 +839,12 @@ def moveIsLegal(app, currRow, currCol, drow, dcol):
     # water and moats cannot be walked onto
     elif app.map[newRow][newCol] == "X": return False
 
-    if obstacleInTheWay(app, currRow, currCol, drow, dcol): return False
+    if obstacleInTheWay(app, currRow, currCol, drow, dcol, isPlayer):
+        return False
 
     return True
 
-def obstacleInTheWay(app, currRow, currCol, drow, dcol):
+def obstacleInTheWay(app, currRow, currCol, drow, dcol, isPlayer=True):
     ''' return True if a 1-cell move is illegal before a 2-cell move '''
     # 1-cell moves and diagonal moves have no obstacles
     if abs(drow) == 1 or abs(dcol) == 1:
@@ -851,13 +853,15 @@ def obstacleInTheWay(app, currRow, currCol, drow, dcol):
     newRow = currRow + (drow//2)
     newCol = currCol + (dcol//2)
     
-    # check that newRow,newCol is not already occupied
-    for unit in app.team:
-        if unit.row == newRow and unit.col == newCol:
-            return True
-    for enemy in app.enemyTeam:
-        if enemy.row == newRow and enemy.col == newCol:
-            return True
+    # check that newRow,newCol is not occupied by a unit on the opposite team
+    if not isPlayer:
+        for unit in app.team:
+            if unit.row == newRow and unit.col == newCol:
+                return True
+    else:
+        for enemy in app.enemyTeam:
+            if enemy.row == newRow and enemy.col == newCol:
+                return True
 
     # water and moats cannot be walked onto
     if app.map[newRow][newCol] == "X":
@@ -875,8 +879,9 @@ def drawMoveRadius(app, canvas, unit):
                     (1, 1), (1, -1), (-1, 1), (-1, -1),
                     (0, 2), (2, 0), (0, -2), (-2, 0)]
 
+    isPlayer = isinstance(unit, PlayableChar)
     for drow,dcol in directions:
-        if moveIsLegal(app, unit.row, unit.col, drow, dcol):
+        if moveIsLegal(app, unit.row, unit.col, drow, dcol, isPlayer):
             newRow = unit.row + drow
             newCol = unit.col + dcol
             topX = mapOffsetX + (app.cellSize * newCol)
