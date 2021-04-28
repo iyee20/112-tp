@@ -3,7 +3,7 @@
 # andrewID: iby
 ####
 
-import random, math
+import random
 from cmu_112_graphics import *
 from tp_graphics import *
 from tp_content import *
@@ -642,22 +642,20 @@ def enemyTurn(app):
     ''' play through an enemy turn '''
     for enemy in app.enemyTeam:
         if enemy.untapped and enemy.hp != 0:
+            print(enemy.name) # remove later
             target = enemy.chooseTarget(app.team)
-            # try to find a path that includes only 2-cell moves
-            enemy.movePath = aStarSearch(app, (enemy.row, enemy.col),
-                                (target.row, target.col), heuristic, False)
-            if enemy.movePath == None: # find a path including 1-cell moves
-                enemy.movePath = aStarSearch(app, (enemy.row, enemy.col),
-                                (target.row, target.col), heuristic, True)
-            print(f"{enemy.name}: {enemy.movePath}") # remove later
-            if enemy.range == 1 and len(enemy.movePath) != 0:
-                findAdjacentCell(enemy, target.row, target.col)
-                print(enemy.movePath) # remove later
 
             # attack if already in range
             if inRange(enemy, target):
                 attackAndCounter(app, enemy, target)
                 enemy.canMove = False
+
+            # find a path to target
+            goalRow, goalCol = findCellInRange(app, enemy, target, heuristic)
+            enemy.movePath = aStarSearch(app, (enemy.row, enemy.col),
+                                            (goalRow, goalCol), heuristic)
+            if enemy.range == 2: removeTooCloseCell(enemy, target, heuristic)
+            print(f"{enemy.name}: {enemy.movePath}") # remove later
 
             # move closer to target and attack if possible
             if len(enemy.movePath) != 0 and enemy.canMove:
@@ -671,28 +669,68 @@ def enemyTurn(app):
     # end turn after all enemies have moved
     if allUnitsTapped(app.enemyTeam): app.playerTurn = True
 
-def findAdjacentCell(unit, targetRow, targetCol):
-    ''' add a position to unit.movePath so that the target will be in range '''
-    lastRow, lastCol = unit.movePath[-1]
+def findCellInRange(app, unit, target, heuristic):
+    ''' return a row,col position such that target will be in range of unit '''
+    # find all relative positions that unit could be at
+    if unit.range == 1:
+        directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+    else: # unit.range == 2
+        directions = [(0, 2), (2, 0), (0, -2), (-2, 0),
+                        (1, 1), (-1, -1), (-1, 1), (1, -1)]
     
-    # unit will reach a cell with target in range
-    if targetRow == lastRow and targetCol == lastCol:
-        return
+    # find cells that can be moved to
+    legalCells = []
+    for drow, dcol in directions:
+        if moveIsLegal(app, target.row, target.col, drow, dcol, False):
+            cell = (target.row + drow, target.col + dcol)
+            legalCells.append(cell)
     
-    # add nearest cell with target in range
-    else:
-        goalRow = (lastRow+targetRow) // 2
-        goalCol = (lastCol+targetCol) // 2
+    print(legalCells)# remove later
+    # find closest cell to move to
+    unitCell = (unit.row, unit.col)
+    targetCell = (target.row, target.col)
+    secondOptions = []
+    for guess in legalCells:
+        if cellIsBetweenCells(guess, unitCell, targetCell, heuristic):
+            return guess
+        elif heuristic(guess, targetCell) == unit.range:
+            if heuristic(guess, unitCell) == 1:
+                return guess
+            else:
+                secondOptions.append(guess)
+    return findBestCell(unitCell, secondOptions, heuristic)
 
-        # prevent stacking 1-cell moves by replacing worse moves
-        if abs(unit.row - goalRow) + abs(unit.col - goalCol) <= 2:
-            unit.movePath.remove((lastRow, lastCol))
-        elif len(unit.movePath) >= 2:
-            rowBeforeLast, colBeforeLast = unit.movePath[-2]
-            if abs(rowBeforeLast - goalRow) + abs(colBeforeLast - goalCol) <= 2:
-                unit.movePath.remove((lastRow, lastCol))
-        
-        unit.movePath.append((goalRow, goalCol))
+def cellIsBetweenCells(guess, currCell, goalCell, heuristic):
+    ''' return True if a cell is between currCell and goalCell '''
+    fullDistance = heuristic(currCell, goalCell)
+
+    # distance from guess to currCell or goalCell should be less than total
+    if heuristic(guess, currCell) < fullDistance:
+        if heuristic(guess, goalCell) < fullDistance:
+            return True
+    return False
+
+def findBestCell(currCell, options, heuristic):
+    ''' return the cell in options that is the closest to currCell '''
+    bestDist = heuristic(currCell, options[0])
+    bestCell = options[0]
+
+    for i in range(1, len(options)):
+        cell = options[i]
+        distance = heuristic(currCell, cell)
+        if distance < bestDist:
+            bestDist = distance
+            bestCell = cell
+    return bestCell
+
+def removeTooCloseCell(unit, target, heuristic):
+    ''' remove moves that would place a 2-cell ranged unit next to a target '''
+    newPath = []
+
+    for cell in unit.movePath:
+        if heuristic(cell, (target.row, target.col)) != 1:
+            newPath.append(cell)
+    unit.movePath = newPath
 
 def playerTurn(app, event):
     ''' handle mouse presses in battle mode during the player's turn '''
@@ -1119,16 +1157,13 @@ def makePathFromNodes(nodes, goal):
     while currNode in nodes.keys():
         currNode = nodes[currNode]
         path = [currNode] + path
-    # exclude current position and goal position
-    return path[1:-1]
+    # exclude current position //and goal position - delete //later?
+    return path[1:]
 
 def heuristic(node, goal):
     ''' return the Manhattan distance from node to goal '''
-    # difference of rows + difference of cols (reinstate later?)
-    #return abs(node[0] - goal[0]) + abs(node[1] - goal[1])
-
-    # distance formula
-    return math.sqrt((node[0] - goal[0])**2 + (node[1] - goal[1])**2)
+    # drow + dcol
+    return abs(node[0] - goal[0]) + abs(node[1] - goal[1])
 
 def lowestFCostNode(nodes, fCosts):
     ''' return the node with the lowest f(n) (cost to travel to it) '''
@@ -1140,7 +1175,7 @@ def lowestFCostNode(nodes, fCosts):
             bestNode = node
     return bestNode
 
-def nodeNeighbors(app, node, goal, oneCellOk):
+def nodeNeighbors(app, node, goal):
     ''' return a set of all the neighbors of a row,col node '''
     currRow, currCol = node
     neighbors = set()
@@ -1161,7 +1196,7 @@ def nodeNeighbors(app, node, goal, oneCellOk):
         elif moveIsLegal(app, currRow, currCol, drow, dcol):
             neighbors.add((newRow, newCol))
         # add 1-cell neighbors
-        if oneCellOk and i < len(oneCellMoves):
+        if i < len(oneCellMoves):
             drow, dcol = oneCellMoves[i]
             newRow = currRow + drow
             newCol = currCol + dcol
@@ -1169,7 +1204,7 @@ def nodeNeighbors(app, node, goal, oneCellOk):
                 neighbors.add((newRow, newCol))
     return neighbors
 
-def aStarSearch(app, startNode, goal, heuristic, oneCellOk):
+def aStarSearch(app, startNode, goal, heuristic):
     ''' perform an A* informed search to find a path of nodes to goal '''
     visited = {startNode}
     path = dict()
@@ -1184,7 +1219,7 @@ def aStarSearch(app, startNode, goal, heuristic, oneCellOk):
         visited.remove(currNode) # travel past current node
 
         # travel to the neighbor node with the lowest f(n) so far
-        for neighbor in nodeNeighbors(app, currNode, goal, oneCellOk):
+        for neighbor in nodeNeighbors(app, currNode, goal):
             gEstimate = gCosts[currNode] + heuristic(currNode, neighbor)
             # compare current estimate g(n) to previous estimate of g(n)
             gCostSoFar = gCosts.get(neighbor, 1000)
