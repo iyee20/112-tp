@@ -11,7 +11,7 @@ Fwizz
 Giang
 Kai
 Game Status
-Freeplay False
+Freeplay True
 MoatSize 25
-Droplets 14
-Seashells 1
+Droplets 25
+Seashells 50

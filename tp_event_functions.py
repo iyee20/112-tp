@@ -26,6 +26,7 @@ def appStarted(app):
 
     app.mode = "mainScreenMode"
     app.saveFilePath = None
+    newSave(app)
 
 def setColorsAndFonts(app):
     ''' define game colors and fonts '''
@@ -86,6 +87,7 @@ def mainScreenMode_mousePressed(app, event):
     elif app.saveFilePath != None and menuButtonClicked(app, event) == 2:
         # only one game mode (story or freeplay) is available at a time 
         if app.freeplay:
+            saveGame(app)
             app.storyModeEnd = False
             app.battleMenuDisplay = 3
             chooseMap(app)
@@ -208,6 +210,8 @@ def saveGame(app):
     saveContents = writeSaveContents(app)
     writeFile(app.saveFilePath, saveContents)
 
+    app.showMessage("The game was saved.")
+
 def overwriteSaveOkay(app):
     ''' return False if a user cancels saving over a previous file '''
     confirmation = app.getUserInput('''Saving will overwrite the previous save.
@@ -328,6 +332,10 @@ def settingsMode_keyPressed(app, event):
         getAllCharacters(app)
     elif event.key in "Ll":
         tenLevelUpAll(app)
+    elif event.key in "Ss": # switch to sample save file
+        app.saveFilePath = "saves/sample_save.txt"
+        loadSave(app)
+        app.showMessage("Switched to sample save file.")
 
 def getAllCharacters(app):
     ''' cheat all characters into the barracks '''
