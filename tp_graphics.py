@@ -91,14 +91,15 @@ def drawThreeButtonMenu(app, canvas, text1, text2, text3,
                             color1, color2, color3):
     ''' draw a menu with three buttons '''
     oneFifthHeight = app.height // 5
+    buttonHeight = oneFifthHeight - app.margin
 
     drawButton(app, canvas, app.margin, oneFifthHeight, app.width - app.margin,
-            (oneFifthHeight*2) - app.margin, color=color1, text=text1)
+                    oneFifthHeight + buttonHeight, color=color1, text=text1)
     drawButton(app, canvas, app.margin, oneFifthHeight * 2,
-                    app.width - app.margin, (oneFifthHeight*3) - app.margin,
+                    app.width - app.margin, (oneFifthHeight*2) + buttonHeight,
                     color=color2, text=text2)
     drawButton(app, canvas, app.margin, oneFifthHeight * 3,
-                    app.width - app.margin, (oneFifthHeight*4) - app.margin,
+                    app.width - app.margin, (oneFifthHeight*3) + buttonHeight,
                     color=color3, text=text3)
 
 def mainScreenMode_redrawAll(app, canvas):

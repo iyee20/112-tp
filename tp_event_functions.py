@@ -53,14 +53,15 @@ def menuButtonClicked(app, event):
     ''' return the number (1, 2, or 3 top-down) of a menu button clicked '''
     xClick, yClick = event.x, event.y
     oneFifthHeight = app.height // 5
+    buttonHeight = oneFifthHeight - app.margin
 
     # all 3-button menus are formatted the same, so compare y values
     if app.margin <= xClick <= app.width - app.margin:
-        if oneFifthHeight <= yClick <= (oneFifthHeight*2) - app.margin:
+        if oneFifthHeight <= yClick <= oneFifthHeight + buttonHeight:
             return 1
-        elif oneFifthHeight * 2 <= yClick <= (oneFifthHeight*3) - app.margin:
+        elif oneFifthHeight * 2 <= yClick <= (oneFifthHeight*2) + buttonHeight:
             return 2
-        elif oneFifthHeight * 3 <= yClick <= (oneFifthHeight*4) - app.margin:
+        elif oneFifthHeight * 3 <= yClick <= (oneFifthHeight*3) + buttonHeight:
             return 3
     return None
 
