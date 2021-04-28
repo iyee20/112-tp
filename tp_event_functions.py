@@ -642,7 +642,6 @@ def enemyTurn(app):
     ''' play through an enemy turn '''
     for enemy in app.enemyTeam:
         if enemy.untapped and enemy.hp != 0:
-            print(enemy.name) # remove later
             target = enemy.chooseTarget(app.team)
 
             # attack if already in range
@@ -655,7 +654,6 @@ def enemyTurn(app):
             enemy.movePath = aStarSearch(app, (enemy.row, enemy.col),
                                             (goalRow, goalCol), heuristic)
             if enemy.range == 2: removeTooCloseCell(enemy, target, heuristic)
-            print(f"{enemy.name}: {enemy.movePath}") # remove later
 
             # move closer to target and attack if possible
             if len(enemy.movePath) != 0 and enemy.canMove:
@@ -685,7 +683,6 @@ def findCellInRange(app, unit, target, heuristic):
             cell = (target.row + drow, target.col + dcol)
             legalCells.append(cell)
     
-    print(legalCells)# remove later
     # find closest cell to move to
     unitCell = (unit.row, unit.col)
     targetCell = (target.row, target.col)
@@ -1230,7 +1227,6 @@ def aStarSearch(app, startNode, goal, heuristic):
                if neighbor not in visited:
                    visited.add(neighbor)
     # failure: goal is never reached
-    print("uh oh") # remove later
     return None
 
 ####
