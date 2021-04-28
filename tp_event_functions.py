@@ -642,10 +642,13 @@ def enemyTurn(app):
     ''' play through an enemy turn '''
     for enemy in app.enemyTeam:
         if enemy.untapped and enemy.hp != 0:
-            # choose target and find path to target
             target = enemy.chooseTarget(app.team)
+            # try to find a path that includes only 2-cell moves
             enemy.movePath = aStarSearch(app, (enemy.row, enemy.col),
-                                (target.row, target.col), heuristic)
+                                (target.row, target.col), heuristic, False)
+            if enemy.movePath == None: # find a path including 1-cell moves
+                enemy.movePath = aStarSearch(app, (enemy.row, enemy.col),
+                                (target.row, target.col), heuristic, True)
             print(f"{enemy.name}: {enemy.movePath}") # remove later
             if enemy.range == 1 and len(enemy.movePath) != 0:
                 findAdjacentCell(enemy, target.row, target.col)
@@ -660,15 +663,13 @@ def enemyTurn(app):
             if len(enemy.movePath) != 0 and enemy.canMove:
                 enemy.row, enemy.col = enemy.movePath.pop(0)
                 enemy.canMove = False
-                if inRange(enemy, target):
-                    attackAndCounter(app, enemy, target)
+                if inRange(enemy, target): attackAndCounter(app, enemy, target)
         
             enemy.untapped = False
             break # separate each enemy's move with mouse presses
 
     # end turn after all enemies have moved
-    if allUnitsTapped(app.enemyTeam):
-        app.playerTurn = True
+    if allUnitsTapped(app.enemyTeam): app.playerTurn = True
 
 def findAdjacentCell(unit, targetRow, targetCol):
     ''' add a position to unit.movePath so that the target will be in range '''
@@ -1139,7 +1140,7 @@ def lowestFCostNode(nodes, fCosts):
             bestNode = node
     return bestNode
 
-def nodeNeighbors(app, node, goal):
+def nodeNeighbors(app, node, goal, oneCellOk):
     ''' return a set of all the neighbors of a row,col node '''
     currRow, currCol = node
     neighbors = set()
@@ -1160,7 +1161,7 @@ def nodeNeighbors(app, node, goal):
         elif moveIsLegal(app, currRow, currCol, drow, dcol):
             neighbors.add((newRow, newCol))
         # add 1-cell neighbors
-        if i < len(oneCellMoves):
+        if oneCellOk and i < len(oneCellMoves):
             drow, dcol = oneCellMoves[i]
             newRow = currRow + drow
             newCol = currCol + dcol
@@ -1168,7 +1169,7 @@ def nodeNeighbors(app, node, goal):
                 neighbors.add((newRow, newCol))
     return neighbors
 
-def aStarSearch(app, startNode, goal, heuristic):
+def aStarSearch(app, startNode, goal, heuristic, oneCellOk):
     ''' perform an A* informed search to find a path of nodes to goal '''
     visited = {startNode}
     path = dict()
@@ -1183,7 +1184,7 @@ def aStarSearch(app, startNode, goal, heuristic):
         visited.remove(currNode) # travel past current node
 
         # travel to the neighbor node with the lowest f(n) so far
-        for neighbor in nodeNeighbors(app, currNode, goal):
+        for neighbor in nodeNeighbors(app, currNode, goal, oneCellOk):
             gEstimate = gCosts[currNode] + heuristic(currNode, neighbor)
             # compare current estimate g(n) to previous estimate of g(n)
             gCostSoFar = gCosts.get(neighbor, 1000)
@@ -1194,7 +1195,8 @@ def aStarSearch(app, startNode, goal, heuristic):
                if neighbor not in visited:
                    visited.add(neighbor)
     # failure: goal is never reached
-    print("uh oh")
+    print("uh oh") # remove later
+    return None
 
 ####
 # Main
