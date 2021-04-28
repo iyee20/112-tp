@@ -62,7 +62,7 @@ class Unit(object):
                 target.defeated = True
             return amountLost # attack succeeded
         else:
-            return False # attack failed
+            return None # attack failed
     
     def heal(self, target):
         ''' heal a target unit '''
@@ -314,7 +314,7 @@ class Enemy(Unit):
             lowestDefense = 1000
             target = None
             for unit in playerTeam:
-                if unit.defense < lowestDefense:
+                if unit.hp > 0 and unit.defense < lowestDefense:
                     target = unit
                     lowestDefense = unit.defense
         # magical units attack the player unit with lowest res
@@ -322,7 +322,7 @@ class Enemy(Unit):
             lowestRes = 1000
             target = None
             for unit in playerTeam:
-                if unit.res < lowestRes:
+                if unit.hp > 0 and unit.res < lowestRes:
                     target = unit
-                    lowestRest = unit.res
+                    lowestRes = unit.res
         return target

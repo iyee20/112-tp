@@ -3,7 +3,7 @@
 # andrewID: iby
 ####
 
-import random
+import random, math
 from cmu_112_graphics import *
 from tp_graphics import *
 from tp_content import *
@@ -259,6 +259,7 @@ def saveMode_keyPressed(app, event):
             if deleteSaveOkay(app):
                 deleteFile(app.saveFilePath)
                 writeFile(app.saveFilePath, "")
+                app.saveFilePath = None
 
 def deleteSaveOkay(app):
     ''' return False if a user cancels deleting a previous save file '''
@@ -645,8 +646,10 @@ def enemyTurn(app):
             target = enemy.chooseTarget(app.team)
             enemy.movePath = aStarSearch(app, (enemy.row, enemy.col),
                                 (target.row, target.col), heuristic)
+            print(f"{enemy.name}: {enemy.movePath}") # remove later
             if enemy.range == 1 and len(enemy.movePath) != 0:
                 findAdjacentCell(enemy, target.row, target.col)
+                print(enemy.movePath) # remove later
 
             # attack if already in range
             if inRange(enemy, target):
@@ -1120,8 +1123,11 @@ def makePathFromNodes(nodes, goal):
 
 def heuristic(node, goal):
     ''' return the Manhattan distance from node to goal '''
-    # difference of rows + difference of cols
-    return abs(node[0] - goal[0]) + abs(node[1] - goal[1])
+    # difference of rows + difference of cols (reinstate later?)
+    #return abs(node[0] - goal[0]) + abs(node[1] - goal[1])
+
+    # distance formula
+    return math.sqrt((node[0] - goal[0])**2 + (node[1] - goal[1])**2)
 
 def lowestFCostNode(nodes, fCosts):
     ''' return the node with the lowest f(n) (cost to travel to it) '''
