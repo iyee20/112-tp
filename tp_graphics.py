@@ -140,6 +140,7 @@ def saveMode_redrawAll(app, canvas):
     ''' draw the save file choice screen '''
     drawBackButton(app, canvas, app.margin, app.margin)
 
+    # draw player names associated with saves
     name1, name2 = getSaveNames(app)
     drawButton(app, canvas, app.margin, app.height // 3,
                     (app.width - app.margin) // 2, app.height // 3 * 2,
@@ -149,14 +150,15 @@ def saveMode_redrawAll(app, canvas):
                     color=app.buttonColor, text=f"Save 2\n{name2}")
     
     # display current selected save file
-    if app.saveFilePath == "saves/save1.txt":
+    saveNum = 0
+    if app.saveFilePath == "saves/save1.txt": saveNum = 1
+    elif app.saveFilePath == "saves/save2.txt": saveNum = 2
+
+    if saveNum != 0:
         canvas.create_text(app.width // 2, app.height - 30,
-                            text="Currently using save file 1",
-                            font=app.dialogueFont)
-    elif app.saveFilePath == "saves/save2.txt":
-        canvas.create_text(app.width // 2, app.height - 30,
-                            text="Currently using save file 2",
-                            font=app.dialogueFont)
+                                text=f'''Currently using save file {saveNum}.
+Press Delete or Backspace to clear the save file.''',
+                                font=app.dialogueFont, justify="center")
 
 def getSaveNames(app):
     ''' return the player name corresponding to a save, or Empty for no save '''
@@ -551,6 +553,8 @@ keys to change the order of the team. A team has up to 3 members.
         '''Once you meet more people, you can click on a unit and press Enter
 to change which units you take into battle.
 >>''',
+        '''Also, if you press S when you're in the Transition menu, you can
+save your game.''',
         "Alright, now you're ready to fight!"
     ]
     return barracksIntro
@@ -644,6 +648,7 @@ def drawUnitSummary(app, canvas, unit, topX, topY):
 
 def battleMode_redrawAll(app, canvas):
     ''' draw the battle screen '''
+    tutorialLines = 5
     drawMap(app, canvas)
     drawUnitsOnMap(app, canvas)
     
@@ -656,8 +661,10 @@ def battleMode_redrawAll(app, canvas):
         drawStatus(app, canvas, unit, 0)
         if unit.canMove:
             drawMoveRadius(app, canvas, unit)
+    
+    # display player menu and tutorial dialogue
     else:
-        if app.tutorial and app.onCutsceneLine < 5:
+        if app.tutorial and app.onCutsceneLine < tutorialLines:
             drawTutorialBattleIntro(app, canvas)
         if app.battleMenuDisplay == 0: drawPlayerMenu(app, canvas)
         elif app.battleMenuDisplay == 1: drawUntappedUnits(app, canvas)
@@ -665,6 +672,8 @@ def battleMode_redrawAll(app, canvas):
         elif app.battleMenuDisplay == 3: drawFreeplayIntro(app, canvas)
     
     if app.battleMessage != None:
+        if app.tutorial and app.onCutsceneLine < tutorialLines:
+            return
         canvas.create_text(app.width // 2, int(app.height * 0.9),
                             text=app.battleMessage, font=app.dialogueFont,
                             justify="center")

@@ -6,7 +6,7 @@
 import random
 
 ####
-# Characters
+# Unit class
 ####
 
 class Unit(object):
@@ -79,6 +79,10 @@ class Unit(object):
         ''' reset a unit's HP to max '''
         self.hp = self.maxHP
         self.defeated = False
+
+####
+# Playable characters
+####
 
 class PlayableChar(Unit):
     ''' class for playable characters (inherits from Unit class) '''
@@ -287,6 +291,10 @@ def nameInBarracks(app, name):
             return True
     return False
 
+####
+# Enemy class
+####
+
 class Enemy(Unit):
     ''' class for enemies (inherits from Unit class) '''
     def __init__(self, name, weapon, maxHP, attack, defense, res, accuracy,
@@ -295,7 +303,7 @@ class Enemy(Unit):
                         image)
 
         # set stats unique to enemies
-        self.droplets = random.randint(1, 5) # number of Droplets carried
+        self.droplets = random.randint(1, 3) # number of Droplets carried
         self.seashellDropRate = random.randint(0, 100)
         self.movePath = []
     

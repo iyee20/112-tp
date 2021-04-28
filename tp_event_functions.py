@@ -251,6 +251,27 @@ def writeFile(path, contents):
     with open(path, "wt") as f:
         f.write(contents)
 
+def saveMode_keyPressed(app, event):
+    ''' handle key presses in save mode '''
+    if app.saveFilePath != None:
+        if event.key in ["Backspace", "Delete"]:
+            if deleteSaveOkay(app):
+                deleteFile(app.saveFilePath)
+                writeFile(app.saveFilePath, "")
+
+def deleteSaveOkay(app):
+    ''' return False if a user cancels deleting a previous save file '''
+    if saveIsBlank(app.saveFilePath):
+        app.showMessage("This file is already empty!")
+    else:
+        confirmation = app.getUserInput('''The old save will be lost forever.
+Type OKAY to continue deleting.''')
+        if confirmation != None and confirmation.isalpha():
+            if confirmation.upper() == "OKAY":
+                app.showMessage("Save deleted.")
+                return True
+    return False
+
 ####
 # Settings
 ####
@@ -330,7 +351,8 @@ def tenLevelUpAll(app):
 
 def tutorialMode_mousePressed(app, event):
     ''' handle mouse presses in tutorial mode '''
-    if app.aqua.name == "Aqua":
+    # name can only be entered during the first scene
+    if app.aqua.name == "Aqua" and app.onCutsceneLine == 0:
         name = app.getUserInput("Enter a name with 6 characters or less.")
         if name != None and name.isalpha() and len(name) <= 6:
             name = name.title()
@@ -581,8 +603,11 @@ def cutsceneMode_mousePressed(app, event):
 
 def battleMode_mousePressed(app, event):
     ''' handle mouse presses in battle mode '''
-    # make sure that tutorial dialogue disappears after reading
-    if app.tutorial: app.onCutsceneLine += 1
+    # make sure that tutorial dialogue disappears after reading all of it
+    if app.tutorial:
+        app.onCutsceneLine += 1
+        tutorialLines = 5
+        if app.onCutsceneLine < tutorialLines: return
 
     if app.victory or app.defeat:
         # reset all battle-related variables before going back
@@ -709,7 +734,7 @@ def movePlayableCharacter(app, unit, clickedCell):
                 attackKeys += " or WESD"
             instruction = "attack"
             if unit.weapon == "bubble wand":
-                instruction = " or heal"
+                instruction += " or heal"
             app.battleMessage = f'''Press {attackKeys} to {instruction}
 or Enter to wait.'''
 
@@ -841,7 +866,7 @@ def attackAndCounter(app, unit, target, unitIsPlayer=False):
     ''' play through a unit's attack and target's counterattack '''
     # unit attacks target
     amount = unit.attackTarget(target)
-    if amount != False:
+    if isinstance(amount, int):
         app.battleMessage = f'''{unit.name} attacked {target.name}
 for {amount} damage!'''
         if target.hp == 0:
@@ -855,7 +880,7 @@ for {amount} damage!'''
     # if possible, target counterattacks unit
     if inRange(target, unit) and target.hp != 0:
         counterAmount = target.attackTarget(unit)
-        if counterAmount != False:
+        if isinstance(counterAmount, int):
             app.battleMessage += f'''\n{target.name} counterattacked {unit.name}
 for {counterAmount} damage!'''
             if unit.hp == 0:
@@ -1053,22 +1078,23 @@ def makeEnemy(app, name, weapon, image):
     lowestDefended = min(worstDefense, worstRes)
 
     # balance stats based on enemy's weapon type
+    teamSize = len(app.team)
     if weapon == "pool noodle":
-        hp = max(int((worstHP+2) / 3), 1)
-        attack = max(int((worstAttack+1) / 3), 1)
-        defense = max(int(lowestDefended / 3), 1)
-        res = max(int((lowestDefended-1) / 3), 1)
+        hp = max(int((worstHP+2) * (teamSize/3)), 1)
+        attack = max(int((worstAttack+1) * (teamSize/3)), 1)
+        defense = max(int(lowestDefended * (teamSize/3)), 1)
+        res = max(int((lowestDefended-1) * (teamSize/3)), 1)
         accuracy = 85
     elif weapon == "water gun":
-        hp = max(int(worstHP / 3), 1)
-        attack = max(int(worstAttack / 3), 1)
-        defense = res = max(int(lowestDefended / 3), 1)
+        hp = max(int(worstHP * (teamSize/3)), 1)
+        attack = max(int(worstAttack * (teamSize/3)), 1)
+        defense = res = max(int(lowestDefended * (teamSize/3)), 1)
         accuracy = 80
     else:
-        hp = max(int((worstHP-1) / 3), 1)
-        attack = max(int((worstAttack-1) / 3), 1)
-        defense = max(int((lowestDefended-1) / 3), 1)
-        res = max(int(lowestDefended / 3), 1)
+        hp = max(int((worstHP-1) * (teamSize/3)), 1)
+        attack = max(int((worstAttack-1) * (teamSize/3)), 1)
+        defense = max(int((lowestDefended-1) * (teamSize/3)), 1)
+        res = max(int(lowestDefended * (teamSize/3)), 1)
         accuracy = 90
     return Enemy(name, weapon, hp, attack, defense, res, accuracy, image)
 

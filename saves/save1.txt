@@ -1,17 +1,14 @@
-Fwizz
+Yoru
 Barracks
-Fwizz:
+Yoru:
 15, 9, 5, 4, 1
-Giang:
-15, 7, 5, 5, 1
-Kai:
-15, 8, 6, 6, 1
+Marina:
+15, 6, 4, 6, 1
 Team
-Fwizz
-Giang
-Kai
+Yoru
+Marina
 Game Status
 Freeplay False
 MoatSize 25
-Droplets 14
-Seashells 1
+Droplets 1
+Seashells 0
