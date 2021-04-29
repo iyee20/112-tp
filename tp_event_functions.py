@@ -334,7 +334,8 @@ def settingsMode_keyPressed(app, event):
     elif event.key in "Ss": # switch to sample save file
         app.saveFilePath = "saves/sample_save.txt"
         loadSave(app)
-        app.showMessage("Switched to sample save file.")
+        app.showMessage(f'''Switched to sample save file.
+Remember to toggle cheats back on.''')
 
 def getAllCharacters(app):
     ''' cheat all characters into the barracks '''
@@ -1063,23 +1064,23 @@ def makeEnemy(app, name, weapon, image):
     lowestDefended = min(worstDefense, worstRes)
 
     # balance stats based on enemy's weapon type
-    teamSize = len(app.team)
+    teamScale = len(app.team) / (1.5)
     if weapon == "pool noodle":
-        hp = max(int((worstHP+2) * (teamSize/3)), 1)
-        attack = max(int((worstAttack+1) * (teamSize/3)), 1)
-        defense = max(int(lowestDefended * (teamSize/3)), 1)
-        res = max(int((lowestDefended-1) * (teamSize/3)), 1)
+        hp = max(int((worstHP+2) * (teamScale/3)), 1)
+        attack = max(int((worstAttack+1) * (teamScale/3)), 1)
+        defense = max(int(lowestDefended * (teamScale/3)), 1)
+        res = max(int((lowestDefended-1) * (teamScale/3)), 1)
         accuracy = 85
     elif weapon == "water gun":
-        hp = max(int(worstHP * (teamSize/3)), 1)
-        attack = max(int(worstAttack * (teamSize/3)), 1)
-        defense = res = max(int(lowestDefended * (teamSize/3)), 1)
+        hp = max(int(worstHP * (teamScale/3)), 1)
+        attack = max(int(worstAttack * (teamScale/3)), 1)
+        defense = res = max(int(lowestDefended * (teamScale/3)), 1)
         accuracy = 80
     else:
-        hp = max(int((worstHP-1) * (teamSize/3)), 1)
-        attack = max(int((worstAttack-1) * (teamSize/3)), 1)
-        defense = max(int((lowestDefended-1) * (teamSize/3)), 1)
-        res = max(int(lowestDefended * (teamSize/3)), 1)
+        hp = max(int((worstHP-1) * (teamScale/3)), 1)
+        attack = max(int((worstAttack-1) * (teamScale/3)), 1)
+        defense = max(int((lowestDefended-1) * (teamScale/3)), 1)
+        res = max(int(lowestDefended * (teamScale/3)), 1)
         accuracy = 90
     return Enemy(name, weapon, hp, attack, defense, res, accuracy, image)
 
@@ -1089,7 +1090,7 @@ def makeEnemy(app, name, weapon, image):
 
 def chooseMap(app):
     ''' set the current map for one battle '''
-    if app.freeplay:
+    if app.freeplay: # generate a random map for freeplay
         app.map = makeMap()
         return
 
