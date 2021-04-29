@@ -1138,12 +1138,59 @@ def makeMap(app): # may give up on later...
     newMap = [ ["_"] * cols for row in range(rows) ] # start with all sand
 
     # rules
-    # sand castle must be surrounded by water
-    # limit number of water cells that can be placed
     # dunes can only be up to half the traversable map
     # dunes can't surround water
 
+    # place sand castle and surround with water (a moat)
+    placeCastle = random.choice([True, False, False, False, False, False])
+    if placeCastle:
+        castleRow, castleCol = placeSymOnMap(newMap, "*")
+        placedWater = placeMoat(newMap, castleRow, castleCol)
+    
+    # up to 12 total water cells can be placed
+    waterToPlace = random.randint(0, 12 - placedWater)
+    # place water here later
+
     return newMap
+
+def placeSymOnMap(map, symbol, cell=(None, None)):
+    ''' place a symbol on a map cell and return the cell '''
+    # choose a random cell
+    if cell == (None, None):
+        row = random.randrange(0, len(map))
+        col = random.randrange(0, len(map[0]))
+    # assign cell based on arguments
+    else:
+        row, col = cell
+    
+    while True:
+        # only replace "sand" cells
+        if map[row][col] != "_":
+            map[row][col] = symbol
+            return row, col
+        
+        # make water and dunes clump together later
+        # (move off to the side of a cell with the same symbol)
+
+        # pick a new random cell
+        row = random.randrange(0, len(map))
+        col = random.randrange(0, len(map[0]))
+
+def placeMoat(map, castleRow, castleCol):
+    ''' place a moat around a castle and return the number of cells placed '''
+    placed = 0
+
+    directions = [(0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1),
+                    (-1, 0), (-1, 1)]
+    for drow, dcol in directions:
+        moatRow = castleRow + drow
+        moatCol = castleCol + dcol
+        # only place if cell is on the map
+        if 0 <= moatRow < len(map) and 0 <= moatCol < len(map[0]):
+            placeSymOnMap(map, "X", (moatRow, moatCol))
+            placed += 1
+    
+    return placed
 
 def spawnTeam(app, team, unitType="playable"):
     ''' set positions for a team of units based on available spawn points '''
