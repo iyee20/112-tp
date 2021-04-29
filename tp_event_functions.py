@@ -291,13 +291,14 @@ def settingsMode_mousePressed(app, event):
     # toggle cheats
     elif menuButtonClicked(app, event) == 2:
         app.cheats = not app.cheats
-        if app.cheats:
-            app.showMessage("Developer cheats ON.")
-        else:
-            app.showMessage("Developer cheats OFF.")
+        if app.cheats: app.showMessage("Developer cheats ON.")
+        else: app.showMessage("Developer cheats OFF.")
 
     # toggle game mode (story or freeplay)
-    elif menuButtonClicked(app, event) == 3: 
+    elif menuButtonClicked(app, event) == 3:
+        if app.saveFilePath == None:
+            app.showMessage("Please load a non-empty save file first!")
+            return
         app.freeplay = not app.freeplay
         if app.freeplay:
             app.battleMenuDisplay = 3
