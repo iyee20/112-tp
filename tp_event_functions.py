@@ -1007,6 +1007,67 @@ def victoryRewards(app):
 a bucket of {dropletsWon} Droplets and {seashellsWon} Seashells.
 Click to go back inside.'''
 
+def makeEnemyTeam(app):
+    ''' generate enemies based on the current team size '''
+    # 3 to 5 enemies should be made
+    app.enemyTeam = []
+    numEnemies = len(app.team) + 2
+
+    # make 1 of each possible type of enemy
+    enemy1 = makeEnemy(app, "Dehydration", "bubble wand", app.dehydrationImg)
+    enemy2 = makeEnemy(app, "Heatstroke", "pool noodle", app.heatstrokeImg)
+    enemy3 = makeEnemy(app, "Salt", "water gun", app.saltImg)
+
+    if app.tutorial: # only make 1 enemy for the tutorial
+        app.enemyTeam.append(enemy1)
+        return
+    
+    app.enemyTeam.extend([enemy1, enemy2, enemy3])
+
+    # make extra enemies
+    if numEnemies > 3:
+        enemy4 = makeEnemy(app, "Heatstroke", "pool noodle", app.heatstrokeImg)
+        app.enemyTeam.append(enemy4)
+        if numEnemies > 4:
+            enemy5 = makeEnemy(app, "Salt", "water gun", app.saltImg)
+            app.enemyTeam.append(enemy5)
+
+def makeEnemy(app, name, weapon, image):
+    ''' generate an enemy based on the current team '''
+    # use the lowest player stats
+    worstHP = worstAttack = worstDefense = worstRes = 1000
+    for unit in app.team:
+        if unit.hp < worstHP: worstHP = unit.hp
+        if unit.attack < worstAttack: worstAttack = unit.attack
+        if unit.defense < worstDefense: worstDefense = unit.defense
+        if unit.res < worstRes: worstRes = unit.res
+    lowestDefended = min(worstDefense, worstRes)
+
+    # balance stats based on enemy's weapon type
+    teamSize = len(app.team)
+    if weapon == "pool noodle":
+        hp = max(int((worstHP+2) * (teamSize/3)), 1)
+        attack = max(int((worstAttack+1) * (teamSize/3)), 1)
+        defense = max(int(lowestDefended * (teamSize/3)), 1)
+        res = max(int((lowestDefended-1) * (teamSize/3)), 1)
+        accuracy = 85
+    elif weapon == "water gun":
+        hp = max(int(worstHP * (teamSize/3)), 1)
+        attack = max(int(worstAttack * (teamSize/3)), 1)
+        defense = res = max(int(lowestDefended * (teamSize/3)), 1)
+        accuracy = 80
+    else:
+        hp = max(int((worstHP-1) * (teamSize/3)), 1)
+        attack = max(int((worstAttack-1) * (teamSize/3)), 1)
+        defense = max(int((lowestDefended-1) * (teamSize/3)), 1)
+        res = max(int(lowestDefended * (teamSize/3)), 1)
+        accuracy = 90
+    return Enemy(name, weapon, hp, attack, defense, res, accuracy, image)
+
+####
+# Map Choice and Spawning
+####
+
 def chooseMap(app):
     ''' set the current map for one battle '''
     # _ = sand, O = dune, X = water/moat, * = sand castle
@@ -1069,6 +1130,21 @@ def chooseMap(app):
     maps = [sandCastleMap, dunesMap, beachMap, tidalMap, islandMap]
     app.map = random.choice(maps)
 
+def makeMap(app): # may give up on later...
+    ''' generate a map '''
+    # _ = sand, O = dune, X = water/moat, * = sand castle
+    # A = player unit spawn point, E = enemy unit spawn point
+    rows = cols = 7
+    newMap = [ ["_"] * cols for row in range(rows) ] # start with all sand
+
+    # rules
+    # sand castle must be surrounded by water
+    # limit number of water cells that can be placed
+    # dunes can only be up to half the traversable map
+    # dunes can't surround water
+
+    return newMap
+
 def spawnTeam(app, team, unitType="playable"):
     ''' set positions for a team of units based on available spawn points '''
     # create a set of possible spawn points
@@ -1087,63 +1163,6 @@ def spawnTeam(app, team, unitType="playable"):
     # place each unit at a randomly chosen row,col position from those available
     for unit in team:
         unit.row, unit.col = spawnPoints.pop()
-
-def makeEnemyTeam(app):
-    ''' generate enemies based on the current team size '''
-    # 3 to 5 enemies should be made
-    app.enemyTeam = []
-    numEnemies = len(app.team) + 2
-
-    # make 1 of each possible type of enemy
-    enemy1 = makeEnemy(app, "Dehydration", "bubble wand", app.dehydrationImg)
-    enemy2 = makeEnemy(app, "Heatstroke", "pool noodle", app.heatstrokeImg)
-    enemy3 = makeEnemy(app, "Salt", "water gun", app.saltImg)
-
-    if app.tutorial: # only make 1 enemy for the tutorial
-        app.enemyTeam.append(enemy1)
-        return
-    
-    app.enemyTeam.extend([enemy1, enemy2, enemy3])
-
-    # make extra enemies
-    if numEnemies > 3:
-        enemy4 = makeEnemy(app, "Heatstroke", "pool noodle", app.heatstrokeImg)
-        app.enemyTeam.append(enemy4)
-        if numEnemies > 4:
-            enemy5 = makeEnemy(app, "Salt", "water gun", app.saltImg)
-            app.enemyTeam.append(enemy5)
-
-def makeEnemy(app, name, weapon, image):
-    ''' generate an enemy based on the current team '''
-    # use the lowest player stats
-    worstHP = worstAttack = worstDefense = worstRes = 1000
-    for unit in app.team:
-        if unit.hp < worstHP: worstHP = unit.hp
-        if unit.attack < worstAttack: worstAttack = unit.attack
-        if unit.defense < worstDefense: worstDefense = unit.defense
-        if unit.res < worstRes: worstRes = unit.res
-    lowestDefended = min(worstDefense, worstRes)
-
-    # balance stats based on enemy's weapon type
-    teamSize = len(app.team)
-    if weapon == "pool noodle":
-        hp = max(int((worstHP+2) * (teamSize/3)), 1)
-        attack = max(int((worstAttack+1) * (teamSize/3)), 1)
-        defense = max(int(lowestDefended * (teamSize/3)), 1)
-        res = max(int((lowestDefended-1) * (teamSize/3)), 1)
-        accuracy = 85
-    elif weapon == "water gun":
-        hp = max(int(worstHP * (teamSize/3)), 1)
-        attack = max(int(worstAttack * (teamSize/3)), 1)
-        defense = res = max(int(lowestDefended * (teamSize/3)), 1)
-        accuracy = 80
-    else:
-        hp = max(int((worstHP-1) * (teamSize/3)), 1)
-        attack = max(int((worstAttack-1) * (teamSize/3)), 1)
-        defense = max(int((lowestDefended-1) * (teamSize/3)), 1)
-        res = max(int(lowestDefended * (teamSize/3)), 1)
-        accuracy = 90
-    return Enemy(name, weapon, hp, attack, defense, res, accuracy, image)
 
 ####
 # Searching algorithm for enemies
