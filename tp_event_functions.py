@@ -1089,6 +1089,10 @@ def makeEnemy(app, name, weapon, image):
 
 def chooseMap(app):
     ''' set the current map for one battle '''
+    if app.freeplay:
+        app.map = makeMap()
+        return
+
     # _ = sand, O = dune, X = water/moat, * = sand castle
     # A = player unit spawn point, E = enemy unit spawn point
 
@@ -1149,35 +1153,26 @@ def chooseMap(app):
     maps = [sandCastleMap, dunesMap, beachMap, tidalMap, islandMap]
     app.map = random.choice(maps)
 
-def makeMap(app):
+def makeMap():
     ''' generate a map '''
-    # _ = sand, O = dune, X = water/moat, * = sand castle
-    # A = player unit spawn point, E = enemy unit spawn point
     rows = cols = 7
-    newMap = [ ["_"] * cols for row in range(rows) ] # start with all sand
-
-    # place sand castle and surround with water (a moat)
-    placedWater = 0
-    placeCastle = random.choice([True, False, False, False, False, False])
-    if placeCastle:
-        castleRow, castleCol = placeSymOnMap(newMap, "*")
-        placedWater = placeMoat(newMap, castleRow, castleCol)
+    newMap = [ ["_"] * cols for row in range(rows) ] # start with all sand (_)
     
-    # up to 12 total water cells can be placed
-    waterToPlace = random.randint(0, 13 - placedWater)
+    # place up to 12 water cells (X)
+    waterToPlace = random.randint(0, 13)
     for waterCell in range(waterToPlace):
-        placeSymOnMap(currMap, "X")
+        placeSymOnMap(newMap, "X")
 
-    # dunes can make up half of the rest of the map at most
-    dunesToPlace = len(currMap) * len(currMap[0])
-    dunesToPlace -= waterToPlace + placedWater
-    dunesToPlace = random.randint(0, dunesToPlace // 2)
+    # dunes (O) can be up to 1/4 of the rest of the map
+    dunesToPlace = len(newMap) * len(newMap[0])
+    dunesToPlace -= waterToPlace
+    dunesToPlace = random.randint(0, dunesToPlace // 4)
     for duneCell in range(dunesToPlace):
-        placeSymOnMap(currMap, "O")
+        placeSymOnMap(newMap, "O")
 
-    clearBlockedPaths(currMap)
+    clearBlockedPaths(newMap)
 
-    placeSpawnPoints(currMap)
+    placeSpawnPoints(newMap)
 
     return newMap
 
@@ -1201,26 +1196,18 @@ def placeSymOnMap(currMap, symbol, cell=(None, None)):
         elif currMap[row][col] == symbol:
             row, col = moveSymToSide(currMap, symbol, row, col)
 
+        # limit which side spawn points are placed on
+        elif symbol == "A":
+            row = random.randint(0, len(currMap) - 1)
+            col = random.randint(0, len(currMap[0]) // 2)
+        elif symbol == "E":
+            row = random.randrange(0, len(currMap))
+            col = random.randrange((len(currMap[0])//2) + 1, len(currMap[0]))
+
         # pick a new random cell
         else:
             row = random.randrange(0, len(currMap))
             col = random.randrange(0, len(currMap[0]))
-
-def placeMoat(currMap, castleRow, castleCol):
-    ''' place a moat around a castle and return the number of cells placed '''
-    placed = 0
-
-    directions = [(0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1),
-                    (-1, 0), (-1, 1)]
-    for drow, dcol in directions:
-        moatRow = castleRow + drow
-        moatCol = castleCol + dcol
-        # only place if cell is on the map
-        if 0 <= moatRow < len(currMap) and 0 <= moatCol < len(currMap[0]):
-            placeSymOnMap(currMap, "X", (moatRow, moatCol))
-            placed += 1
-    
-    return placed
 
 def moveSymToSide(currMap, symbol, currRow, currCol):
     ''' return a row,col where symbol can be placed next to currRow,currCol '''
@@ -1235,25 +1222,27 @@ def moveSymToSide(currMap, symbol, currRow, currCol):
 
 def clearBlockedPaths(currMap):
     ''' place sand cells to clear a path through water other than a moat '''
-    findBlockage(currMap) # do something later
+    for blockage in findBlockages(currMap):
+        toReplaceIndex = random.randrange(0, len(blockage))
+        toReplace = blockage[toReplaceIndex]
+        placeSymOnMap(currMap, "_", toReplace)
 
-def findBlockage(currMap):
-    ''' return a list of 3 water cells that form a "blockage" on currMap '''
+def findBlockages(currMap):
+    ''' return a list of lists of cells that form a "blockage" on currMap '''
+    blockages = []
+
     corner = None
     rows, cols = len(currMap), len(currMap[0])
     for row in range(rows):
         for col in range(cols):
             if currMap[row][col] == "X":
-                corner = findCornerFromCell(currMap, row, col)
+                corner = findBlockageFromCell(currMap, row, col)
+                if corner != None:
+                    blockages.append(corner)
+    
+    return blockages
 
-    # check the symbol of the remaining cell
-    if corner != None:
-        pass
-
-    # moats around a sand castle shouldn't be removed
-    return None
-
-def findCornerFromCell(currMap, currRow, currCol):
+def findBlockageFromCell(currMap, currRow, currCol):
     ''' return a list of 3 water cells that form a "corner" on currMap '''
     corner = [(currRow, currCol)]
 
@@ -1267,15 +1256,15 @@ def findCornerFromCell(currMap, currRow, currCol):
                 corner.append((nextRow, nextCol))
                 # find another adjacent water cell
                 for newDrow, newDcol in directions:
-                    newRow = nextRow + newDrow
-                    newCol = nextCol + newDcol
-                    if ( 0 <= nextRow < len(currMap) and
-                        0 <= nextCol < len(currMap[0]) and
-                        (newRow, newCol) != (currRow, currCol) ):
+                    lastRow = nextRow + newDrow
+                    lastCol = nextCol + newDcol
+                    if ( 0 <= lastRow < len(currMap) and
+                        0 <= lastCol < len(currMap[0]) and
+                        (lastRow, lastCol) != (currRow, currCol) ):
                         # make sure cell direction isn't the same as before
                         if newDrow != drow and newDcol != dcol:
-                            if currMap[newRow][newCol] == "X":
-                                corner.append((newRow, newCol))
+                            if currMap[lastRow][lastCol] == "X":
+                                corner.append((lastRow, lastCol))
                                 return corner
                 # no corner found, try the next adjacent water cell
                 corner.pop()
@@ -1284,11 +1273,17 @@ def findCornerFromCell(currMap, currRow, currCol):
 
 def placeSpawnPoints(currMap):
     ''' place unit and enemy spawn points on a map '''
-    # unit spawn points on the left side
-    pass
+    # 3 unit spawn points (A) on the left side
+    for unitSpawn in range(3):
+        col = random.randint(0, len(currMap[0]) // 2)
+        row = random.randint(0, len(currMap) - 1)
+        placeSymOnMap(currMap, "A", (row, col))
 
-    # enemy spawn points on the right side
-    pass
+    # 5 enemy spawn points (E) on the right side
+    for enemySpawn in range(5):
+        col = random.randrange((len(currMap[0])//2) + 1, len(currMap[0]))
+        row = random.randrange(0, len(currMap))
+        placeSymOnMap(currMap, "E", (row, col))
 
 ####
 # Searching algorithm for enemies
