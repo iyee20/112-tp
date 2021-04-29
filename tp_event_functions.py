@@ -1149,7 +1149,7 @@ def chooseMap(app):
     maps = [sandCastleMap, dunesMap, beachMap, tidalMap, islandMap]
     app.map = random.choice(maps)
 
-def makeMap(app): # may give up on later...
+def makeMap(app):
     ''' generate a map '''
     # _ = sand, O = dune, X = water/moat, * = sand castle
     # A = player unit spawn point, E = enemy unit spawn point
@@ -1174,6 +1174,8 @@ def makeMap(app): # may give up on later...
     dunesToPlace = random.randint(0, dunesToPlace // 2)
     for duneCell in range(dunesToPlace):
         placeSymOnMap(currMap, "O")
+
+    clearBlockedPaths(currMap)
 
     placeSpawnPoints(currMap)
 
@@ -1231,12 +1233,62 @@ def moveSymToSide(currMap, symbol, currRow, currCol):
         if 0 <= newRow < len(currMap) and 0 <= newCol < len(currMap[0]):
             return newRow, newCol
 
+def clearBlockedPaths(currMap):
+    ''' place sand cells to clear a path through water other than a moat '''
+    findBlockage(currMap) # do something later
+
+def findBlockage(currMap):
+    ''' return a list of 3 water cells that form a "blockage" on currMap '''
+    corner = None
+    rows, cols = len(currMap), len(currMap[0])
+    for row in range(rows):
+        for col in range(cols):
+            if currMap[row][col] == "X":
+                corner = findCornerFromCell(currMap, row, col)
+
+    # check the symbol of the remaining cell
+    if corner != None:
+        pass
+
+    # moats around a sand castle shouldn't be removed
+    return None
+
+def findCornerFromCell(currMap, currRow, currCol):
+    ''' return a list of 3 water cells that form a "corner" on currMap '''
+    corner = [(currRow, currCol)]
+
+    directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+    # find an adjacent water cell
+    for drow, dcol in directions:
+        nextRow = currRow + drow
+        nextCol = currCol + dcol
+        if 0 <= nextRow < len(currMap) and 0 <= nextCol < len(currMap[0]):
+            if currMap[nextRow][nextCol] == "X":
+                corner.append((nextRow, nextCol))
+                # find another adjacent water cell
+                for newDrow, newDcol in directions:
+                    newRow = nextRow + newDrow
+                    newCol = nextCol + newDcol
+                    if ( 0 <= nextRow < len(currMap) and
+                        0 <= nextCol < len(currMap[0]) and
+                        (newRow, newCol) != (currRow, currCol) ):
+                        # make sure cell direction isn't the same as before
+                        if newDrow != drow and newDcol != dcol:
+                            if currMap[newRow][newCol] == "X":
+                                corner.append((newRow, newCol))
+                                return corner
+                # no corner found, try the next adjacent water cell
+                corner.pop()
+
+    return None
+
 def placeSpawnPoints(currMap):
     ''' place unit and enemy spawn points on a map '''
     # unit spawn points on the left side
-
+    pass
 
     # enemy spawn points on the right side
+    pass
 
 ####
 # Searching algorithm for enemies
