@@ -30,7 +30,7 @@ def appStarted(app):
 
 def setColorsAndFonts(app):
     ''' define game colors and fonts '''
-    app.buttonColor = "#699bf0"
+    app.buttonColor = "#60C1FF"
     app.textColor = "black"
     app.buttonFont = "Arial 12 bold"
     app.dialogueFont = "Arial 14"
