@@ -215,11 +215,10 @@ def saveGame(app):
 def overwriteSaveOkay(app):
     ''' return False if a user cancels saving over a previous file '''
     confirmation = app.getUserInput('''Saving will overwrite the previous save.
-Type CANCEL to cancel the save.''')
-    if confirmation != None and confirmation.isalpha():
-        if confirmation.upper() == "CANCEL":
-            app.showMessage("Save cancelled.")
-            return False
+Type or click Cancel to cancel the save.''')
+    if confirmation == None or confirmation.upper() == "CANCEL":
+        app.showMessage("Save cancelled.")
+        return False
     return True
 
 def writeSaveContents(app):
@@ -271,9 +270,9 @@ def deleteSaveOkay(app):
         app.showMessage("This file is already empty!")
     else:
         confirmation = app.getUserInput('''The old save will be lost forever.
-Type OKAY to continue deleting.''')
-        if confirmation != None and confirmation.isalpha():
-            if confirmation.upper() == "OKAY":
+Type or click OK to continue deleting.''')
+        if confirmation != None:
+            if confirmation == "" or confirmation.upper() == "OK":
                 app.showMessage("Save deleted.")
                 return True
     return False
