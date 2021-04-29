@@ -27,6 +27,7 @@ def loadImages(app):
     app.nerissaImg = app.loadImage("images/nerissa.png")
 
     # misc
+    app.titleImg = app.loadImage("images/title.png")
     app.seashellImg = app.loadImage("images/seashell.png")
     app.gachaImg = app.loadImage("images/gacha.png")
 
@@ -125,10 +126,8 @@ Special thanks to Casper Wong'''
 
 def drawTitle(app, canvas):
     ''' draw the game title '''
-    topY = app.height // 9
-
-    canvas.create_text(app.width // 2, topY, text="Water Emblem",
-                        font="Papyrus 30 bold")
+    canvas.create_image(0, 0, anchor="nw",
+                            image=ImageTk.PhotoImage(app.titleImg))
 
 def settingsMode_redrawAll(app, canvas):
     ''' draw the settings screen '''
