@@ -28,6 +28,7 @@ def loadImages(app):
 
     # misc
     app.seashellImg = app.loadImage("images/seashell.png")
+    app.gachaImg = app.loadImage("images/gacha.png")
 
 def loadIcons(app):
     ''' load character icon images '''
@@ -343,13 +344,10 @@ Use 1 Seashell to wish for a new character, or use
 def drawGachaMachine(app, canvas):
     ''' draw the gacha machine '''
     topX = app.width // 4
-    botX = app.width - topX
     topY = app.height // 3
-    botY = app.height - topY
 
-    canvas.create_rectangle(topX, topY, botX, botY, fill=app.buttonColor)
-    drawButton(app, canvas, topX, (topY+botY) // 2, botX, botY,
-                        color="white", text="Gacha")
+    canvas.create_image(topX, topY, anchor="nw",
+                            image=ImageTk.PhotoImage(app.gachaImg))
 
 ####
 # Cutscene drawing functions
