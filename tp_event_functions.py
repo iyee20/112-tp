@@ -1007,6 +1007,25 @@ def victoryRewards(app):
 a bucket of {dropletsWon} Droplets and {seashellsWon} Seashells.
 Click to go back inside.'''
 
+def spawnTeam(app, team, unitType="playable"):
+    ''' set positions for a team of units based on available spawn points '''
+    # create a set of possible spawn points
+    spawnPoints = set()
+    rows, cols = len(app.map), len(app.map[0])
+    # spawn units on corresponding spawn points
+    if unitType == "playable":
+        spawnSymbol = "A"
+    else: # unitType == "enemy"
+        spawnSymbol = "E"
+    for row in range(rows):
+        for col in range(cols):
+            if app.map[row][col] == spawnSymbol:
+                spawnPoints.add((row, col))
+    
+    # place each unit at a randomly chosen row,col position from those available
+    for unit in team:
+        unit.row, unit.col = spawnPoints.pop()
+
 def makeEnemyTeam(app):
     ''' generate enemies based on the current team size '''
     # 3 to 5 enemies should be made
@@ -1065,7 +1084,7 @@ def makeEnemy(app, name, weapon, image):
     return Enemy(name, weapon, hp, attack, defense, res, accuracy, image)
 
 ####
-# Map Choice and Spawning
+# Map Choice and Generation
 ####
 
 def chooseMap(app):
@@ -1137,46 +1156,55 @@ def makeMap(app): # may give up on later...
     rows = cols = 7
     newMap = [ ["_"] * cols for row in range(rows) ] # start with all sand
 
-    # rules
-    # dunes can only be up to half the traversable map
-    # dunes can't surround water
-
     # place sand castle and surround with water (a moat)
+    placedWater = 0
     placeCastle = random.choice([True, False, False, False, False, False])
     if placeCastle:
         castleRow, castleCol = placeSymOnMap(newMap, "*")
         placedWater = placeMoat(newMap, castleRow, castleCol)
     
     # up to 12 total water cells can be placed
-    waterToPlace = random.randint(0, 12 - placedWater)
-    # place water here later
+    waterToPlace = random.randint(0, 13 - placedWater)
+    for waterCell in range(waterToPlace):
+        placeSymOnMap(currMap, "X")
+
+    # dunes can make up half of the rest of the map at most
+    dunesToPlace = len(currMap) * len(currMap[0])
+    dunesToPlace -= waterToPlace + placedWater
+    dunesToPlace = random.randint(0, dunesToPlace // 2)
+    for duneCell in range(dunesToPlace):
+        placeSymOnMap(currMap, "O")
+
+    placeSpawnPoints(currMap)
 
     return newMap
 
-def placeSymOnMap(map, symbol, cell=(None, None)):
+def placeSymOnMap(currMap, symbol, cell=(None, None)):
     ''' place a symbol on a map cell and return the cell '''
     # choose a random cell
     if cell == (None, None):
-        row = random.randrange(0, len(map))
-        col = random.randrange(0, len(map[0]))
+        row = random.randrange(0, len(currMap))
+        col = random.randrange(0, len(currMap[0]))
     # assign cell based on arguments
     else:
         row, col = cell
     
     while True:
         # only replace "sand" cells
-        if map[row][col] != "_":
-            map[row][col] = symbol
+        if currMap[row][col] == "_":
+            currMap[row][col] = symbol
             return row, col
         
-        # make water and dunes clump together later
-        # (move off to the side of a cell with the same symbol)
+        # "dunes" and "water" cells can be spawned "together"
+        elif currMap[row][col] == symbol:
+            row, col = moveSymToSide(currMap, symbol, row, col)
 
         # pick a new random cell
-        row = random.randrange(0, len(map))
-        col = random.randrange(0, len(map[0]))
+        else:
+            row = random.randrange(0, len(currMap))
+            col = random.randrange(0, len(currMap[0]))
 
-def placeMoat(map, castleRow, castleCol):
+def placeMoat(currMap, castleRow, castleCol):
     ''' place a moat around a castle and return the number of cells placed '''
     placed = 0
 
@@ -1186,30 +1214,29 @@ def placeMoat(map, castleRow, castleCol):
         moatRow = castleRow + drow
         moatCol = castleCol + dcol
         # only place if cell is on the map
-        if 0 <= moatRow < len(map) and 0 <= moatCol < len(map[0]):
-            placeSymOnMap(map, "X", (moatRow, moatCol))
+        if 0 <= moatRow < len(currMap) and 0 <= moatCol < len(currMap[0]):
+            placeSymOnMap(currMap, "X", (moatRow, moatCol))
             placed += 1
     
     return placed
 
-def spawnTeam(app, team, unitType="playable"):
-    ''' set positions for a team of units based on available spawn points '''
-    # create a set of possible spawn points
-    spawnPoints = set()
-    rows, cols = len(app.map), len(app.map[0])
-    # spawn units on corresponding spawn points
-    if unitType == "playable":
-        spawnSymbol = "A"
-    else: # unitType == "enemy"
-        spawnSymbol = "E"
-    for row in range(rows):
-        for col in range(cols):
-            if app.map[row][col] == spawnSymbol:
-                spawnPoints.add((row, col))
-    
-    # place each unit at a randomly chosen row,col position from those available
-    for unit in team:
-        unit.row, unit.col = spawnPoints.pop()
+def moveSymToSide(currMap, symbol, currRow, currCol):
+    ''' return a row,col where symbol can be placed next to currRow,currCol '''
+    directions = [(0, 1), (1, 0), (-1, 0), (0, -1)]
+
+    for drow, dcol in directions:
+        newRow = currRow + drow
+        newCol = currCol + dcol
+        # only place if cell is on the map
+        if 0 <= newRow < len(currMap) and 0 <= newCol < len(currMap[0]):
+            return newRow, newCol
+
+def placeSpawnPoints(currMap):
+    ''' place unit and enemy spawn points on a map '''
+    # unit spawn points on the left side
+
+
+    # enemy spawn points on the right side
 
 ####
 # Searching algorithm for enemies
