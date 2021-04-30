@@ -217,7 +217,7 @@ def overwriteSaveOkay(app):
     confirmation = app.getUserInput('''Saving will overwrite the previous save.
 Type or click Cancel to cancel the save.''')
     if confirmation == None or confirmation.upper() == "CANCEL":
-        app.showMessage("Save cancelled.")
+        app.showMessage("The game was not saved.")
         return False
     return True
 
@@ -1065,7 +1065,7 @@ def makeEnemy(app, name, weapon, image):
     lowestDefended = min(worstDefense, worstRes)
 
     # balance stats based on enemy's weapon type
-    teamScale = len(app.team) / (1.5)
+    teamScale = len(app.team) / 4
     if weapon == "pool noodle":
         hp = max(int((worstHP+2) * (teamScale/3)), 1)
         attack = max(int((worstAttack+1) * (teamScale/3)), 1)
@@ -1160,8 +1160,8 @@ def makeMap():
     rows = cols = 7
     newMap = [ ["_"] * cols for row in range(rows) ] # start with all sand (_)
     
-    # place up to 12 water cells (X)
-    waterToPlace = random.randint(0, 13)
+    # place up to 8 water cells (X)
+    waterToPlace = random.randint(0, 9)
     for waterCell in range(waterToPlace):
         placeSymOnMap(newMap, "X")
 
