@@ -285,6 +285,9 @@ def settingsMode_mousePressed(app, event):
     ''' handle mouse presses in settings mode '''
     # change moat size
     if menuButtonClicked(app, event) == 1:
+        if app.saveFilePath == None:
+            app.showMessage("Please choose a save file first!")
+            return
         changeMoatSize(app)
         app.showMessage(f"Moat size is now {app.moatSize} Droplets.")
 

@@ -120,8 +120,8 @@ def mainScreenMode_redrawAll(app, canvas):
                                     app.buttonColor, playColor, app.buttonColor)
 
     # draw credits
-    creditText = '''(C) Isabella Yee 2021 | made with Python | 15-112
-Special thanks to Casper Wong'''
+    creditText = ''' (C) Isabella Yee 2021 | made with Python | 15-112
+ Special thanks to Casper Wong'''
     canvas.create_text(0, app.height, text=creditText, anchor="sw",
                             fill=app.textColor, font=app.buttonFont)
 
@@ -136,8 +136,19 @@ def settingsMode_redrawAll(app, canvas):
 
     drawBackButton(app, canvas, app.margin, app.margin)
 
-    drawThreeButtonMenu(app, canvas, "Change Moat Size", "Toggle Cheats",
-                            "Toggle Game Mode",
+    # display current settings
+    moatButtonText = f"Change Moat Size (currently {app.moatSize} Droplets)"
+    if app.cheats:
+        cheatButtonText = "Toggle Cheats (currently ON)"
+    else:
+        cheatButtonText = "Toggle Cheats (currently OFF)"
+    if app.freeplay:
+        gameModeButtonText = "Toggle Game Mode (currently Freeplay)"
+    else:
+        gameModeButtonText = "Toggle Game Mode (current Story)"
+
+    drawThreeButtonMenu(app, canvas, moatButtonText, cheatButtonText,
+                            gameModeButtonText,
                             app.buttonColor, app.buttonColor, app.buttonColor)
 
 def saveMode_redrawAll(app, canvas):
@@ -145,6 +156,10 @@ def saveMode_redrawAll(app, canvas):
     drawBackground(app, canvas, app.decoImg)
 
     drawBackButton(app, canvas, app.margin, app.margin)
+
+    canvas.create_text(app.width // 2, app.height // 5,
+                        text="Click to choose a save file.",
+                        font=app.dialogueFont)
 
     # draw player names associated with saves
     name1, name2 = getSaveNames(app)
@@ -161,7 +176,7 @@ def saveMode_redrawAll(app, canvas):
     elif app.saveFilePath == "saves/save2.txt": saveNum = 2
 
     if saveNum != 0:
-        canvas.create_text(app.width // 2, app.height - 30,
+        canvas.create_text(app.width // 2, app.height - 100,
                                 text=f'''Currently using save file {saveNum}.
 Press Delete or Backspace to clear the save file.''',
                                 font=app.dialogueFont, justify="center")
