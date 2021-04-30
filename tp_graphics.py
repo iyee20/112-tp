@@ -13,8 +13,9 @@ from tp_content import PlayableChar
 
 def loadImages(app):
     ''' import images from local files '''
-    # background
+    # backgrounds
     app.sandCastleImg = app.loadImage("images/sandCastle.png")
+    app.decoImg = app.loadImage("images/deco.png")
 
     # map-related images
     app.castleCellImg = app.loadImage("images/castle.png")
@@ -131,6 +132,8 @@ def drawTitle(app, canvas):
 
 def settingsMode_redrawAll(app, canvas):
     ''' draw the settings screen '''
+    drawBackground(app, canvas, app.decoImg)
+
     drawBackButton(app, canvas, app.margin, app.margin)
 
     drawThreeButtonMenu(app, canvas, "Change Moat Size", "Toggle Cheats",
@@ -139,6 +142,8 @@ def settingsMode_redrawAll(app, canvas):
 
 def saveMode_redrawAll(app, canvas):
     ''' draw the save file choice screen '''
+    drawBackground(app, canvas, app.decoImg)
+
     drawBackButton(app, canvas, app.margin, app.margin)
 
     # draw player names associated with saves
