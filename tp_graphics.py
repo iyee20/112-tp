@@ -76,7 +76,7 @@ def drawButton(app, canvas, topX, topY, botX, botY, color="blue", text=""):
 
     centerX = (botX + topX) // 2
     centerY = (botY + topY) // 2
-    canvas.create_text(centerX, centerY, text=text, fill=app.textColor,
+    canvas.create_text(centerX, centerY, text=text,
                         font=app.buttonFont, justify="center")
 
 def drawBackButton(app, canvas, topX, topY):
@@ -123,7 +123,7 @@ def mainScreenMode_redrawAll(app, canvas):
     creditText = ''' (C) Isabella Yee 2021 | made with Python | 15-112
  Special thanks to Casper Wong'''
     canvas.create_text(0, app.height, text=creditText, anchor="sw",
-                            fill=app.textColor, font=app.buttonFont)
+                            font=app.buttonFont)
 
 def drawTitle(app, canvas):
     ''' draw the game title '''
@@ -278,7 +278,7 @@ def drawDialogueBox(app, canvas, name, text, position="bottom"):
     
     # draw text
     canvas.create_text(topX + app.margin, topY + app.margin, anchor="nw",
-        text=name, fill=app.textColor, font=app.dialogueFont+" bold")
+        text=name, font=app.dialogueFont+" bold")
     
     space = 30
     for line in text.splitlines():
@@ -287,8 +287,8 @@ def drawDialogueBox(app, canvas, name, text, position="bottom"):
 
 def drawDialogue(app, canvas, line, topX, topY):
     ''' draw a line of dialogue '''
-    canvas.create_text(topX, topY, text=line, anchor="nw", fill=app.textColor,
-                            font=app.dialogueFont)
+    canvas.create_text(topX, topY, text=line, anchor="nw",
+                        font=app.dialogueFont)
 
 ####
 # Tutorial (opening) drawing functions
@@ -591,8 +591,7 @@ def drawStatus(app, canvas, unit, topY, slotNum=-1):
 
     # draw unit name and icon
     canvas.create_text(app.margin, botY - app.margin, anchor="sw",
-                    text=unit.name, fill=app.textColor,
-                    font=app.dialogueFont+" bold")
+                    text=unit.name, font=app.dialogueFont+" bold")
     cx = app.margin + (app.cellSize // 2)
     cy = cx + topY
     canvas.create_image(cx, cy, image=ImageTk.PhotoImage(unit.image))
@@ -600,22 +599,22 @@ def drawStatus(app, canvas, unit, topY, slotNum=-1):
     # draw stats and weapon
     offset = (2 * app.margin) + app.cellSize
     canvas.create_text(offset, topY + app.margin, text=f"Level {unit.level}",
-                        anchor="nw", fill=app.textColor, font=app.dialogueFont)
+                        anchor="nw", font=app.dialogueFont)
     drawHPBar(app, canvas, unit, offset, topY + 25,
                         app.width - app.margin - offset, app.dialogueFont)
 
     stats = f'''Attack {unit.attack}
 Def {unit.defense}      Res {unit.res}'''
     canvas.create_text(offset, topY + 60, text=stats, anchor="nw",
-                        fill=app.textColor, font=app.dialogueFont)
+                        font=app.dialogueFont)
     
     canvas.create_text(offset * 4, topY + app.margin, text=unit.weapon,
-                        anchor="nw", fill=app.textColor, font=app.dialogueFont)
+                        anchor="nw", font=app.dialogueFont)
 
 def drawHPBar(app, canvas, unit, topX, topY, barLength, font):
     ''' draw a unit's HP bar '''
     canvas.create_text(topX, topY, text=f"HP: {unit.hp} / {unit.maxHP}",
-                        anchor="nw", fill=app.textColor, font=font)
+                        anchor="nw", font=font)
 
     # draw bar below text
     filled = unit.hp / unit.maxHP
@@ -647,7 +646,7 @@ def drawUnitSummary(app, canvas, unit, topX, topY):
 
     # draw unit name and icon
     canvas.create_text(app.margin + topX, botY - app.margin, anchor="sw",
-                    text=unit.name, fill=app.textColor, font=app.summaryFont)
+                    text=unit.name, font=app.summaryFont)
     canvas.create_image(topX, topY, anchor="nw",
                             image=ImageTk.PhotoImage(unit.image))
 
@@ -658,7 +657,7 @@ def drawUnitSummary(app, canvas, unit, topX, topY):
                     barLength, app.summaryFont)
     
     canvas.create_text(offset, topY + 35 + app.margin, text=unit.weapon,
-                        anchor="nw", fill=app.textColor, font=app.summaryFont)
+                        anchor="nw", font=app.summaryFont)
 
 ####
 # Battle drawing functions
@@ -671,7 +670,8 @@ def battleMode_redrawAll(app, canvas):
     drawUnitsOnMap(app, canvas)
     
     # display victory or defeat message
-    if app.victory or app.defeat: drawEndOfBattle(app, canvas)
+    if app.victory or app.defeat:
+        drawEndOfBattle(app, canvas)
     
     # draw status bar of selected unit
     elif app.selected != None:
@@ -684,10 +684,8 @@ def battleMode_redrawAll(app, canvas):
     else:
         if app.tutorial and app.onCutsceneLine < tutorialLines:
             drawTutorialBattleIntro(app, canvas)
-        if app.battleMenuDisplay == 0: drawPlayerMenu(app, canvas)
-        elif app.battleMenuDisplay == 1: drawUntappedUnits(app, canvas)
-        elif app.battleMenuDisplay == 2: drawBattleSummary(app, canvas)
-        elif app.battleMenuDisplay == 3: drawFreeplayIntro(app, canvas)
+        displayBattleMenu(app, canvas)
+        drawClickInstructions(app, canvas)
     
     if app.battleMessage != None:
         if app.tutorial and app.onCutsceneLine < tutorialLines:
@@ -745,6 +743,21 @@ play of the enemy turn.'''
     ]
 
     return battleIntro
+
+def displayBattleMenu(app, canvas):
+    ''' call the function that corresponds to the correct battle menu '''
+    if app.battleMenuDisplay == 0:
+        drawPlayerMenu(app, canvas)
+
+    # accessed by clicking player menu buttons
+    elif app.battleMenuDisplay == 1:
+        drawUntappedUnits(app, canvas)
+    elif app.battleMenuDisplay == 2:
+        drawBattleSummary(app, canvas)
+
+    # only shown when a freeplay-mode save is loaded
+    elif app.battleMenuDisplay == 3:
+        drawFreeplayIntro(app, canvas)
 
 def drawPlayerMenu(app, canvas):
     ''' draw a player's menu options in battle mode '''
@@ -818,6 +831,20 @@ def drawFreeplayIntro(app, canvas):
     freeplayIntro = '''Now that the Moat is full, we can let loose, but we
 can’t rest easy yet! Keep defending the Sand Castle from enemies!'''
     drawDialogueBox(app, canvas, "Anna", freeplayIntro, "top")
+
+def drawClickInstructions(app, canvas):
+    ''' draw the prompt for the player to click during battles '''
+    if app.playerTurn:
+        prompt = '''Click to select a unit.
+Then click to move or press Enter to wait.'''
+    else:
+        prompt = "Click to move through the enemy turn."
+    
+    mapOffsetY = ((app.height*4//5) - (2*app.margin) - (7*app.cellSize))
+    cy = ((app.height//5) + mapOffsetY) // 2
+
+    canvas.create_text(app.width // 2, cy, text=prompt, font=app.dialogueFont,
+                                                justify="center")
 
 def drawMap(app, canvas):
     ''' draw a battle map '''

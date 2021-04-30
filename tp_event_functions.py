@@ -31,7 +31,6 @@ def appStarted(app):
 def setColorsAndFonts(app):
     ''' define game colors and fonts '''
     app.buttonColor = "#60C1FF"
-    app.textColor = "black"
     app.buttonFont = "Arial 12 bold"
     app.dialogueFont = "Arial 14"
     app.summaryFont = "Arial 11"
@@ -749,6 +748,7 @@ def playerTurn(app, event):
     # activate one of the player menu buttons or make a character selection
     if app.selected == None:
         if battleMenuButtonClicked(app, xClick, yClick): return
+        app.battleMenuDisplay = 0
         selectUnit(app, clickedCell)
 
     else: # move selected unit
