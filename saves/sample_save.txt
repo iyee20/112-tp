@@ -6,6 +6,16 @@ Giang:
 153, 42, 40, 47, 51
 Kai:
 152, 41, 45, 47, 51
+Iara:
+15, 8, 6, 5, 1
+Naia:
+16, 8, 5, 5, 1
+Morgan:
+16, 7, 4, 5, 1
+Marina:
+15, 6, 4, 6, 1
+Walter:
+17, 8, 5, 4, 1
 Team
 Fwizz
 Giang

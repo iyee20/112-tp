@@ -784,9 +784,9 @@ def movePlayableCharacter(app, unit, clickedCell):
             attackKeys = "an arrow key"
             if unit.range == 2:
                 attackKeys += " or WESD"
-            instruction = "attack"
+            instruction = "attack an enemy"
             if unit.weapon == "bubble wand":
-                instruction += " or heal"
+                instruction += " or heal an ally"
             app.battleMessage = f'''Press {attackKeys} to {instruction}
 or Enter to wait.'''
 
