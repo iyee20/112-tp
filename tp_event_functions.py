@@ -429,9 +429,14 @@ def transitionMode_keyPressed(app, event):
     elif event.key in "Ss":
         saveGame(app)
 
-    # go back to main screen
-    elif app.cheats and event.key in "Hh":
-        app.mode = "mainScreenMode"
+    elif app.cheats:
+        # go back to main screen
+        if event.key in "Hh":
+            app.mode = "mainScreenMode"
+        # skip to ending cutscene
+        elif event.key in "Ee":
+            app.storyModeEnd = True
+            app.mode = "cutsceneMode"
 
 ####
 # Barracks screen and team selection screen
