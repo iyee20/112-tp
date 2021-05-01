@@ -51,9 +51,9 @@ class Unit(object):
         if self.accuracy >= hitChance:
             # physical units target defense, magical units target res
             if self.type == "physical":
-                defended = self.defense
+                defended = target.defense
             else:
-                defended = self.res
+                defended = target.res
             # unit can't do negative damage
             amountLost = max(0, self.attack - defended)
             target.hp -= amountLost

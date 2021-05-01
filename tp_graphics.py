@@ -691,17 +691,15 @@ def battleMode_redrawAll(app, canvas):
     drawUnitsOnMap(app, canvas)
     
     # display victory or defeat message
-    if app.victory or app.defeat:
-        drawEndOfBattle(app, canvas)
+    if app.victory or app.defeat: drawEndOfBattle(app, canvas)
     
     # draw status bar of selected unit
     elif app.selected != None:
         unit = app.team[app.selected]
         drawStatus(app, canvas, unit, 0)
-        if unit.canMove:
-            drawMoveRadius(app, canvas, unit)
+        if unit.canMove: drawMoveRadius(app, canvas, unit)
     
-    # display player menu and tutorial dialogue
+    # display player menu or battle matchup (and tutorial dialogue)
     else:
         if app.tutorial and app.onCutsceneLine < tutorialLines:
             drawTutorialBattleIntro(app, canvas)
@@ -709,8 +707,7 @@ def battleMode_redrawAll(app, canvas):
         drawClickInstructions(app, canvas)
     
     if app.battleMessage != None:
-        if app.tutorial and app.onCutsceneLine < tutorialLines:
-            return
+        if app.tutorial and app.onCutsceneLine < tutorialLines: return
         canvas.create_text(app.width // 2, int(app.height * 0.9),
                             text=app.battleMessage, font=app.dialogueFont,
                             justify="center")
@@ -771,18 +768,59 @@ play of the enemy turn.'''
 
 def displayBattleMenu(app, canvas):
     ''' call the function that corresponds to the correct battle menu '''
-    if app.battleMenuDisplay == 0:
-        drawPlayerMenu(app, canvas)
+    if not app.playerTurn:
+        drawBattleMatchup(app, canvas)
 
-    # accessed by clicking player menu buttons
-    elif app.battleMenuDisplay == 1:
-        drawUntappedUnits(app, canvas)
-    elif app.battleMenuDisplay == 2:
-        drawBattleSummary(app, canvas)
+    else:
+        if app.battleMenuDisplay == 0:
+            drawPlayerMenu(app, canvas)
 
-    # only shown when a freeplay-mode save is loaded
-    elif app.battleMenuDisplay == 3:
-        drawFreeplayIntro(app, canvas)
+        # accessed by clicking player menu buttons
+        elif app.battleMenuDisplay == 1:
+            drawUntappedUnits(app, canvas)
+        elif app.battleMenuDisplay == 2:
+            drawBattleSummary(app, canvas)
+
+        # only shown when a freeplay-mode save is loaded
+        elif app.battleMenuDisplay == 3:
+            drawFreeplayIntro(app, canvas)
+
+def drawBattleMatchup(app, canvas):
+    ''' draw a battle matchup between an enemy and targeted team member '''
+    if app.currMatchup != None:
+        enemy, unit = app.currMatchup
+        drawMatchupStatus(app, canvas, enemy)
+        drawMatchupStatus(app, canvas, unit, "right")
+    else:
+        canvas.create_rectangle(0, 0, app.width, app.height // 5,
+                                    fill=app.buttonColor)
+
+def drawMatchupStatus(app, canvas, unit, side="left"):
+    ''' draw a unit's abbreviated status for a battle matchup '''
+    if side == "left":
+        topX = 0
+        botX = app.width // 2
+    else: # side == "right"
+        topX = app.width // 2
+        botX = app.width
+    botY = app.height // 5
+    offset = (2 * app.margin) + app.cellSize
+
+    canvas.create_rectangle(topX, 0, botX, botY, fill=app.buttonColor)
+
+    # draw unit name and icon
+    canvas.create_text(app.margin + topX, botY - app.margin, anchor="sw",
+                    text=unit.name, font=app.dialogueFont+" bold")
+    canvas.create_image(topX, 0, anchor="nw",
+                            image=ImageTk.PhotoImage(unit.image))
+
+    # draw HP and stats
+    drawHPBar(app, canvas, unit, topX + offset, 0, botX - offset - app.margin,
+                    app.dialogueFont)
+    stats = f'''Attack {unit.attack}
+Def {unit.defense}      Res {unit.res}'''
+    canvas.create_text(topX + offset, 60, text=stats, anchor="nw",
+                        font=app.dialogueFont)
 
 def drawPlayerMenu(app, canvas):
     ''' draw a player's menu options in battle mode '''

@@ -42,7 +42,7 @@ def setColorsAndFonts(app):
 def resetBattleVars(app):
     ''' reset battle-related variables '''
     app.enemyTeam = []
-    app.selected = app.battleMessage = None
+    app.selected = app.battleMessage = app.currMatchup = None
     app.battleMenuDisplay = 0
     app.playerTurn = True
     app.victory = app.defeat = False
@@ -647,6 +647,7 @@ def battleMode_mousePressed(app, event):
         # free enemy units to move again
         for enemy in app.enemyTeam:
             enemy.untapped = enemy.canMove = True
+        app.currMatchup = None
 
 def enemyTurn(app):
     ''' play through an enemy turn '''
@@ -661,9 +662,12 @@ def enemyTurn(app):
 
             # find a path to target
             goalRow, goalCol = findCellInRange(app, enemy, target, heuristic)
-            enemy.movePath = aStarSearch(app, (enemy.row, enemy.col),
-                                            (goalRow, goalCol), heuristic)
-            if enemy.range == 2: removeTooCloseCell(enemy, target, heuristic)
+            if (goalRow, goalCol) != (None, None):
+                enemy.movePath = aStarSearch(app, (enemy.row, enemy.col),
+                                                (goalRow, goalCol), heuristic)
+                if enemy.range == 2:
+                    removeTooCloseCell(enemy, target, heuristic)
+            else: enemy.movePath = None
 
             # move closer to target and attack if possible
             if (enemy.movePath != None and enemy.canMove
@@ -672,6 +676,7 @@ def enemyTurn(app):
                 enemy.canMove = False
                 if inRange(enemy, target): attackAndCounter(app, enemy, target)
         
+            app.currMatchup = (enemy, target)
             enemy.untapped = False
             break # separate each enemy's move with mouse presses
 
@@ -720,6 +725,9 @@ def cellIsBetweenCells(guess, currCell, goalCell, heuristic):
 
 def findBestCell(currCell, options, heuristic):
     ''' return the cell in options that is the closest to currCell '''
+    if len(options) == 0:
+        return (None, None)
+
     bestDist = heuristic(currCell, options[0])
     bestCell = options[0]
 
@@ -1073,21 +1081,21 @@ def makeEnemy(app, name, weapon, image):
     # balance stats based on enemy's weapon type
     teamScale = len(app.team) / 4
     if weapon == "pool noodle":
-        hp = max(int((worstHP+2) * (teamScale/3)), 1)
-        attack = max(int((worstAttack+1) * (teamScale/3)), 1)
-        defense = max(int(lowestDefended * (teamScale/3)), 1)
-        res = max(int((lowestDefended-1) * (teamScale/3)), 1)
+        hp = max(int((worstHP+2) * teamScale), 1)
+        attack = max(int((worstAttack+1) * teamScale), 1)
+        defense = max(int(lowestDefended * teamScale), 1)
+        res = max(int((lowestDefended-1) * teamScale), 1)
         accuracy = 85
     elif weapon == "water gun":
-        hp = max(int(worstHP * (teamScale/3)), 1)
-        attack = max(int(worstAttack * (teamScale/3)), 1)
-        defense = res = max(int(lowestDefended * (teamScale/3)), 1)
+        hp = max(int(worstHP * teamScale), 1)
+        attack = max(int(worstAttack * teamScale), 1)
+        defense = res = max(int(lowestDefended * teamScale), 1)
         accuracy = 80
     else:
-        hp = max(int((worstHP-1) * (teamScale/3)), 1)
-        attack = max(int((worstAttack-1) * (teamScale/3)), 1)
-        defense = max(int((lowestDefended-1) * (teamScale/3)), 1)
-        res = max(int(lowestDefended * (teamScale/3)), 1)
+        hp = max(int((worstHP-1) * teamScale), 1)
+        attack = max(int((worstAttack-1) * teamScale), 1)
+        defense = max(int((lowestDefended-1) * teamScale), 1)
+        res = max(int(lowestDefended * teamScale), 1)
         accuracy = 90
     return Enemy(name, weapon, hp, attack, defense, res, accuracy, image)
 
@@ -1184,7 +1192,7 @@ def makeMap():
 
     return newMap
 
-def placeSymOnMap(currMap, symbol, cell=(None, None)):
+def placeSymOnMap(currMap, symbol, cell=(None, None), replaceAny=False):
     ''' place a symbol on a map cell and return the cell '''
     # choose a random cell
     if cell == (None, None):
@@ -1196,7 +1204,7 @@ def placeSymOnMap(currMap, symbol, cell=(None, None)):
     
     while True:
         # only replace "sand" cells
-        if currMap[row][col] == "_":
+        if currMap[row][col] == "_" or replaceAny:
             currMap[row][col] = symbol
             return row, col
         
@@ -1233,7 +1241,7 @@ def clearBlockedPaths(currMap):
     for blockage in findBlockages(currMap):
         toReplaceIndex = random.randrange(0, len(blockage))
         toReplace = blockage[toReplaceIndex]
-        placeSymOnMap(currMap, "_", toReplace)
+        placeSymOnMap(currMap, "_", toReplace, True)
 
 def findBlockages(currMap):
     ''' return a list of lists of cells that form a "blockage" on currMap '''
@@ -1337,22 +1345,20 @@ def nodeNeighbors(app, node, goal):
                         (-1, 1), (-1, -1)]
     oneCellMoves = [(1, 0), (-1, 0), (0, 1), (0, -1)]
 
-    # add valid neighbors (and goal, if possible) to set
+    # add valid neighbors to set
     for i in range(len(twoCellMoves)):
         # add 2-cell neighbors
         drow, dcol = twoCellMoves[i]
         newRow = currRow + drow
         newCol = currCol + dcol
-        if (newRow, newCol) == goal:
-            neighbors.add((newRow, newCol))
-        elif moveIsLegal(app, currRow, currCol, drow, dcol):
+        if moveIsLegal(app, currRow, currCol, drow, dcol, False):
             neighbors.add((newRow, newCol))
         # add 1-cell neighbors
         if i < len(oneCellMoves):
             drow, dcol = oneCellMoves[i]
             newRow = currRow + drow
             newCol = currCol + dcol
-            if moveIsLegal(app, currRow, currCol, drow, dcol):
+            if moveIsLegal(app, currRow, currCol, drow, dcol, False):
                 neighbors.add((newRow, newCol))
     return neighbors
 
