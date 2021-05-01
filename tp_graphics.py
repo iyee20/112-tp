@@ -227,7 +227,10 @@ def transitionMode_redrawAll(app, canvas):
 def drawProgressBar(app, canvas):
     ''' draw the moat filling progress bar '''
     progress = app.droplets / app.moatSize
-    fillLength = int((app.width - (2 * app.margin)) * progress)
+    if progress > 1:
+        fillLength = app.width - (2*app.margin)
+    else:
+        fillLength = int((app.width - (2*app.margin)) * progress)
 
     canvas.create_rectangle(app.margin, app.margin, app.width - app.margin,
                 app.margin + 30, fill="black")
