@@ -202,15 +202,7 @@ def getSaveNames(app):
 
 def transitionMode_redrawAll(app, canvas):
     ''' draw the transition screen '''
-    # draw progress bar
-    progress = app.droplets / app.moatSize
-    fillLength = int((app.width - (2 * app.margin)) * progress)
-    canvas.create_rectangle(app.margin, app.margin, app.width - app.margin,
-                app.margin + 30, fill="black")
-    canvas.create_rectangle(app.margin, app.margin, app.margin + fillLength,
-                app.margin + 30, fill="blue", width=0)
-    canvas.create_text(app.width // 2, 15,
-                        text=f"{app.droplets}/{app.moatSize}", fill="white")
+    drawProgressBar(app, canvas)
 
     drawSeashells(app, canvas, app.margin, app.margin + 35)
 
@@ -225,8 +217,24 @@ def transitionMode_redrawAll(app, canvas):
     else:
         color1 = color2 = color3 = app.buttonColor
 
+        # draw reminder to save
+        canvas.create_text(app.width // 2, app.height - 40,
+                    text="Press S to save the game.", font=app.dialogueFont)
+
     drawThreeButtonMenu(app, canvas, "Gacha", "Battle", "Team",
                                                         color1, color2, color3)
+
+def drawProgressBar(app, canvas):
+    ''' draw the moat filling progress bar '''
+    progress = app.droplets / app.moatSize
+    fillLength = int((app.width - (2 * app.margin)) * progress)
+
+    canvas.create_rectangle(app.margin, app.margin, app.width - app.margin,
+                app.margin + 30, fill="black")
+    canvas.create_rectangle(app.margin, app.margin, app.margin + fillLength,
+                app.margin + 30, fill="blue", width=0)
+    canvas.create_text(app.width // 2, 15,
+                        text=f"{app.droplets}/{app.moatSize}", fill="white")
 
 def drawTutorialTransition(app, canvas):
     ''' draw the prompts in transition mode during the tutorial '''
@@ -572,7 +580,8 @@ keys to change the order of the team. A team has up to 3 members.
 to change which units you take into battle.
 >>''',
         '''Also, if you press S when you're in the Transition menu, you can
-save your game.''',
+save your game.
+>>''',
         "Alright, now you're ready to fight!"
     ]
     return barracksIntro
@@ -596,20 +605,32 @@ def drawStatus(app, canvas, unit, topY, slotNum=-1):
     cy = cx + topY
     canvas.create_image(cx, cy, image=ImageTk.PhotoImage(unit.image))
 
-    # draw stats and weapon
     offset = (2 * app.margin) + app.cellSize
-    canvas.create_text(offset, topY + app.margin, text=f"Level {unit.level}",
-                        anchor="nw", font=app.dialogueFont)
+    drawStats(app, canvas, unit, offset, topY)
     drawHPBar(app, canvas, unit, offset, topY + 25,
                         app.width - app.margin - offset, app.dialogueFont)
 
+def drawStats(app, canvas, unit, offset, topY):
+    ''' draw a unit's stats in a status bar '''
+    # draw unit information
+    canvas.create_text(offset, topY + app.margin, text=f"Level {unit.level}",
+                        anchor="nw", font=app.dialogueFont)
     stats = f'''Attack {unit.attack}
 Def {unit.defense}      Res {unit.res}'''
     canvas.create_text(offset, topY + 60, text=stats, anchor="nw",
                         font=app.dialogueFont)
-    
-    canvas.create_text(offset * 4, topY + app.margin, text=unit.weapon,
+
+    # draw weapon information
+    canvas.create_text(offset * 4, topY + app.margin, text=unit.weapon.title(),
                         anchor="nw", font=app.dialogueFont)
+    weaponInfo = f"Range {unit.range}"
+    if unit.weapon == "bubble wand":
+        weaponInfo += "\nTargets Res"
+        weaponInfo += "\nCan heal allies two spaces away"
+    else:
+        weaponInfo += "\nTargets Def"
+    canvas.create_text(app.width - (3*app.margin), topY + 60, text=weaponInfo,
+                        anchor="ne", font=app.dialogueFont, justify="right")
 
 def drawHPBar(app, canvas, unit, topX, topY, barLength, font):
     ''' draw a unit's HP bar '''
@@ -737,6 +758,10 @@ of the Sand Castle.
         f'''You’re right there, so why don’t you try attacking the
 {enemy.name}? Click your icon and click to where you want to move.
 Then attack with the correct arrow key!
+>>''',
+        '''You can only attack adjacent enemies with a Pool Noodle. Long-range
+weapons can only attack enemies that are two spaces away. Bubble Wands can also
+heal allies that are two spaces away.
 >>''',
         '''At the end of your turn, don't forget to click through the play-by-
 play of the enemy turn.'''

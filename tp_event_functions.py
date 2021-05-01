@@ -628,16 +628,15 @@ def battleMode_mousePressed(app, event):
         for unit in app.team:
             unit.resetHP()
             unit.untapped = unit.canMove = True
-        if app.droplets >= app.moatSize and not app.storyModeEnd:
+        if (app.droplets >= app.moatSize and
+                not app.storyModeEnd and not app.freeplay):
             app.droplets = app.moatSize
             app.storyModeEnd = True
             app.mode = "cutsceneMode"
-        else:
-            app.mode = "transitionMode"
+        else: app.mode = "transitionMode"
         return
 
     if not app.playerTurn:
-        # click to see each enemy unit's turn
         enemyTurn(app)
         # free player units to move again
         for unit in app.team:
@@ -667,7 +666,8 @@ def enemyTurn(app):
             if enemy.range == 2: removeTooCloseCell(enemy, target, heuristic)
 
             # move closer to target and attack if possible
-            if len(enemy.movePath) != 0 and enemy.canMove:
+            if (enemy.movePath != None and enemy.canMove
+                and len(enemy.movePath) != 0):
                 enemy.row, enemy.col = enemy.movePath.pop(0)
                 enemy.canMove = False
                 if inRange(enemy, target): attackAndCounter(app, enemy, target)
@@ -733,6 +733,9 @@ def findBestCell(currCell, options, heuristic):
 
 def removeTooCloseCell(unit, target, heuristic):
     ''' remove moves that would place a 2-cell ranged unit next to a target '''
+    if unit.movePath == None:
+        return
+
     newPath = []
 
     for cell in unit.movePath:
