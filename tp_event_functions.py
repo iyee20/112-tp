@@ -396,6 +396,14 @@ def tutorialMode_keyPressed(app, event):
             app.mode = "battleMode"
 
 ####
+# Credits screen
+####
+
+def creditsMode_mousePressed(app, event):
+    ''' handle mouse presses in credits mode '''
+    app.mode = "mainScreenMode"
+
+####
 # Transition screen
 ####
 
@@ -613,7 +621,7 @@ def cutsceneMode_mousePressed(app, event):
         if app.onCutsceneLine > cutSceneLines:
             app.onCutsceneLine = 0
             app.freeplay = True
-            app.mode = "mainScreenMode"
+            app.mode = "creditsMode"
 
 ####
 # Battle screen

@@ -119,7 +119,7 @@ def mainScreenMode_redrawAll(app, canvas):
     drawThreeButtonMenu(app, canvas, "Choose Save File", "Play", "Settings",
                                     app.buttonColor, playColor, app.buttonColor)
 
-    # draw credits
+    # draw main credits
     creditText = ''' (C) Isabella Yee 2021 | made with Python | 15-112
  Special thanks to Casper Wong'''
     canvas.create_text(0, app.height, text=creditText, anchor="sw",
@@ -195,6 +195,36 @@ def getSaveNames(app):
         name2 = "Empty"
     
     return name1, name2
+
+####
+# Credits screen drawing function
+####
+
+def creditsMode_redrawAll(app, canvas):
+    ''' draw the credits screen '''
+    cx = app.width // 2
+    canvas.create_text(cx, 50, text="Credits", font=app.dialogueFont+" bold")
+
+    creditsText = '''CMU 15-112
+Professors:
+David Kosbie and Mike Taylor
+
+Programmer:
+Isabella Yee
+
+Mentor:
+Casper Wong
+
+SPECIAL THANKS TO
+Beta Tester:
+Serena Yee
+'''
+    canvas.create_text(cx, 80, text=creditsText, anchor="n",
+                            font=app.dialogueFont, justify="center")
+    
+    canvas.create_text(cx, app.height - 20,
+                        text="Click to return to the main screen",
+                        font=app.dialogueFont)
 
 ####
 # Transition screen drawing functions
@@ -402,7 +432,7 @@ def cutsceneMode_redrawAll(app, canvas):
         if not app.storyModeEnd:
             text = "Click here to go back to gacha"
         else:
-            text = "Click here to return to main screen"
+            text = "Click here to view credits"
         drawButton(app, canvas, 0, fourFifthsHeight, app.width, app.height,
                         color=app.buttonColor, text=text)
     
