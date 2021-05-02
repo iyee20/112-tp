@@ -1,13 +1,22 @@
 Water Emblem
-[insert description here]
+Water Emblem is a role-playing game in which players control
+a team of characters to defeat enemies and complete the story through
+winning enough battles. Characters are gained through exchanging
+in-game currency for random “gacha pulls.” After the story is complete,
+players enter Freeplay mode, in which they can battle indefinitely. 
 
 How to Run the Game
 Please open the file tp_event_functions.py and run it. All of the .py files must
-be in one folder. Please put the folder "images" (contains all images) and the
-folder "saves" (contains all save files) in this same folder.
+be in one folder. Please put the folder "images" (contains all images), the
+folder "saves" (contains all save files), and the folder "audio" (contains all
+audio files) in this same folder.
 
 Libraries
-[insert library description here; hopefully all included]
+The following must be imported in order to run the game:
++ random
++ os
++ pydub
++ simpleaudio
 
 Shortcuts
 In Settings, pressing "Toggle Game Mode" will allow you to quickly switch

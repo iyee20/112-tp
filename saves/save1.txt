@@ -1,0 +1,14 @@
+Aqua
+Barracks
+Aqua:
+15, 9, 5, 4, 1
+Marina:
+15, 6, 4, 6, 1
+Team
+Aqua
+Marina
+Game Status
+Freeplay False
+MoatSize 25
+Droplets 1
+Seashells 0

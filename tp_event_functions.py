@@ -3,11 +3,18 @@
 # andrewID: iby
 ####
 
-import random
+# other files
 from cmu_112_graphics import *
 from tp_graphics import *
 from tp_content import *
+
+# modules (general)
+import random
 from os import remove as deleteFile
+
+# modules (audio)
+from pydub import AudioSegment
+from pydub.playback import play
 
 ####
 # Main app
@@ -948,10 +955,10 @@ for {amount} damage!'''
         if target.hp == 0:
             app.battleMessage += f"\n{target.name} was defeated!"
             target.row = target.col = -1
+            playDefeatNoise(target)
             if unitIsPlayer: # player unit defeats enemy unit
                 getExperience(app, unit)
-    else:
-        app.battleMessage = f"{unit.name}'s attack missed!"
+    else: app.battleMessage = f"{unit.name}'s attack missed!"
 
     # if possible, target counterattacks unit
     if inRange(target, unit) and target.hp != 0:
@@ -962,10 +969,10 @@ for {counterAmount} damage!'''
             if unit.hp == 0:
                 app.battleMessage += f"\n{unit.name} was defeated!"
                 unit.row = unit.col = -1
+                playDefeatNoise(unit)
                 if not unitIsPlayer: # enemy unit is defeated by player unit
                     getExperience(app, target)
-        else:
-            app.battleMessage += f"\n{target.name}'s counterattack missed!"
+        else: app.battleMessage += f"\n{target.name}'s counterattack missed!"
     
     checkBattleEnd(app)
 
@@ -981,6 +988,11 @@ def getExperience(app, unit):
     if unit.toNextLevel <= 0:
         unit.levelUp()
         app.battleMessage += f"\n{unit.name} leveled up to level {unit.level}!"
+
+def playDefeatNoise(unit):
+    ''' play the defeat noise that corresponds to a character '''
+    path = f"audio/{unit.name}.wav"
+    # add more later
 
 def checkBattleEnd(app):
     ''' check if a battle is over and set victory or defeat conditions '''
@@ -1330,7 +1342,7 @@ def makePathFromNodes(nodes, goal):
     while currNode in nodes.keys():
         currNode = nodes[currNode]
         path = [currNode] + path
-    # exclude current position //and goal position - delete //later?
+    # exclude current position
     return path[1:]
 
 def heuristic(node, goal):
