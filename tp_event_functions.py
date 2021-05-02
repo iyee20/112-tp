@@ -33,6 +33,7 @@ def appStarted(app):
 
     app.mode = "mainScreenMode"
     app.saveFilePath = None
+    app.volumeChange = 0 # in dB
     newSave(app)
 
 def setColorsAndFonts(app):
@@ -305,20 +306,17 @@ def settingsMode_mousePressed(app, event):
         if app.cheats: app.showMessage("Developer cheats ON.")
         else: app.showMessage("Developer cheats OFF.")
 
-    # toggle game mode (story or freeplay)
+    # change volume (normal, low, or off)
     elif menuButtonClicked(app, event) == 3:
-        if app.saveFilePath == None:
-            app.showMessage("Please load a non-empty save file first!")
-            return
-        app.freeplay = not app.freeplay
-        if app.freeplay:
-            app.battleMenuDisplay = 3
-            app.tutorial = False
-            app.showMessage("Story mode skipped.")
+        if app.volumeChange == 0:
+            app.volumeChange = 10
+            app.showMessage("Game volume is now LOW.")
+        elif app.volumeChange == 10:
+            app.volumeChange = None
+            app.showMessage("Game volume is now OFF.")
         else:
-            app.battleMenuDisplay = 0
-            app.tutorial = True
-            app.showMessage("Now in story mode.")
+            app.volumeChange = 0
+            app.showMessage("Game volume is now NORMAL.")
 
     # go back to main screen
     elif backButtonClicked(app, event, app.margin, app.margin):
@@ -339,15 +337,27 @@ def settingsMode_keyPressed(app, event):
     ''' handle key presses in settings mode (only used for cheats) '''
     if not app.cheats: return
 
-    if event.key in "Cc":
-        getAllCharacters(app)
-    elif event.key in "Ll":
-        tenLevelUpAll(app)
-    elif event.key in "Ss": # switch to sample save file
+    if event.key in "Ss": # switch to sample save file
         app.saveFilePath = "saves/sample_save.txt"
         loadSave(app)
         app.showMessage(f'''Switched to sample save file.
 Remember to toggle cheats back on.''')
+    elif app.saveFilePath == None:
+        app.showMessage("Please load a non-empty save file first!")
+    elif event.key in "Cc":
+        getAllCharacters(app)
+    elif event.key in "Ll":
+        tenLevelUpAll(app)
+    elif event.key in "Ff": # toggle freeplay
+        app.freeplay = not app.freeplay
+        if app.freeplay:
+            app.battleMenuDisplay = 3
+            app.tutorial = False
+            app.showMessage("Story mode skipped.")
+        else:
+            app.battleMenuDisplay = 0
+            app.tutorial = True
+            app.showMessage("Now in story mode.")
 
 def getAllCharacters(app):
     ''' cheat all characters into the barracks '''
@@ -983,7 +993,7 @@ for {amount} damage!'''
         if target.hp == 0:
             app.message += f"\n{target.name} was defeated!"
             target.row = target.col = -1
-            playDefeatNoise(target)
+            if app.volumeChange != None: playDefeatNoise(app, target)
             if unitIsPlayer: # player unit defeats enemy unit
                 getExperience(app, unit)
     else: app.message = f"{unit.name}'s attack missed!"
@@ -997,7 +1007,7 @@ for {counterAmount} damage!'''
             if unit.hp == 0:
                 app.message += f"\n{unit.name} was defeated!"
                 unit.row = unit.col = -1
-                playDefeatNoise(unit)
+                if app.volumeChange != None: playDefeatNoise(app, unit)
                 if not unitIsPlayer: # enemy unit is defeated by player unit
                     getExperience(app, target)
         else: app.message += f"\n{target.name}'s counterattack missed!"
@@ -1017,11 +1027,12 @@ def getExperience(app, unit):
         unit.levelUp()
         app.message += f"\n{unit.name} leveled up to level {unit.level}!"
 
-def playDefeatNoise(unit):
+def playDefeatNoise(app, unit):
     ''' play the defeat noise that corresponds to a character '''
-    path = f"audio/{unit.name.lower()}.wav"
+    #path = f"audio/{unit.name.lower()}.wav"
+    path = "audio/iara.wav" # change back later
     sound = AudioSegment.from_wav(path)
-    play(sound)
+    play(sound - app.volumeChange) # adjust volume based on settings
 
 def checkBattleEnd(app):
     ''' check if a battle is over and set victory or defeat conditions '''

@@ -142,13 +142,15 @@ def settingsMode_redrawAll(app, canvas):
         cheatButtonText = "Toggle Cheats (currently ON)"
     else:
         cheatButtonText = "Toggle Cheats (currently OFF)"
-    if app.freeplay:
-        gameModeButtonText = "Toggle Game Mode (currently Freeplay)"
+    if app.volumeChange == 0:
+        volumeButtonText = "Change Volume (currently NORMAL)"
+    elif app.volumeChange == 10:
+        volumeButtonText = "Change Volume (currently LOW)"
     else:
-        gameModeButtonText = "Toggle Game Mode (current Story)"
+        volumeButtonText = "Change Volume (currently OFF)"
 
     drawThreeButtonMenu(app, canvas, moatButtonText, cheatButtonText,
-                            gameModeButtonText,
+                            volumeButtonText,
                             app.buttonColor, app.buttonColor, app.buttonColor)
 
 def saveMode_redrawAll(app, canvas):

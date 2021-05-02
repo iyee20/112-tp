@@ -25,5 +25,6 @@ When cheats are active:
 + pressing "C" in settings will give you all characters
 + pressing "L" in settings will level up all obtained characters by 10 levels
 + pressing "S" in settings will switch to the sample save (already on Freeplay)
++ pressing "F" in settings will toggle the game mode (story or freeplay)
 + pressing "H" in the transition screen will bring you back to the main screen
 + pressing "E" in the transition screen will bring you to the ending cutscene
