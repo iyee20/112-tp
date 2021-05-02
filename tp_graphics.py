@@ -232,7 +232,7 @@ Serena Yee
 ''',
         '''Voice Actors:
 (Giang)         (Naia)
-Kelley Sun (Iara)          (Walter)
+Kelley Sun (Iara)          Vincent Cheng (Walter)
 Yunxiu Zhang (Kai)           (Dehydration)
 (Marina)        Leah McGregor (Heatstroke)
 Ethan Ossier (Morgan)        (Salt)
@@ -359,9 +359,11 @@ def tutorialMode_redrawAll(app, canvas):
                             image=ImageTk.PhotoImage(app.annaImg))
 
     allDialogue = openingDialogue(app)
-
     if app.onCutsceneLine < len(allDialogue):
         drawDialogueBox(app, canvas, "Anna", allDialogue[app.onCutsceneLine])
+    
+    if app.choosingName:
+        drawNameEntryBox(app, canvas)
 
 def openingDialogue(app):
     ''' return the game's opening dialogue '''
@@ -381,6 +383,27 @@ It probably won’t happen again.
         "Huh? What was that?"
     ]
     return openingDialogue
+
+def drawNameEntryBox(app, canvas):
+    ''' draw a box with the user's entered name so far '''
+    topX = app.margin
+    topY = (app.height//2) + 75
+    botX = app.width - app.margin
+    botY = topY + 100
+    offset = 50
+
+    # draw box
+    canvas.create_rectangle(topX, topY, botX, botY, fill=app.buttonColor)
+    canvas.create_rectangle(topX + offset, botY - offset,
+                            botX - offset, botY,
+                            fill="white")
+
+    # draw text
+    canvas.create_text((topX+botX) // 2, ((2*botY)-offset) // 2,
+                            text=app.nameSoFar, font=app.dialogueFont)
+    if app.message != None:
+        canvas.create_text((topX+botX) // 2, (topY+botY-offset) // 2,
+                            text=app.message, font=app.dialogueFont)
 
 ####
 # Gacha drawing functions
@@ -755,10 +778,10 @@ def battleMode_redrawAll(app, canvas):
         displayBattleMenu(app, canvas)
         drawClickInstructions(app, canvas)
     
-    if app.battleMessage != None:
+    if app.message != None:
         if app.tutorial and app.onCutsceneLine < tutorialLines: return
         canvas.create_text(app.width // 2, int(app.height * 0.9),
-                            text=app.battleMessage, font=app.dialogueFont,
+                            text=app.message, font=app.dialogueFont,
                             justify="center")
 
 def drawUnitsOnMap(app, canvas):

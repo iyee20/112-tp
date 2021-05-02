@@ -49,7 +49,7 @@ def setColorsAndFonts(app):
 def resetBattleVars(app):
     ''' reset battle-related variables '''
     app.enemyTeam = []
-    app.selected = app.battleMessage = app.currMatchup = None
+    app.selected = app.message = app.currMatchup = None
     app.battleMenuDisplay = 0
     app.playerTurn = True
     app.victory = app.defeat = False
@@ -170,8 +170,10 @@ def newSave(app):
     app.moatSize = 25
 
     # define game mode
-    app.freeplay = app.cheats = app.storyModeEnd = False
+    app.freeplay = app.cheats = app.storyModeEnd = app.choosingName = False
     app.tutorial = True
+    app.nameSoFar = ""
+    app.message = None
 
 def loadSave(app):
     ''' define characters and other variables from a previous save file '''
@@ -181,7 +183,7 @@ def loadSave(app):
 
     loadProgress(app, saveData)
 
-    # saving is unlocked after tutorial, cheats are toggled after every load
+    # cheats are toggled after every load, tutorial is already cleared
     app.cheats = app.storyModeEnd = app.tutorial = False
 
 def loadProgress(app, saveData):
@@ -372,26 +374,26 @@ def tenLevelUpAll(app):
 def tutorialMode_mousePressed(app, event):
     ''' handle mouse presses in tutorial mode '''
     # name can only be entered during the first scene
-    if app.aqua.name == "Aqua" and app.onCutsceneLine == 0:
-        name = app.getUserInput("Enter a name with 6 characters or less.")
-        if name != None and name.isalpha() and len(name) <= 6:
-            name = name.title()
-            if nameInUse(name):
-                app.showMessage('''Someone else has that name.
-Please pick a different one. A nickname, maybe?''')
-            else:
-                app.aqua.name = name
-                app.onCutsceneLine += 1
-
-def nameInUse(name):
-    ''' return True if a name is already used in the game '''
-    names = {"Anna", "Nerissa", "Giang", "Iara", "Kai", "Marina", "Morgan",
-                "Naia", "Walter", "Dehydration", "Heatstroke", "Salt"}
-    return name in names
+    if app.onCutsceneLine == 0:
+        app.choosingName = True
+        app.message = "Please enter a name with up to 6 letters."
 
 def tutorialMode_keyPressed(app, event):
     ''' handle key presses in tutorial mode '''
-    if event.key == "Space":
+    # enter a name
+    if app.choosingName:
+        name = inputName(app, event.key)
+        if name != None:
+            if nameInUse(name):
+                app.message = '''Someone else has that name.
+Please pick a different one. A nickname, maybe?'''
+            else:
+                app.aqua.name = name
+                app.choosingName = False
+                app.onCutsceneLine += 1
+
+    # move through tutorial
+    elif not app.choosingName and event.key == "Space":
         app.onCutsceneLine += 1
         allDialogue = openingDialogue(app)
         if app.onCutsceneLine >= len(allDialogue):
@@ -401,6 +403,28 @@ def tutorialMode_keyPressed(app, event):
             makeEnemyTeam(app)
             spawnTeam(app, app.enemyTeam, unitType="enemy")
             app.mode = "battleMode"
+
+def inputName(app, key):
+    ''' use key presses to change the user's entered name '''
+    maxNameLength = 6
+
+    if key == "Enter": # finish entering name
+        return app.nameSoFar.title()
+    elif key == "Backspace": # delete the last letter
+        app.nameSoFar = app.nameSoFar[:-1]
+    elif len(key) > 1 or not key.isalpha(): # no special characters
+        app.message = "Please only enter letters."
+    elif len(app.nameSoFar) > maxNameLength:
+        app.message = "Your name can only be 6 letters long."
+    else:
+        app.nameSoFar += key
+    return None
+
+def nameInUse(name):
+    ''' return True if a name is already used in the game '''
+    names = {"Anna", "Nerissa", "Giang", "Iara", "Kai", "Marina", "Morgan",
+                "Naia", "Walter", "Dehydration", "Heatstroke", "Salt"}
+    return name in names
 
 ####
 # Credits screen
@@ -822,7 +846,7 @@ def movePlayableCharacter(app, unit, clickedCell):
             instruction = "attack an enemy"
             if unit.weapon == "bubble wand":
                 instruction += " or heal an ally"
-            app.battleMessage = f'''Press {attackKeys} to {instruction}
+            app.message = f'''Press {attackKeys} to {instruction}
 or Enter to wait.'''
 
 def allUnitsTapped(team):
@@ -894,7 +918,7 @@ def battleMode_keyPressed(app, event):
             elif target != None:
                 amount = unit.heal(target)
                 if amount != False:
-                    app.battleMessage = f'''{unit.name} healed {target.name}
+                    app.message = f'''{unit.name} healed {target.name}
 for {amount} HP.'''
             unit.untapped = unit.canMove = False
         
@@ -954,29 +978,29 @@ def attackAndCounter(app, unit, target, unitIsPlayer=False):
     # unit attacks target
     amount = unit.attackTarget(target)
     if isinstance(amount, int):
-        app.battleMessage = f'''{unit.name} attacked {target.name}
+        app.message = f'''{unit.name} attacked {target.name}
 for {amount} damage!'''
         if target.hp == 0:
-            app.battleMessage += f"\n{target.name} was defeated!"
+            app.message += f"\n{target.name} was defeated!"
             target.row = target.col = -1
             playDefeatNoise(target)
             if unitIsPlayer: # player unit defeats enemy unit
                 getExperience(app, unit)
-    else: app.battleMessage = f"{unit.name}'s attack missed!"
+    else: app.message = f"{unit.name}'s attack missed!"
 
     # if possible, target counterattacks unit
     if inRange(target, unit) and target.hp != 0:
         counterAmount = target.attackTarget(unit)
         if isinstance(counterAmount, int):
-            app.battleMessage += f'''\n{target.name} counterattacked {unit.name}
+            app.message += f'''\n{target.name} counterattacked {unit.name}
 for {counterAmount} damage!'''
             if unit.hp == 0:
-                app.battleMessage += f"\n{unit.name} was defeated!"
+                app.message += f"\n{unit.name} was defeated!"
                 unit.row = unit.col = -1
                 playDefeatNoise(unit)
                 if not unitIsPlayer: # enemy unit is defeated by player unit
                     getExperience(app, target)
-        else: app.battleMessage += f"\n{target.name}'s counterattack missed!"
+        else: app.message += f"\n{target.name}'s counterattack missed!"
     
     checkBattleEnd(app)
 
@@ -991,7 +1015,7 @@ def getExperience(app, unit):
     unit.toNextLevel -= 1
     if unit.toNextLevel <= 0:
         unit.levelUp()
-        app.battleMessage += f"\n{unit.name} leveled up to level {unit.level}!"
+        app.message += f"\n{unit.name} leveled up to level {unit.level}!"
 
 def playDefeatNoise(unit):
     ''' play the defeat noise that corresponds to a character '''
@@ -1003,13 +1027,13 @@ def checkBattleEnd(app):
     ''' check if a battle is over and set victory or defeat conditions '''
     if checkVictory(app) or app.victory:
         app.victory = True
-        app.battleMessage = "You win!"
+        app.message = "You win!"
 
         victoryRewards(app)
 
     elif checkDefeat(app) or app.defeat:
         app.defeat = True
-        app.battleMessage = "You lose!"
+        app.message = "You lose!"
 
         # lose some Droplets
         if app.droplets > 0:
