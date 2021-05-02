@@ -408,7 +408,11 @@ def tutorialMode_keyPressed(app, event):
 
 def creditsMode_mousePressed(app, event):
     ''' handle mouse presses in credits mode '''
-    app.mode = "mainScreenMode"
+    creditsPages = 2
+    if app.onCutsceneLine >= creditsPages:
+        app.onCutsceneLine = 0
+        app.mode = "mainScreenMode"
+    app.onCutsceneLine += 1
 
 ####
 # Transition screen

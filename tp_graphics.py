@@ -205,7 +205,18 @@ def creditsMode_redrawAll(app, canvas):
     cx = app.width // 2
     canvas.create_text(cx, 50, text="Credits", font=app.dialogueFont+" bold")
 
-    creditsText = '''CMU 15-112
+    creditsText = creditsTextPage(app.onCutsceneLine)
+    canvas.create_text(cx, 80, text=creditsText, anchor="n",
+                            font=app.dialogueFont, justify="center")
+    
+    canvas.create_text(cx, app.height - 20,
+                        text="Click to return to the main screen",
+                        font=app.dialogueFont)
+
+def creditsTextPage(page):
+    ''' return a page of the credits text '''
+    creditsText = [
+        '''CMU 15-112
 Professors:
 David Kosbie and Mike Taylor
 
@@ -218,13 +229,18 @@ Casper Wong
 SPECIAL THANKS TO
 Beta Tester:
 Serena Yee
+''',
+        '''Voice Actors:
+(Giang)         (Naia)
+Kelley Sun (Iara)          (Walter)
+Yunxiu Zhang (Kai)           (Dehydration)
+(Marina)        Leah McGregor (Heatstroke)
+Ethan Ossier (Morgan)        (Salt)
 '''
-    canvas.create_text(cx, 80, text=creditsText, anchor="n",
-                            font=app.dialogueFont, justify="center")
-    
-    canvas.create_text(cx, app.height - 20,
-                        text="Click to return to the main screen",
-                        font=app.dialogueFont)
+    ]
+
+    try: return creditsText[page]
+    except: return creditsText[-1]
 
 ####
 # Transition screen drawing functions
