@@ -995,8 +995,9 @@ def getExperience(app, unit):
 
 def playDefeatNoise(unit):
     ''' play the defeat noise that corresponds to a character '''
-    path = f"audio/{unit.name}.wav"
-    # add more later
+    path = f"audio/{unit.name.lower()}.wav"
+    sound = AudioSegment.from_wav(path)
+    play(sound)
 
 def checkBattleEnd(app):
     ''' check if a battle is over and set victory or defeat conditions '''
