@@ -419,6 +419,7 @@ def inputName(app, key):
     maxNameLength = 6
 
     if key == "Enter": # finish entering name
+        app.message = None
         return app.nameSoFar.title()
     elif key == "Backspace": # delete the last letter
         app.nameSoFar = app.nameSoFar[:-1]
@@ -726,6 +727,7 @@ def enemyTurn(app):
                 if enemy.range == 2:
                     removeTooCloseCell(enemy, target, heuristic)
             else: enemy.movePath = None
+            print(f"{enemy.name}: {enemy.movePath}") # remove later
 
             # move closer to target and attack if possible
             if (enemy.movePath != None and enemy.canMove
@@ -1030,7 +1032,7 @@ def getExperience(app, unit):
 def playDefeatNoise(app, unit):
     ''' play the defeat noise that corresponds to a character '''
     #path = f"audio/{unit.name.lower()}.wav"
-    path = "audio/iara.wav" # change back later
+    path = "audio/walter.wav" # change back later
     sound = AudioSegment.from_wav(path)
     play(sound - app.volumeChange) # adjust volume based on settings
 

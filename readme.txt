@@ -1,6 +1,6 @@
 Water Emblem
 Water Emblem is a role-playing game in which players control
-a team of characters to defeat enemies and complete the story through
+a team of characters ("units") to defeat enemies and complete the story through
 winning enough battles. Characters are gained through exchanging
 in-game currency for random “gacha pulls.” After the story is complete,
 players enter Freeplay mode, in which they can battle indefinitely. 
