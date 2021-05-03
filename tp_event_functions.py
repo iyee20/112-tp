@@ -727,7 +727,6 @@ def enemyTurn(app):
                 if enemy.range == 2:
                     removeTooCloseCell(enemy, target, heuristic)
             else: enemy.movePath = None
-            print(f"{enemy.name}: {enemy.movePath}") # remove later
 
             # move closer to target and attack if possible
             if (enemy.movePath != None and enemy.canMove
@@ -767,10 +766,7 @@ def findCellInRange(app, unit, target, heuristic):
         if cellIsBetweenCells(guess, unitCell, targetCell, heuristic):
             return guess
         elif heuristic(guess, targetCell) == unit.range:
-            if heuristic(guess, unitCell) == 1:
-                return guess
-            else:
-                secondOptions.append(guess)
+            secondOptions.append(guess)
     return findBestCell(unitCell, secondOptions, heuristic)
 
 def cellIsBetweenCells(guess, currCell, goalCell, heuristic):
@@ -1028,11 +1024,19 @@ def getExperience(app, unit):
     if unit.toNextLevel <= 0:
         unit.levelUp()
         app.message += f"\n{unit.name} leveled up to level {unit.level}!"
+        if app.volumeChange != None:
+            playLevelUpNoise(app)
+
+def playLevelUpNoise(app):
+    ''' play the noise that corresponds to a character levelling up '''
+    path = "audio/levelUp.wav"
+    sound = AudioSegment.from_wav(path)
+    play(sound - app.volumeChange) # adjust volume based on settings
 
 def playDefeatNoise(app, unit):
     ''' play the defeat noise that corresponds to a character '''
     #path = f"audio/{unit.name.lower()}.wav"
-    path = "audio/walter.wav" # change back later
+    path = "audio/heatstroke.wav" # change back later
     sound = AudioSegment.from_wav(path)
     play(sound - app.volumeChange) # adjust volume based on settings
 
