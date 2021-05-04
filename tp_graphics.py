@@ -211,8 +211,13 @@ def creditsMode_redrawAll(app, canvas):
     canvas.create_text(cx, 80, text=creditsText, anchor="n",
                             font=app.dialogueFont, justify="center")
     
+    creditsPages = 2
+    if app.onCutsceneLine >= creditsPages:
+        prompt = "return to the main screen"
+    else:
+        prompt = "go to the next page"
     canvas.create_text(cx, app.height - 20,
-                        text="Click to return to the main screen",
+                        text=f"Click to {prompt}",
                         font=app.dialogueFont)
 
 def creditsTextPage(page):
@@ -222,10 +227,10 @@ def creditsTextPage(page):
 Professors:
 David Kosbie and Mike Taylor
 
-Programmer:
+Programmer/Amateur Foley Artist (?):
 Isabella Yee
 
-Mentor:
+TP Mentor:
 Casper Wong
 
 SPECIAL THANKS TO

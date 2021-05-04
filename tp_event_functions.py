@@ -35,7 +35,6 @@ def appStarted(app):
     app.mode = "mainScreenMode"
     app.saveFilePath = None
     app.volumeChange = 0 # in dB
-    startBgm(app)
     newSave(app)
 
 def setColorsAndFonts(app):
@@ -44,16 +43,6 @@ def setColorsAndFonts(app):
     app.buttonFont = "Arial 12 bold"
     app.dialogueFont = "Arial 14"
     app.summaryFont = "Arial 11"
-
-def startBgm(app, volumeChange=0):
-    ''' play the game's background music '''
-    # from: https://simpleaudio.readthedocs.io/en/latest/
-    wave_obj = sa.WaveObject.from_wave_file("audio/bgm.wav")
-    app.bgm = wave_obj.play()
-
-def appStopped(app):
-    print("Turning off the music.")
-    app.bgm.stop()
 
 ####
 # Functions used in multiple screens
@@ -508,6 +497,7 @@ def transitionMode_keyPressed(app, event):
         # skip to ending cutscene
         elif event.key in "Ee":
             app.storyModeEnd = True
+            startBgm(app)
             app.mode = "cutsceneMode"
 
 ####
@@ -665,10 +655,19 @@ def gachaPull(app, pullNum):
 # Cutscenes
 ####
 
+def startBgm(app):
+    ''' play the ending cutscene background music '''
+    if app.volumeChange != None:
+        # from: https://simpleaudio.readthedocs.io/en/latest/
+        wave_obj = sa.WaveObject.from_wave_file("audio/bgm.wav")
+        app.bgm = wave_obj.play()
+
 def cutsceneMode_keyPressed(app, event):
     ''' handle key presses in cutscene mode '''
     if event.key == "Space":
         app.onCutsceneLine += 1
+        if app.storyModeEnd and not app.bgm.is_playing():
+            startBgm(app)
 
 def cutsceneMode_mousePressed(app, event):
     ''' handle mouse presses in cutscene mode '''
@@ -683,6 +682,7 @@ def cutsceneMode_mousePressed(app, event):
     else:
         cutSceneLines = 4
         if app.onCutsceneLine > cutSceneLines:
+            app.bgm.stop()
             app.onCutsceneLine = 0
             app.freeplay = True
             app.mode = "creditsMode"
@@ -709,6 +709,7 @@ def battleMode_mousePressed(app, event):
                 not app.storyModeEnd and not app.freeplay):
             app.droplets = app.moatSize
             app.storyModeEnd = True
+            startBgm(app)
             app.mode = "cutsceneMode"
         else: app.mode = "transitionMode"
         return
