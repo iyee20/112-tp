@@ -1054,8 +1054,7 @@ def playLevelUpNoise(app):
 
 def playDefeatNoise(app, unit):
     ''' play the defeat noise that corresponds to a character '''
-    #path = f"audio/{unit.name.lower()}.wav"
-    path = "audio/heatstroke.wav" # change back later
+    path = f"audio/{unit.name.lower()}.wav"
     sound = AudioSegment.from_wav(path)
     play(sound - app.volumeChange) # adjust volume based on settings
 

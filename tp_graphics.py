@@ -238,11 +238,14 @@ Beta Tester:
 Serena Yee
 ''',
         '''Voice Actors:
-(Giang)         (Naia)
-Kelley Sun (Iara)          Vincent Cheng (Walter)
-Yunxiu Zhang (Kai)           (Dehydration)
-(Marina)        Leah McGregor (Heatstroke)
-Ethan Ossier (Morgan)        (Salt)
+Ethan Ossier (Morgan)
+Kelley Sun (Iara, Salt)
+Leah McGregor (Dehydration, Heatstroke)
+(Marina)
+(Naia)
+Subhasish Mukherjee (Giang)
+Vincent Cheng (Walter)
+Yunxiu Zhang (Kai)
 '''
     ]
 

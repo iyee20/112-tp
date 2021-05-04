@@ -12,15 +12,14 @@ folder "saves" (contains all save files), and the folder "audio" (contains all
 audio files) in this same folder.
 
 Libraries
-The following must be imported in order to run the game:
+The following must be imported/installed in order to run the game:
 + random
 + os
 + pydub
 + simpleaudio
 
 Shortcuts
-In Settings, pressing "Toggle Game Mode" will allow you to quickly switch
-between story mode and freeplay. Pressing "Toggle Cheats" will activate cheats.
+In Settings, pressing "Toggle Cheats" will activate cheats.
 When cheats are active:
 + pressing "C" in settings will give you all characters
 + pressing "L" in settings will level up all obtained characters by 10 levels
@@ -28,3 +27,8 @@ When cheats are active:
 + pressing "F" in settings will toggle the game mode (story or freeplay)
 + pressing "H" in the transition screen will bring you back to the main screen
 + pressing "E" in the transition screen will bring you to the ending cutscene
+
+Usage
+All images and the background music were created by me. Please contact me if you
+would like to reuse them. All other audio clips belong to the voice actors and
+should not be reused by anyone else.
