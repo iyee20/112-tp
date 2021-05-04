@@ -653,6 +653,11 @@ def gachaPull(app, pullNum):
 # Cutscenes
 ####
 
+def cutsceneMode_timerFired(app):
+    ''' loop the ending cutscene music '''
+    if not app.bgm.is_playing():
+        startBgm(app)
+
 def startBgm(app):
     ''' play the ending cutscene background music '''
     if app.volumeChange != None:
@@ -664,8 +669,6 @@ def cutsceneMode_keyPressed(app, event):
     ''' handle key presses in cutscene mode '''
     if event.key == "Space":
         app.onCutsceneLine += 1
-        if app.storyModeEnd and not app.bgm.is_playing():
-            startBgm(app)
 
 def cutsceneMode_mousePressed(app, event):
     ''' handle mouse presses in cutscene mode '''
