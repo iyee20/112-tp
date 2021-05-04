@@ -142,8 +142,7 @@ def saveIsBlank(path):
         return True
     return False
 
-# from:
-# https://www.cs.cmu.edu/~112/notes/notes-strings.html#basicFileIO
+# from: https://www.cs.cmu.edu/~112/notes/notes-strings.html#basicFileIO
 def readFile(path):
     ''' return the contents of a .txt file '''
     with open(path, "rt") as f:
@@ -258,8 +257,7 @@ Seashells {app.seashells}'''
 
     return contents
 
-# from:
-# https://www.cs.cmu.edu/~112/notes/notes-strings.html#basicFileIO
+# from: https://www.cs.cmu.edu/~112/notes/notes-strings.html#basicFileIO
 def writeFile(path, contents):
     ''' add to the contents of a .txt file '''
     with open(path, "wt") as f:
@@ -1045,6 +1043,8 @@ def getExperience(app, unit):
         app.message += f"\n{unit.name} leveled up to level {unit.level}!"
         if app.volumeChange != None:
             playLevelUpNoise(app)
+
+# audio playback code based on: https://github.com/jiaaro/pydub#playback
 
 def playLevelUpNoise(app):
     ''' play the noise that corresponds to a character levelling up '''
