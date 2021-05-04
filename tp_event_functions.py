@@ -655,7 +655,7 @@ def gachaPull(app, pullNum):
 
 def cutsceneMode_timerFired(app):
     ''' loop the ending cutscene music '''
-    if not app.bgm.is_playing():
+    if app.storyModeEnd and not app.bgm.is_playing():
         startBgm(app)
 
 def startBgm(app):
