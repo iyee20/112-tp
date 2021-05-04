@@ -15,6 +15,7 @@ from os import remove as deleteFile
 # modules (audio)
 from pydub import AudioSegment
 from pydub.playback import play
+import simpleaudio as sa
 
 ####
 # Main app
@@ -34,6 +35,7 @@ def appStarted(app):
     app.mode = "mainScreenMode"
     app.saveFilePath = None
     app.volumeChange = 0 # in dB
+    startBgm(app)
     newSave(app)
 
 def setColorsAndFonts(app):
@@ -42,6 +44,16 @@ def setColorsAndFonts(app):
     app.buttonFont = "Arial 12 bold"
     app.dialogueFont = "Arial 14"
     app.summaryFont = "Arial 11"
+
+def startBgm(app, volumeChange=0):
+    ''' play the game's background music '''
+    # from: https://simpleaudio.readthedocs.io/en/latest/
+    wave_obj = sa.WaveObject.from_wave_file("audio/bgm.wav")
+    app.bgm = wave_obj.play()
+
+def appStopped(app):
+    print("Turning off the music.")
+    app.bgm.stop()
 
 ####
 # Functions used in multiple screens
@@ -418,14 +430,20 @@ def inputName(app, key):
     ''' use key presses to change the user's entered name '''
     maxNameLength = 6
 
-    if key == "Enter": # finish entering name
+    # finish entering name
+    if key == "Enter" and len(app.nameSoFar) <= maxNameLength:
         app.message = None
         return app.nameSoFar.title()
-    elif key == "Backspace": # delete the last letter
+    
+    # delete the last letter
+    elif key == "Backspace": 
         app.nameSoFar = app.nameSoFar[:-1]
-    elif len(key) > 1 or not key.isalpha(): # no special characters
+
+    # no special characters
+    elif len(key) > 1 or not key.isalpha():
         app.message = "Please only enter letters."
-    elif len(app.nameSoFar) > maxNameLength:
+    
+    elif len(app.nameSoFar) >= maxNameLength:
         app.message = "Your name can only be 6 letters long."
     else:
         app.nameSoFar += key
