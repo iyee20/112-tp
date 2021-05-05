@@ -239,10 +239,9 @@ Serena Yee
 ''',
         '''Voice Actors:
 Ethan Ossier (Morgan)
-Isabella Yee (Marina)
+Isabella Yee (Marina, Naia)
 Kelley Sun (Iara, Salt)
 Leah McGregor (Dehydration, Heatstroke)
-(Naia)
 Subhasish Mukherjee (Giang)
 Vincent Cheng (Walter)
 Yunxiu Zhang (Kai)
