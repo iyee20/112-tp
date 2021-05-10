@@ -32,3 +32,8 @@ Usage
 All images and the background music were created by me. Please contact me if you
 would like to reuse them. All other audio clips belong to the voice actors and
 should not be reused by anyone else.
+
+10 May 2021 Update
+Thanks to the efforts of many people, Water Emblem has enjoyed a degree of
+success. However, term project season is over and I want to move on to new
+things, so this repository will be archived from now on.
