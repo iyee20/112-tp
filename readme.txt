@@ -37,3 +37,5 @@ should not be reused by anyone else.
 Thanks to the efforts of many people, Water Emblem has enjoyed a degree of
 success. However, term project season is over and I want to move on to new
 things, so this repository will be archived from now on.
+To future CMU students: this project got a 93.7 as a final grade, but that
+doesn't mean anything. I put 52 hours into it and enjoyed every minute!
